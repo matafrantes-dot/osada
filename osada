@@ -1,0 +1,867 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Osada</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one-screen game. HUD on top, shared map in the middle, build tray at the bottom. */
+:root {
+  --frame: #15201a; --frame-2: #1f2e25; --line: #34493c;
+  --ink: #eef3e6; --muted: #9fb3a3; --wood: #e0a45a; --stone: #a9b8c6; --moss: #8fd16a; --danger: #ff8a6b;
+  --display: "Pixelify Sans", "Courier New", monospace;
+  --body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--frame); color: var(--ink); font-family: var(--body); font-size: 15px;
+  overflow: hidden; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+[hidden] { display: none !important; }
+#app { height: 100%; display: flex; flex-direction: column; }
+.hud, .tray {
+  display: flex; align-items: center; gap: 10px;
+  padding-block: 10px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: var(--frame-2);
+}
+.hud { border-bottom: 2px solid var(--line); flex-wrap: wrap; }
+.tray { border-top: 2px solid var(--line); overflow-x: auto; }
+.brand { font-family: var(--display); font-weight: 700; font-size: 22px; color: var(--moss); margin-right: auto; }
+.stat { display: flex; align-items: center; gap: 6px; font-family: var(--display); font-size: 18px; font-variant-numeric: tabular-nums; }
+.stat i { width: 14px; height: 14px; display: inline-block; border-radius: 3px; }
+.stat .w { background: var(--wood); }
+.stat .s { background: var(--stone); border-radius: 50%; }
+.stat .h { background: #d65a4a; clip-path: polygon(50% 0, 100% 50%, 85% 50%, 85% 100%, 15% 100%, 15% 50%, 0 50%); border-radius: 0; }
+.stat .o { background: var(--moss); border-radius: 50%; width: 10px; height: 10px; box-shadow: 0 0 0 3px rgba(143,209,106,.25); }
+.mapbtn {
+  font-family: var(--display); font-size: 15px; font-weight: 700; color: var(--ink);
+  background: var(--frame); border: 2px solid var(--line); border-radius: 6px; padding: 4px 10px; cursor: pointer;
+}
+.stage { position: relative; flex: 1; min-height: 0; }
+#cv { display: block; width: 100%; height: 100%; cursor: pointer; }
+.tool {
+  flex: 1 0 auto; min-width: 96px; display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+  padding: 8px 10px; background: var(--frame); color: var(--ink);
+  border: 2px solid var(--line); border-radius: 6px; font-family: var(--body); font-size: 13px; text-align: left; cursor: pointer;
+}
+.tool b { font-family: var(--display); font-size: 16px; }
+.tool span { color: var(--muted); font-variant-numeric: tabular-nums; }
+.tool[aria-pressed="true"] { border-color: var(--moss); box-shadow: inset 0 0 0 1px var(--moss); }
+.tool:disabled { opacity: .45; cursor: not-allowed; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--moss); outline-offset: 2px; }
+.banner {
+  position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); max-width: calc(100% - 32px);
+  background: rgba(21,32,26,.9); border: 2px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; font-size: 13px; color: var(--muted); text-align: center; pointer-events: none;
+}
+.board {
+  position: absolute; top: 10px; right: max(10px, env(safe-area-inset-right, 0px)); width: 168px; cursor: pointer;
+  background: rgba(21,32,26,.88); border: 2px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 13px;
+}
+.board h3 { margin: 0 0 6px; font-family: var(--display); font-size: 14px; color: var(--wood); letter-spacing: .04em; }
+.board ol { margin: 0; padding-left: 18px; display: grid; gap: 2px; }
+.board li { font-variant-numeric: tabular-nums; }
+.board li span { float: right; color: var(--muted); }
+.board li.me { color: var(--moss); }
+.board .empty { color: var(--muted); }
+.board.min ol, .board.min .empty { display: none; }
+.board.min h3 { margin: 0; }
+.overlay {
+  position: absolute; inset: 0; display: grid; place-items: center; overflow-y: auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 16px;
+  background: rgba(13,20,16,.78);
+}
+.card {
+  width: 100%; max-width: 380px; background: var(--frame-2); border: 2px solid var(--line); border-radius: 10px;
+  padding: 22px 20px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 6px 0 #0b120e;
+}
+.card h1 { margin: 0; font-family: var(--display); font-size: 44px; color: var(--moss); line-height: 1; }
+.card h2 { margin: 0; font-family: var(--display); font-size: 26px; text-wrap: balance; }
+.card p { margin: 0; color: var(--muted); line-height: 1.5; }
+.eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--wood); font-weight: 700; }
+label.eyebrow { color: var(--muted); margin-bottom: -6px; }
+.card input {
+  width: 100%; padding: 12px; font-size: 18px; font-family: var(--display);
+  background: var(--frame); color: var(--ink); border: 2px solid var(--line); border-radius: 6px;
+}
+#code { text-transform: uppercase; letter-spacing: .08em; }
+.btn {
+  padding: 12px 16px; font-family: var(--display); font-size: 18px; font-weight: 700;
+  background: var(--moss); color: #10200f; border: 0; border-radius: 6px; cursor: pointer; box-shadow: 0 3px 0 #4f8a35;
+}
+.btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #4f8a35; }
+.btn.ghost { background: transparent; color: var(--ink); border: 2px solid var(--line); box-shadow: none; }
+.err { color: var(--danger); font-size: 14px; min-height: 1.2em; }
+.mapcard { max-width: 460px; }
+#mm { width: 100%; max-width: 100%; aspect-ratio: 1; image-rendering: pixelated; border: 2px solid var(--line); border-radius: 6px; cursor: crosshair; display: block; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.btnrow { display: flex; gap: 8px; flex-wrap: wrap; }
+.btnrow .btn { flex: 1 1 140px; font-size: 16px; }
+@media (prefers-reduced-motion: reduce) { .btn:active { transform: none; } }
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+</head>
+<body>
+<div id="app">
+  <header class="hud">
+    <div class="brand">Osada</div>
+    <div class="stat" title="Dřevo"><i class="w"></i><span id="sWood">0</span></div>
+    <div class="stat" title="Kámen"><i class="s"></i><span id="sStone">0</span></div>
+    <div class="stat" title="Tvoje body"><i class="h"></i><span id="sScore">0</span></div>
+    <div class="stat" title="Hráčů online"><i class="o"></i><span id="sOnline">0</span></div>
+    <button class="mapbtn" id="mapBtn" hidden>Mapa</button>
+  </header>
+
+  <main class="stage">
+    <canvas id="cv" aria-label="Společná mapa osady"></canvas>
+    <aside class="board" id="board">
+      <h3>Nejlepší stavitelé</h3>
+      <ol id="top"></ol>
+      <div class="empty" id="topEmpty">Zatím nikdo nic nepostavil</div>
+    </aside>
+    <div class="banner" id="banner" hidden></div>
+
+    <section class="overlay" id="gate">
+      <div class="card">
+        <div class="eyebrow">Společná hra pro sledující</div>
+        <h1>Osada</h1>
+        <p>Kácej stromy, těž kámen, stav domy a zařiď si je. Všichni hrají v jednom velkém světě.</p>
+        <label class="eyebrow" for="nick">Přezdívka</label>
+        <input id="nick" maxlength="16" autocomplete="nickname" placeholder="třeba tvůj Instagram">
+        <label class="eyebrow" for="code">Kód z Instagramu</label>
+        <input id="code" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="KÓD">
+        <div class="err" id="err" role="status"></div>
+        <button class="btn" id="go">Pokračovat</button>
+        <button class="btn ghost" id="watch">Jen se dívat</button>
+      </div>
+    </section>
+
+    <section class="overlay" id="mapView" hidden>
+      <div class="card mapcard">
+        <div class="eyebrow" id="mapEyebrow">Krok 2 ze 2</div>
+        <h2 id="mapTitle">Ťukni na mapu, kde začneš</h2>
+        <canvas id="mm" width="240" height="240" aria-label="Mapa celého světa"></canvas>
+        <div class="legend">
+          <span><i style="background:#2f6b2c"></i>les</span><span><i style="background:#8d98a3"></i>kámen</span>
+          <span><i style="background:#3b7fb0"></i>voda</span><span><i style="background:#a8743f"></i>most</span>
+          <span><i style="background:#e8574a"></i>domy</span><span><i style="background:#ffffff"></i>hráči</span><span><i style="background:#8fd16a"></i>ty</span>
+        </div>
+        <div class="btnrow">
+          <button class="btn" id="bedSpawn" hidden>Začít u své postele</button>
+          <button class="btn ghost" id="randSpawn">Náhodné místo</button>
+          <button class="btn ghost" id="mapClose" hidden>Zavřít mapu</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tray" id="trayOut">
+    <button class="tool" id="bHut" aria-pressed="false" disabled><b>Chatka</b><span>10 dřeva · 4 kamene</span></button>
+    <button class="tool" id="bHouse" aria-pressed="false" disabled><b>Kamenný dům</b><span>6 dřeva · 14 kamene</span></button>
+    <button class="tool" id="bTool" disabled><b>Lepší nástroje</b><span id="toolCost">8 dřeva · 6 kamene</span></button>
+  </nav>
+  <nav class="tray" id="trayIn" hidden>
+    <button class="tool" id="fBed" aria-pressed="false"><b>Postel</b><span>8 dřeva</span></button>
+    <button class="tool" id="fTable" aria-pressed="false"><b>Stůl</b><span>5 dřeva</span></button>
+    <button class="tool" id="fFire" aria-pressed="false"><b>Krb</b><span>10 kamene</span></button>
+    <button class="tool" id="fExit"><b>Ven</b><span>Odejít z domu</span></button>
+  </nav>
+</div>
+
+<script>
+// ======================= NASTAVENÍ =======================
+// 1) Nastavení Firebase projektu "manazinie".
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBhe7RX5LSEsVCkyAfWl2Fd2y8LnQbQlWk",
+  authDomain: "manazinie.firebaseapp.com",
+  databaseURL: "https://manazinie-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "manazinie",
+  storageBucket: "manazinie.firebasestorage.app",
+  messagingSenderId: "448691563099",
+  appId: "1:448691563099:web:ef9a1a2f02f324a7f46d7e",
+};
+// 2) Kód do hry: SHA-256 kódu psaného VELKÝMI písmeny. Teď je to SEKERA.
+const CODE_HASH = "b450d021dbddedaf805c6f125465e385dd3d82de6bd319afc002b56313b48c2c";
+// =========================================================
+
+(() => {
+  const W = 120, H = 120, SEED = 2026;
+  const T = { GRASS: 0, TREE: 1, ROCK: 2, WATER: 3, HUT: 4, HOUSE: 5, STUMP: 6, RUBBLE: 7, BRIDGE: 8 };
+  const BUILD = {
+    hut:   { tile: T.HUT,   wood: 10, stone: 4,  pts: 100, name: "Chatka" },
+    house: { tile: T.HOUSE, wood: 6,  stone: 14, pts: 300, name: "Kamenný dům" },
+  };
+  const FURN = {
+    bed:   { id: 1, wood: 8, stone: 0,  pts: 20, name: "Postel" },
+    table: { id: 2, wood: 5, stone: 0,  pts: 10, name: "Stůl" },
+    fire:  { id: 3, wood: 0, stone: 10, pts: 30, name: "Krb" },
+  };
+  const TOOL_COST = [{ wood: 8, stone: 6 }, { wood: 16, stone: 14 }];
+  const SHIRTS = ["#d9533f", "#3f7fd9", "#9b4fd1", "#e0a020", "#2fae8e", "#e26aa8", "#6b8f23", "#e86f2c"];
+
+  const $ = (id) => document.getElementById(id);
+  let bannerT;
+  const cv = $("cv"), ctx = cv.getContext("2d");
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+  };
+
+  // ---------- shared world ----------
+  // The base map is the same for everyone (fixed seed). Only changes are stored online.
+  function rng(seed) { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
+  const base = (() => {
+    const r = rng(SEED), m = new Array(W * H).fill(T.GRASS);
+    for (let k = 0; k < 14; k++) {
+      const px = Math.floor(r() * W), py = Math.floor(r() * H), rad = 2.2 + r() * 3.5;
+      for (let y = Math.max(0, py - 8); y < Math.min(H, py + 8); y++) for (let x = Math.max(0, px - 8); x < Math.min(W, px + 8); x++)
+        if (Math.hypot((x - px) * 1.2, y - py) < rad) m[y * W + x] = T.WATER;
+    }
+    const scatter = (type, clusters, n, spread) => {
+      for (let c = 0; c < clusters; c++) {
+        const cx = Math.floor(r() * W), cy = Math.floor(r() * H);
+        for (let i = 0; i < n; i++) {
+          const x = Math.round(cx + (r() - .5) * spread), y = Math.round(cy + (r() - .5) * spread);
+          if (x >= 0 && y >= 0 && x < W && y < H && m[y * W + x] === T.GRASS) m[y * W + x] = type;
+        }
+      }
+    };
+    scatter(T.TREE, 150, 22, 9); scatter(T.ROCK, 80, 11, 6);
+    // a river from north to south with bridges
+    for (let y = 0; y < H; y++) {
+      const cx = Math.round(W * .55 + Math.sin(y / 11) * 14 + Math.sin(y / 4.3) * 2);
+      for (let x = cx - 1; x <= cx + 1; x++) m[y * W + x] = (y % 17 === 8) ? T.BRIDGE : T.WATER;
+    }
+    return m;
+  })();
+  let tiles = {};          // index -> {t, r (regrow at, server ms), o (builder name), oid (builder id)}
+  let offset = 0;
+  const now = () => Date.now() + offset;
+  function effFrom(o, i) { if (!o) return base[i]; if (o.r && now() > o.r) return base[i]; return o.t; }
+  const eff = (i) => effFrom(tiles[i], i);
+  const at = (x, y) => (x < 0 || y < 0 || x >= W || y >= H) ? T.WATER : eff(y * W + x);
+  const walkable = (t) => t === T.GRASS || t === T.STUMP || t === T.RUBBLE || t === T.BRIDGE;
+  const isHome = (t) => t === T.HUT || t === T.HOUSE;
+
+  // ---------- me ----------
+  let me = null;
+  try { me = JSON.parse(store.get("osada-me") || "null"); } catch (e) {}
+  if (!me || !me.id) me = { id: "p" + Math.random().toString(36).slice(2, 10), name: "", wood: 0, stone: 0, toolLvl: 0, pts: 0, c: SHIRTS[Math.floor(Math.random() * SHIRTS.length)] };
+  if (me.bed === undefined) me.bed = null;
+  const saveMe = () => store.set("osada-me", JSON.stringify(me));
+  const hitsFor = (t) => Math.max(1, (t === T.TREE ? 3 : 4) - me.toolLvl);
+  const myHome = (i) => i !== null && i !== undefined && isHome(eff(i)) && tiles[i] && tiles[i].oid === me.id;
+
+  const S = { hp: {}, fx: [], marker: null };
+  const P = { x: 60, y: 60, fx: 60, fy: 60, path: [], job: null, cd: 0, swing: 0, dir: 1 };
+  let room = null;         // when inside: {i, w, h, items, door:[x,y]}
+  let homesLocal = {};     // offline storage of furniture
+  let homeRef = null;
+  let others = {};
+  let mode = "idle";       // idle | spawn | play | watch
+  let selected = null, followIdx = 0;
+  let tile = 32, camX = 60 * 32, camY = 60 * 32, dpr = 1;
+
+  // ---------- network ----------
+  const online = typeof firebase !== "undefined" && !String(FIREBASE_CONFIG.apiKey).startsWith("DOPLN");
+  let db = null, myRef = null;
+  if (online) {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.database();
+    db.ref(".info/serverTimeOffset").on("value", (s) => { offset = s.val() || 0; });
+    db.ref("world/tiles").on("value", (s) => { tiles = s.val() || {}; if (!$("mapView").hidden) drawMini(); });
+    db.ref("players").on("value", (s) => {
+      const v = s.val() || {}, next = {};
+      for (const [id, p] of Object.entries(v)) {
+        if (id === me.id || !p || typeof p.x !== "number" || now() - (p.ts || 0) > 120000) continue;
+        const old = others[id];
+        next[id] = { n: String(p.n || "Hráč").slice(0, 16), x: p.x, y: p.y, c: SHIRTS.includes(p.c) ? p.c : SHIRTS[0], act: p.a || 0,
+          inside: typeof p.in === "number", fx: old ? old.fx : p.x, fy: old ? old.fy : p.y, dir: old ? old.dir : 1, swing: 0 };
+      }
+      others = next; $("sOnline").textContent = Object.keys(others).length + (mode === "play" ? 1 : 0);
+    });
+    db.ref("scores").orderByChild("p").limitToLast(5).on("value", (s) => {
+      const rows = []; s.forEach((c) => { const v = c.val(); if (v && v.p > 0) rows.push({ id: c.key, n: String(v.n || "Hráč").slice(0, 16), p: v.p | 0 }); });
+      rows.sort((a, b) => b.p - a.p); renderTop(rows);
+    });
+  } else {
+    try { homesLocal = JSON.parse(store.get("osada-homes") || "{}"); tiles = JSON.parse(store.get("osada-tiles") || "{}"); } catch (e) {}
+    renderTop([]);
+  }
+  const TS = () => online ? firebase.database.ServerValue.TIMESTAMP : Date.now();
+  function sendPos(extra) {
+    if (!online || mode !== "play") return;
+    myRef.update(Object.assign({ x: P.x, y: P.y, ts: TS() }, extra || {}));
+  }
+  // claim a tile change so only one player gets each tree, rock or building spot
+  function claim(i, test, value, done) {
+    if (!online) {
+      if (test(eff(i))) { tiles[i] = value; store.set("osada-tiles", JSON.stringify(tiles)); done(true); } else done(false);
+      return;
+    }
+    db.ref("world/tiles/" + i).transaction((cur) => test(effFrom(cur, i)) ? value : undefined, (err, ok) => done(!err && ok), false);
+  }
+  function saveScore() { saveMe(); if (online && me.name) db.ref("scores/" + me.id).set({ n: me.name, p: me.pts }); }
+
+  // ---------- grids & pathfinding ----------
+  const outside = { w: W, h: H, walk: (x, y) => walkable(at(x, y)) };
+  function roomGrid() {
+    return { w: room.w, h: room.h, walk: (x, y) => {
+      if (x === room.door[0] && y === room.door[1]) return true;
+      return x >= 1 && y >= 1 && x < room.w - 1 && y < room.h - 1 && !room.items[y * room.w + x];
+    } };
+  }
+  const grid = () => room ? roomGrid() : outside;
+  function pathTo(tx, ty, adjacent, g = grid()) {
+    const sx = P.x, sy = P.y, gw = g.w;
+    const goal = (x, y) => adjacent ? (Math.abs(x - tx) + Math.abs(y - ty) === 1) : (x === tx && y === ty);
+    if (goal(sx, sy)) return [];
+    const prev = new Int32Array(g.w * g.h).fill(-2), q = [sy * gw + sx]; prev[sy * gw + sx] = -1;
+    for (let h = 0; h < q.length; h++) {
+      const i = q[h], x = i % gw, y = (i / gw) | 0;
+      for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+        const nx = x + dx, ny = y + dy;
+        if (nx < 0 || ny < 0 || nx >= g.w || ny >= g.h) continue;
+        const ni = ny * gw + nx;
+        if (prev[ni] !== -2 || !g.walk(nx, ny)) continue;
+        prev[ni] = i;
+        if (goal(nx, ny)) { const out = []; let c = ni; while (c !== sy * gw + sx) { out.unshift([c % gw, (c / gw) | 0]); c = prev[c]; } return out; }
+        q.push(ni);
+      }
+    }
+    return null;
+  }
+
+  // ---------- actions ----------
+  const canAfford = (c) => me.wood >= c.wood && me.stone >= c.stone;
+  function order(tx, ty) {
+    if (room) return orderInside(tx, ty);
+    const t = at(tx, ty), i = ty * W + tx;
+    if (selected) {
+      const b = BUILD[selected];
+      if (!walkable(t) || t === T.BRIDGE || (tx === P.x && ty === P.y)) return banner("Stavět jde jen na volnou trávu");
+      if (!canAfford(b)) return banner(`Na ${b.name.toLowerCase()} ti chybí suroviny`);
+      const path = pathTo(tx, ty, true); if (!path) return banner("Tam se nedostaneš");
+      P.path = path; P.job = { kind: "build", x: tx, y: ty, b: selected, prog: 0 }; S.marker = { x: tx, y: ty }; return;
+    }
+    if (isHome(t)) {
+      if (!myHome(i)) return banner(`Tohle je dům hráče ${(tiles[i] && tiles[i].o) || "neznámého"}`);
+      const path = pathTo(tx, ty, true); if (!path) return banner("K domu se nedostaneš");
+      P.path = path; P.job = { kind: "enter", x: tx, y: ty }; S.marker = { x: tx, y: ty }; return;
+    }
+    if (t === T.TREE || t === T.ROCK) {
+      const path = pathTo(tx, ty, true); if (!path) return banner("Tam se nedostaneš");
+      P.path = path; P.job = { kind: "harvest", x: tx, y: ty }; S.marker = { x: tx, y: ty }; return;
+    }
+    if (walkable(t)) { const path = pathTo(tx, ty, false); if (path) { P.path = path; P.job = null; S.marker = { x: tx, y: ty }; } }
+  }
+  function orderInside(tx, ty) {
+    const g = roomGrid(), cell = ty * room.w + tx, item = room.items[cell];
+    const isDoor = tx === room.door[0] && ty === room.door[1];
+    if (selected && !isDoor) {
+      const f = FURN[selected];
+      if (item || !g.walk(tx, ty) || (tx === P.x && ty === P.y)) return banner("Sem nic postavit nejde");
+      if (!canAfford(f)) return banner(`Na ${f.name.toLowerCase()} ti chybí suroviny`);
+      if (selected === "bed" && Object.values(room.items).includes(1)) return banner("Postel už tady máš");
+      // keep the way to the door free
+      room.items[cell] = f.id; const free = pathTo(room.door[0], room.door[1], false); delete room.items[cell];
+      if (!free) return banner("Tím by sis zatarasil dveře");
+      const path = pathTo(tx, ty, true); if (!path) return banner("Tam se nedostaneš");
+      P.path = path; P.job = { kind: "furnish", x: tx, y: ty, f: selected, prog: 0 }; S.marker = { x: tx, y: ty }; return;
+    }
+    if (item === 1) { me.bed = room.i; saveMe(); return banner("Tady se budeš objevovat, když přijdeš do hry"); }
+    if (item) return;
+    if (g.walk(tx, ty)) { const path = pathTo(tx, ty, false); if (path) { P.path = path; P.job = isDoor ? { kind: "exit" } : null; S.marker = { x: tx, y: ty }; } }
+  }
+  function buyTool() {
+    const c = TOOL_COST[me.toolLvl]; if (!c) return;
+    if (!canAfford(c)) return banner("Na nástroje ti chybí suroviny");
+    me.wood -= c.wood; me.stone -= c.stone; me.toolLvl++; saveMe();
+    pop(P.x, P.y, "Nástroje +1", "#8fd16a"); ui();
+  }
+  const pop = (x, y, text, color) => S.fx.push({ x: x + .5, y: y + .2, text, color, life: 1.1, room: !!room });
+  function nearest(type, ox, oy, maxD) {
+    let best = null, bd = 1e9;
+    for (let y = Math.max(0, oy - maxD); y <= Math.min(H - 1, oy + maxD); y++) for (let x = Math.max(0, ox - maxD); x <= Math.min(W - 1, ox + maxD); x++) {
+      if (eff(y * W + x) !== type) continue;
+      const d = Math.abs(x - ox) + Math.abs(y - oy); if (d < bd && d <= maxD) { bd = d; best = [x, y]; }
+    }
+    return best;
+  }
+
+  // ---------- houses ----------
+  function enterHouse(i) {
+    const hut = eff(i) === T.HUT, w = hut ? 7 : 9, h = hut ? 6 : 7;
+    room = { i, w, h, items: {}, door: [Math.floor(w / 2), h - 1] };
+    const load = (v) => { room && room.i === i && (room.items = (v && v.items) || {}); };
+    if (online) { homeRef = db.ref("homes/" + i); homeRef.on("value", (s) => load(s.val())); }
+    else load(homesLocal[i]);
+    P.x = room.door[0]; P.y = room.door[1] - 1; P.fx = P.x; P.fy = P.y; P.path = []; P.job = null; S.marker = null;
+    selected = null; sendPos({ in: i }); ui();
+    banner(hut ? "Jsi ve své chatce. Postav si postel." : "Jsi ve svém domě. Postav si postel.");
+  }
+  function exitHouse() {
+    const i = room.i, hx = i % W, hy = (i / W) | 0;
+    if (homeRef) { homeRef.off(); homeRef = null; }
+    room = null; selected = null;
+    const spot = [[0,1],[1,0],[-1,0],[0,-1],[1,1],[-1,1]].map(([dx, dy]) => [hx + dx, hy + dy]).find(([x, y]) => walkable(at(x, y))) || freeNear(hx, hy);
+    P.x = spot[0]; P.y = spot[1]; P.fx = P.x; P.fy = P.y; P.path = []; P.job = null; S.marker = null;
+    camX = P.fx * tile; camY = P.fy * tile;
+    sendPos({ in: null }); ui();
+  }
+  function placeFurniture(cell, f) {
+    room.items[cell] = f.id;
+    if (online) db.ref(`homes/${room.i}/items/${cell}`).set(f.id);
+    else { homesLocal[room.i] = { items: room.items }; store.set("osada-homes", JSON.stringify(homesLocal)); }
+  }
+  function freeNear(x, y) {
+    for (let r = 0; r < 40; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+      const nx = x + dx, ny = y + dy;
+      if (nx >= 0 && ny >= 0 && nx < W && ny < H && walkable(at(nx, ny)) && at(nx, ny) !== T.BRIDGE) return [nx, ny];
+    }
+    return [60, 60];
+  }
+
+  // ---------- update ----------
+  let busy = false, heartbeat = 0;
+  function update(dt) {
+    for (const o of Object.values(others)) {
+      const dx = o.x - o.fx, dy = o.y - o.fy;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) { o.fx = o.x; o.fy = o.y; }
+      else { o.fx += dx * Math.min(1, dt * 10); o.fy += dy * Math.min(1, dt * 10); }
+      if (Math.abs(dx) > .05) o.dir = Math.sign(dx);
+      o.moving = Math.hypot(dx, dy) > .05;
+      o.swing = o.act && now() - o.act < 800 ? (Math.sin(now() / 50) > 0 ? .15 : 0) : 0;
+    }
+    for (const f of S.fx) { f.life -= dt; f.y -= dt * .8; }
+    S.fx = S.fx.filter((f) => f.life > 0);
+    if (mode !== "play") return;
+    heartbeat -= dt; if (heartbeat <= 0) { heartbeat = 30; sendPos(); }
+    const g = grid();
+    if (P.path.length) {
+      const [nx, ny] = P.path[0];
+      if (!g.walk(nx, ny)) { P.path = []; P.job = null; S.marker = null; }
+      else {
+        const sp = (room ? 4 : 5.5) * dt, dx = nx - P.fx, dy = ny - P.fy, d = Math.hypot(dx, dy);
+        if (dx) P.dir = Math.sign(dx);
+        if (d <= sp) { P.fx = nx; P.fy = ny; P.x = nx; P.y = ny; P.path.shift(); if (!room) sendPos(); }
+        else { P.fx += dx / d * sp; P.fy += dy / d * sp; }
+      }
+    } else if (P.job && !busy) {
+      const j = P.job;
+      if (j.kind === "exit") { if (room && P.x === room.door[0] && P.y === room.door[1]) exitHouse(); else P.job = null; return; }
+      if (j.kind === "enter") { const i = j.y * W + j.x; P.job = null; if (myHome(i)) enterHouse(i); return; }
+      if (j.x !== P.x) P.dir = Math.sign(j.x - P.x);
+      P.cd -= dt;
+      if (j.kind === "furnish") {
+        const f = FURN[j.f], cell = j.y * room.w + j.x;
+        if (room.items[cell] || !canAfford(f)) { P.job = null; S.marker = null; }
+        else {
+          if (P.cd <= 0) { P.cd = .25; P.swing = .18; j.prog += .34; }
+          if (j.prog >= 1) {
+            me.wood -= f.wood; me.stone -= f.stone; me.pts += f.pts;
+            placeFurniture(cell, f);
+            if (j.f === "bed") { me.bed = room.i; banner("Postel hotová. Příště se můžeš objevit tady."); }
+            saveScore(); pop(j.x, j.y, `+${f.pts} bodů`, "#8fd16a"); P.job = null; S.marker = null; selected = null; ui();
+          }
+        }
+      } else if (j.kind === "harvest") {
+        const i = j.y * W + j.x, t = eff(i);
+        if (t !== T.TREE && t !== T.ROCK) { P.job = null; S.marker = null; delete S.hp[i]; }
+        else if (P.cd <= 0) {
+          P.cd = .32; P.swing = .2; S.hp[i] = (S.hp[i] || 0) + 1;
+          if (S.hp[i] === 1) sendPos({ a: TS() });
+          if (S.hp[i] >= hitsFor(t)) {
+            busy = true;
+            const isTree = t === T.TREE;
+            claim(i, (e) => e === t, { t: isTree ? T.STUMP : T.RUBBLE, r: now() + (isTree ? 25000 : 35000) }, (ok) => {
+              busy = false; delete S.hp[i];
+              if (ok) {
+                if (isTree) { me.wood += 3; pop(j.x, j.y, "+3 dřevo", "#e0a45a"); } else { me.stone += 2; pop(j.x, j.y, "+2 kámen", "#a9b8c6"); }
+                saveMe(); ui();
+              } else pop(j.x, j.y, "Někdo byl rychlejší", "#ff8a6b");
+              const next = nearest(t, j.x, j.y, 4);
+              if (next) { P.job = { kind: "harvest", x: next[0], y: next[1] }; P.path = pathTo(next[0], next[1], true) || []; S.marker = { x: next[0], y: next[1] }; }
+              else { P.job = null; S.marker = null; }
+            });
+          }
+        }
+      } else if (j.kind === "build") {
+        const b = BUILD[j.b], i = j.y * W + j.x, t = eff(i);
+        if (!walkable(t) || !canAfford(b)) { P.job = null; S.marker = null; }
+        else {
+          if (P.cd <= 0) { P.cd = .25; P.swing = .18; j.prog += .25; }
+          if (j.prog >= 1) {
+            busy = true;
+            claim(i, (e) => walkable(e) && e !== T.BRIDGE, { t: b.tile, o: me.name, oid: me.id }, (ok) => {
+              busy = false; P.job = null; S.marker = null;
+              if (!ok) return banner("Tohle místo už někdo zabral");
+              me.wood -= b.wood; me.stone -= b.stone; me.pts += b.pts; saveScore(); selected = null;
+              pop(j.x, j.y, `+${b.pts} bodů`, "#8fd16a"); ui();
+              banner("Hotovo! Ťukni na svůj dům a vejdi dovnitř.", 3500);
+            });
+          }
+        }
+      }
+    }
+    if (P.swing > 0) P.swing -= dt;
+  }
+
+  // ---------- drawing ----------
+  function hash(x, y) { let h = x * 374761393 + y * 668265263; h = (h ^ (h >> 13)) * 1274126177; return ((h ^ (h >> 16)) >>> 0) / 4294967296; }
+  function resize() {
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    const r = cv.getBoundingClientRect();
+    cv.width = Math.max(1, Math.round(r.width * dpr)); cv.height = Math.max(1, Math.round(r.height * dpr));
+    tile = Math.max(28, Math.min(52, Math.floor(r.width / 11)));
+  }
+  function camTarget() {
+    if (mode === "play") return [P.fx, P.fy];
+    const list = Object.values(others).filter((o) => !o.inside);
+    if (!list.length) return [60, 60];
+    const o = list[followIdx % list.length]; return [o.fx, o.fy];
+  }
+  function draw(nowMs) {
+    const w = cv.width / dpr, h = cv.height / dpr, t = nowMs / 1000;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (room && mode === "play") return drawRoom(w, h, t);
+    ctx.fillStyle = "#2c5a2a"; ctx.fillRect(0, 0, w, h);
+    const [fx, fy] = camTarget();
+    const tx = fx * tile + tile / 2 - w / 2, ty = fy * tile + tile / 2 - h / 2;
+    const maxX = W * tile - w, maxY = H * tile - h;
+    const cx = maxX < 0 ? maxX / 2 : Math.max(0, Math.min(maxX, tx));
+    const cy = maxY < 0 ? maxY / 2 : Math.max(0, Math.min(maxY, ty));
+    if (Math.abs(cx - camX) > w * 2 || Math.abs(cy - camY) > h * 2) { camX = cx; camY = cy; }
+    camX += (cx - camX) * .15; camY += (cy - camY) * .15;
+    ctx.save(); ctx.translate(-Math.round(camX), -Math.round(camY));
+    const x0 = Math.max(0, Math.floor(camX / tile)), y0 = Math.max(0, Math.floor(camY / tile));
+    const x1 = Math.min(W - 1, Math.ceil((camX + w) / tile)), y1 = Math.min(H - 1, Math.ceil((camY + h) / tile));
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) drawGround(x, y, t);
+    const people = Object.values(others).filter((o) => !o.inside).map((o) => ({ fx: o.fx, fy: o.fy, dir: o.dir, swing: o.swing, moving: o.moving, c: o.c, n: o.n, me: false }));
+    if (mode === "play") people.push({ fx: P.fx, fy: P.fy, dir: P.dir, swing: P.swing, moving: P.path.length > 0, c: me.c, n: me.name, me: true });
+    for (let y = y0; y <= y1; y++) {
+      for (let x = x0; x <= x1; x++) drawObj(x, y, t);
+      for (const p of people) if (Math.round(p.fy) === y) drawPerson(p, t, tile, 0, 0);
+    }
+    if (S.marker && mode === "play") {
+      const m = S.marker, s = tile, pulse = 2 + Math.sin(t * 6) * 1.5;
+      ctx.strokeStyle = "rgba(255,240,180,.9)"; ctx.lineWidth = 2; ctx.strokeRect(m.x * s + pulse, m.y * s + pulse, s - pulse * 2, s - pulse * 2);
+    }
+    ctx.textAlign = "center";
+    for (const p of people) nameTag(p, p.fx * tile + tile / 2, p.fy * tile + tile * .02, tile);
+    floaters(false, tile, 0, 0);
+    ctx.restore();
+  }
+  function nameTag(p, X, Y, s) {
+    ctx.font = `700 ${Math.round(s * .32)}px "Atkinson Hyperlegible", sans-serif`;
+    ctx.fillStyle = "rgba(11,18,14,.7)"; const tw = ctx.measureText(p.n).width + 8;
+    ctx.fillRect(X - tw / 2, Y - s * .3, tw, s * .36);
+    ctx.fillStyle = p.me ? "#8fd16a" : "#eef3e6"; ctx.fillText(p.n, X, Y);
+  }
+  function floaters(inRoom, s, ox, oy) {
+    ctx.font = `700 ${Math.round(s * .42)}px "Pixelify Sans", monospace`; ctx.textAlign = "center";
+    for (const f of S.fx) {
+      if (f.room !== inRoom) continue;
+      ctx.globalAlpha = Math.min(1, f.life * 1.5);
+      ctx.fillStyle = "#0b120e"; ctx.fillText(f.text, ox + f.x * s + 1, oy + f.y * s + 1);
+      ctx.fillStyle = f.color; ctx.fillText(f.text, ox + f.x * s, oy + f.y * s);
+    }
+    ctx.globalAlpha = 1;
+  }
+  let roomView = { s: 48, ox: 0, oy: 0 };
+  function drawRoom(w, h, t) {
+    ctx.fillStyle = "#120c07"; ctx.fillRect(0, 0, w, h);
+    const s = Math.floor(Math.min(64, (w - 16) / room.w, (h - 16) / room.h));
+    const ox = Math.floor((w - s * room.w) / 2), oy = Math.floor((h - s * room.h) / 2);
+    roomView = { s, ox, oy };
+    const stoneHome = eff(room.i) === T.HOUSE;
+    for (let y = 0; y < room.h; y++) for (let x = 0; x < room.w; x++) {
+      const X = ox + x * s, Y = oy + y * s;
+      const wall = x === 0 || y === 0 || x === room.w - 1 || y === room.h - 1;
+      const door = x === room.door[0] && y === room.door[1];
+      if (door) {
+        ctx.fillStyle = "#b07d4a"; ctx.fillRect(X, Y, s, s);
+        ctx.fillStyle = "#2a1b10"; ctx.fillRect(X + s * .12, Y + s * .2, s * .76, s * .8);
+        ctx.fillStyle = "#6b9e45"; ctx.fillRect(X + s * .12, Y + s * .7, s * .76, s * .3);
+      } else if (wall) {
+        ctx.fillStyle = stoneHome ? "#7c848d" : "#6e4a2a"; ctx.fillRect(X, Y, s, s);
+        ctx.fillStyle = stoneHome ? "#646b73" : "#583a20";
+        if (stoneHome) { ctx.fillRect(X, Y + s * .5, s, 2); ctx.fillRect(X + ((x + y) % 2 ? s * .5 : 0), Y, 2, s * .5); ctx.fillRect(X + ((x + y) % 2 ? 0 : s * .5), Y + s * .5, 2, s * .5); }
+        else for (let k = 1; k < 4; k++) ctx.fillRect(X, Y + s * k / 4, s, 2);
+        if (y === 0 && x > 0 && x < room.w - 1 && x % 3 === 1) { // window
+          ctx.fillStyle = "#9fd3f0"; ctx.fillRect(X + s * .2, Y + s * .2, s * .6, s * .5);
+          ctx.fillStyle = "#3e2a18"; ctx.fillRect(X + s * .48, Y + s * .2, 3, s * .5); ctx.fillRect(X + s * .2, Y + s * .43, s * .6, 3);
+        }
+      } else {
+        ctx.fillStyle = (y % 2) ? "#b07d4a" : "#a87445"; ctx.fillRect(X, Y, s, s);
+        ctx.fillStyle = "#946238"; ctx.fillRect(X, Y + s - 2, s, 2); ctx.fillRect(X + ((y % 2) ? s * .35 : s * .7), Y, 2, s);
+      }
+    }
+    for (const [cell, id] of Object.entries(room.items)) {
+      const x = cell % room.w, y = Math.floor(cell / room.w); drawFurniture(id, ox + x * s, oy + y * s, s, t);
+    }
+    if (S.marker) { const m = S.marker; ctx.strokeStyle = "rgba(255,240,180,.9)"; ctx.lineWidth = 2; ctx.strokeRect(ox + m.x * s + 3, oy + m.y * s + 3, s - 6, s - 6); }
+    drawPerson({ fx: P.fx, fy: P.fy, dir: P.dir, swing: P.swing, moving: P.path.length > 0, c: me.c }, t, s, ox, oy);
+    floaters(true, s, ox, oy);
+  }
+  function drawFurniture(id, X, Y, s, t) {
+    if (id === 1) { // bed
+      ctx.fillStyle = "rgba(0,0,0,.2)"; ctx.fillRect(X + s * .1, Y + s * .14, s * .84, s * .84);
+      ctx.fillStyle = "#6b4a2b"; ctx.fillRect(X + s * .08, Y + s * .06, s * .84, s * .88);
+      ctx.fillStyle = "#c2523f"; ctx.fillRect(X + s * .14, Y + s * .38, s * .72, s * .5);
+      ctx.fillStyle = "#a8402f"; ctx.fillRect(X + s * .14, Y + s * .38, s * .72, s * .06);
+      ctx.fillStyle = "#f2efe6"; ctx.fillRect(X + s * .2, Y + s * .12, s * .6, s * .2);
+    } else if (id === 2) { // table
+      ctx.fillStyle = "rgba(0,0,0,.2)"; ctx.fillRect(X + s * .16, Y + s * .3, s * .74, s * .62);
+      ctx.fillStyle = "#5a3d24"; ctx.fillRect(X + s * .16, Y + s * .5, s * .08, s * .38); ctx.fillRect(X + s * .76, Y + s * .5, s * .08, s * .38);
+      ctx.fillStyle = "#8a5d31"; ctx.fillRect(X + s * .1, Y + s * .26, s * .8, s * .3);
+      ctx.fillStyle = "#e9e2d0"; ctx.fillRect(X + s * .56, Y + s * .14, s * .14, s * .16);
+    } else if (id === 3) { // fireplace
+      ctx.fillStyle = "#6d747c"; ctx.fillRect(X + s * .06, Y + s * .1, s * .88, s * .84);
+      ctx.fillStyle = "#545a61"; ctx.fillRect(X + s * .06, Y + s * .1, s * .88, s * .12);
+      ctx.fillStyle = "#1c1410"; ctx.fillRect(X + s * .22, Y + s * .36, s * .56, s * .5);
+      const fl = Math.sin(t * 12) * s * .04;
+      ctx.fillStyle = "#e86f2c"; ctx.beginPath(); ctx.moveTo(X + s * .3, Y + s * .84); ctx.lineTo(X + s * .5, Y + s * .44 + fl); ctx.lineTo(X + s * .7, Y + s * .84); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#f4cf6a"; ctx.beginPath(); ctx.moveTo(X + s * .4, Y + s * .84); ctx.lineTo(X + s * .5, Y + s * .6 - fl); ctx.lineTo(X + s * .6, Y + s * .84); ctx.closePath(); ctx.fill();
+    }
+  }
+  function drawGround(x, y, t) {
+    const s = tile, X = x * s, Y = y * s, v = eff(y * W + x), r = hash(x, y);
+    if (v === T.WATER || v === T.BRIDGE) {
+      ctx.fillStyle = "#3b7fb0"; ctx.fillRect(X, Y, s, s);
+      ctx.strokeStyle = "rgba(200,235,255,.45)"; ctx.lineWidth = 2; ctx.beginPath();
+      const o = Math.sin(t * 2 + x + y) * s * 0.1;
+      ctx.moveTo(X + s * .2 + o, Y + s * .4); ctx.lineTo(X + s * .5 + o, Y + s * .4);
+      ctx.moveTo(X + s * .45 - o, Y + s * .72); ctx.lineTo(X + s * .78 - o, Y + s * .72);
+      ctx.stroke();
+      if (v === T.BRIDGE) {
+        ctx.fillStyle = "#8a5d31"; ctx.fillRect(X, Y + s * .12, s, s * .76);
+        ctx.fillStyle = "#a8743f"; for (let k = 0; k < 4; k++) ctx.fillRect(X + k * s / 4 + 1, Y + s * .14, s / 4 - 2, s * .72);
+        ctx.fillStyle = "#5a3d24"; ctx.fillRect(X, Y + s * .1, s, 3); ctx.fillRect(X, Y + s * .86, s, 3);
+      }
+      return;
+    }
+    ctx.fillStyle = r < .5 ? "#5d9e3f" : "#64a744"; ctx.fillRect(X, Y, s, s);
+    if (r > .7) { ctx.fillStyle = "#4f8a35"; ctx.fillRect(X + s * r * .6, Y + s * .3, 2, 5); ctx.fillRect(X + s * r * .6 + 4, Y + s * .3 + 2, 2, 4); }
+    if (r < .06) { ctx.fillStyle = "#f2e37a"; ctx.fillRect(X + s * .3, Y + s * .6, 3, 3); }
+  }
+  function drawObj(x, y, t) {
+    const s = tile, X = x * s, Y = y * s, i = y * W + x, v = eff(i);
+    const shake = P.job && P.job.x === x && P.job.y === y && P.swing > 0 ? Math.sin(t * 60) * 2 : 0;
+    if (v === T.TREE) {
+      ctx.fillStyle = "rgba(0,0,0,.18)"; ctx.beginPath(); ctx.ellipse(X + s / 2, Y + s * .88, s * .34, s * .1, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = "#6b4a2b"; ctx.fillRect(X + s * .43, Y + s * .55, s * .14, s * .33);
+      const cx = X + s / 2 + shake;
+      ctx.fillStyle = "#2f6b2c"; ctx.beginPath(); ctx.arc(cx, Y + s * .38, s * .36, 0, 7); ctx.fill();
+      ctx.fillStyle = "#3d8a37"; ctx.beginPath(); ctx.arc(cx - s * .08, Y + s * .3, s * .24, 0, 7); ctx.fill();
+      ctx.fillStyle = "#57a94a"; ctx.beginPath(); ctx.arc(cx - s * .14, Y + s * .22, s * .09, 0, 7); ctx.fill();
+      dmg(i, v, X, Y);
+    } else if (v === T.ROCK) {
+      const ox = X + shake;
+      ctx.fillStyle = "rgba(0,0,0,.18)"; ctx.beginPath(); ctx.ellipse(X + s / 2, Y + s * .84, s * .36, s * .1, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = "#7d8893"; ctx.beginPath();
+      ctx.moveTo(ox + s * .14, Y + s * .82); ctx.lineTo(ox + s * .22, Y + s * .42); ctx.lineTo(ox + s * .5, Y + s * .22);
+      ctx.lineTo(ox + s * .8, Y + s * .4); ctx.lineTo(ox + s * .88, Y + s * .82); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#a9b8c6"; ctx.beginPath();
+      ctx.moveTo(ox + s * .26, Y + s * .44); ctx.lineTo(ox + s * .5, Y + s * .28); ctx.lineTo(ox + s * .56, Y + s * .5); ctx.lineTo(ox + s * .32, Y + s * .58); ctx.closePath(); ctx.fill();
+      dmg(i, v, X, Y);
+    } else if (v === T.STUMP) {
+      ctx.fillStyle = "#6b4a2b"; ctx.fillRect(X + s * .38, Y + s * .62, s * .24, s * .16);
+      ctx.fillStyle = "#c79a62"; ctx.beginPath(); ctx.ellipse(X + s / 2, Y + s * .62, s * .12, s * .05, 0, 0, 7); ctx.fill();
+    } else if (v === T.RUBBLE) {
+      ctx.fillStyle = "#8d98a3";
+      ctx.fillRect(X + s * .3, Y + s * .66, s * .12, s * .09); ctx.fillRect(X + s * .52, Y + s * .7, s * .16, s * .1); ctx.fillRect(X + s * .44, Y + s * .58, s * .08, s * .07);
+    } else if (v === T.HUT) {
+      ctx.fillStyle = "rgba(0,0,0,.2)"; ctx.fillRect(X + s * .12, Y + s * .84, s * .8, s * .08);
+      ctx.fillStyle = "#a8743f"; ctx.fillRect(X + s * .16, Y + s * .44, s * .68, s * .42);
+      ctx.fillStyle = "#8a5d31"; for (let k = 0; k < 3; k++) ctx.fillRect(X + s * .16, Y + s * (.52 + k * .12), s * .68, 2);
+      ctx.fillStyle = "#c2523f"; ctx.beginPath(); ctx.moveTo(X + s * .06, Y + s * .48); ctx.lineTo(X + s / 2, Y + s * .1); ctx.lineTo(X + s * .94, Y + s * .48); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#4a2f1a"; ctx.fillRect(X + s * .42, Y + s * .62, s * .16, s * .24);
+    } else if (v === T.HOUSE) {
+      ctx.fillStyle = "rgba(0,0,0,.2)"; ctx.fillRect(X + s * .08, Y + s * .86, s * .86, s * .08);
+      ctx.fillStyle = "#6d6d73"; ctx.fillRect(X + s * .66, Y + s * .08, s * .1, s * .24);
+      ctx.fillStyle = "#b5bcc4"; ctx.fillRect(X + s * .12, Y + s * .4, s * .76, s * .48);
+      ctx.fillStyle = "#97a0aa"; for (let k = 0; k < 4; k++) for (let m = 0; m < 3; m++) ctx.fillRect(X + s * (.14 + m * .25 + (k % 2) * .12), Y + s * (.44 + k * .11), s * .1, 2);
+      ctx.fillStyle = "#3e4a5c"; ctx.beginPath(); ctx.moveTo(X + s * .04, Y + s * .44); ctx.lineTo(X + s / 2, Y + s * .06); ctx.lineTo(X + s * .96, Y + s * .44); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#f4cf6a"; ctx.fillRect(X + s * .2, Y + s * .54, s * .14, s * .12); ctx.fillRect(X + s * .66, Y + s * .54, s * .14, s * .12);
+      ctx.fillStyle = "#3b2a1c"; ctx.fillRect(X + s * .43, Y + s * .64, s * .14, s * .24);
+      const sm = (t * .6) % 1; ctx.fillStyle = `rgba(230,230,230,${.5 - sm * .5})`; ctx.beginPath(); ctx.arc(X + s * .71, Y + s * (.05 - sm * .2), s * (.05 + sm * .06), 0, 7); ctx.fill();
+    }
+  }
+  function dmg(i, v, X, Y) {
+    if (!S.hp[i]) return;
+    const s = tile, frac = 1 - S.hp[i] / hitsFor(v);
+    ctx.fillStyle = "#0b120e"; ctx.fillRect(X + s * .15, Y + s * .02, s * .7, 5);
+    ctx.fillStyle = v === T.TREE ? "#e0a45a" : "#a9b8c6"; ctx.fillRect(X + s * .15 + 1, Y + s * .02 + 1, (s * .7 - 2) * frac, 3);
+  }
+  function drawPerson(p, t, s, ox, oy) {
+    const X = ox + p.fx * s, Y = oy + p.fy * s;
+    const bob = p.moving ? Math.abs(Math.sin(t * 14)) * s * .05 : 0, by = Y - bob;
+    ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.beginPath(); ctx.ellipse(X + s / 2, Y + s * .88, s * .2, s * .07, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = "#2b3a6b"; ctx.fillRect(X + s * .38, by + s * .7, s * .09, s * .16); ctx.fillRect(X + s * .53, by + s * .7, s * .09, s * .16);
+    ctx.fillStyle = p.c; ctx.fillRect(X + s * .34, by + s * .45, s * .32, s * .28);
+    ctx.fillStyle = "#f1c49b"; ctx.fillRect(X + s * .37, by + s * .24, s * .26, s * .22);
+    ctx.fillStyle = "#1b1b1b"; ctx.fillRect(X + s * (p.dir > 0 ? .54 : .41), by + s * .32, 3, 3);
+    ctx.fillStyle = "#e8b64c"; ctx.fillRect(X + s * .3, by + s * .2, s * .4, s * .07); ctx.fillRect(X + s * .38, by + s * .12, s * .24, s * .1);
+    ctx.save();
+    ctx.translate(X + s * (p.dir > 0 ? .68 : .32), by + s * .55);
+    ctx.rotate((p.swing > 0 ? -1.4 + (.2 - p.swing) * 9 : -.5) * p.dir);
+    ctx.fillStyle = "#7a5230"; ctx.fillRect(-1.5, -s * .32, 3, s * .32);
+    ctx.fillStyle = "#c9d2da"; ctx.fillRect(p.dir > 0 ? 0 : -s * .12, -s * .34, s * .12, s * .09);
+    ctx.restore();
+  }
+
+  // ---------- world map ----------
+  const MINI = { [T.GRASS]: "#5d9e3f", [T.TREE]: "#2f6b2c", [T.ROCK]: "#8d98a3", [T.WATER]: "#3b7fb0", [T.BRIDGE]: "#a8743f",
+    [T.HUT]: "#e8574a", [T.HOUSE]: "#e8574a", [T.STUMP]: "#6a9a45", [T.RUBBLE]: "#7aa252" };
+  function drawMini() {
+    const mm = $("mm"), m = mm.getContext("2d"), k = mm.width / W;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { m.fillStyle = MINI[eff(y * W + x)]; m.fillRect(x * k, y * k, k, k); }
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { // make homes easier to spot
+      const v = eff(y * W + x);
+      if (isHome(v)) { m.fillStyle = myHome(y * W + x) ? "#8fd16a" : "#e8574a"; m.fillRect(x * k - 1, y * k - 1, k + 2, k + 2); }
+    }
+    for (const o of Object.values(others)) { if (o.inside) continue; m.fillStyle = "#ffffff"; m.fillRect(o.x * k - 2, o.y * k - 2, 5, 5); }
+    if (mode === "play") { m.fillStyle = "#0b120e"; m.fillRect(P.x * k - 4, P.y * k - 4, 9, 9); m.fillStyle = "#8fd16a"; m.fillRect(P.x * k - 3, P.y * k - 3, 7, 7); }
+  }
+  function openMap(kind) {
+    const spawn = kind === "spawn";
+    $("mapEyebrow").textContent = spawn ? "Krok 2 ze 2" : "Svět osady";
+    $("mapTitle").textContent = spawn ? "Ťukni na mapu, kde začneš" : (mode === "play" ? "Tady jsi ty, zelený čtvereček" : "Bílé tečky jsou hráči");
+    $("bedSpawn").hidden = !(spawn && myHome(me.bed));
+    $("randSpawn").hidden = !spawn; $("mapClose").hidden = spawn;
+    $("mapView").hidden = false; $("mapView").dataset.kind = kind; drawMini();
+  }
+
+  // ---------- UI ----------
+  function banner(msg, ms = 2400) {
+    const b = $("banner"); b.textContent = msg; b.hidden = false; clearTimeout(bannerT);
+    if (ms) bannerT = setTimeout(() => { b.hidden = true; }, ms);
+  }
+  function renderTop(rows) {
+    const ol = $("top"); ol.innerHTML = "";
+    for (const r of rows) {
+      const li = document.createElement("li"); if (r.id === me.id) li.className = "me";
+      li.textContent = r.n; const sp = document.createElement("span"); sp.textContent = r.p; li.append(sp); ol.append(li);
+    }
+    $("topEmpty").hidden = rows.length > 0;
+  }
+  function ui() {
+    $("sWood").textContent = me.wood; $("sStone").textContent = me.stone; $("sScore").textContent = me.pts;
+    const tc = TOOL_COST[me.toolLvl];
+    $("toolCost").textContent = tc ? `${tc.wood} dřeva · ${tc.stone} kamene` : "Maximum";
+    const play = mode === "play";
+    $("trayOut").hidden = !!room; $("trayIn").hidden = !room;
+    $("board").hidden = !!room;
+    $("mapBtn").hidden = !(play || mode === "watch") || !!room;
+    $("bTool").disabled = !play || !tc; $("bHut").disabled = $("bHouse").disabled = !play;
+    for (const [id, k] of [["bHut", "hut"], ["bHouse", "house"], ["fBed", "bed"], ["fTable", "table"], ["fFire", "fire"]]) $(id).setAttribute("aria-pressed", selected === k);
+  }
+  function pick(k) {
+    selected = selected === k ? null : k; ui();
+    if (!selected) return;
+    const item = BUILD[k] || FURN[k];
+    banner(BUILD[k] ? `Ťukni na trávu, kde má stát ${item.name.toLowerCase()}` : `Ťukni na podlahu, kam dáš ${item.name.toLowerCase()}`);
+  }
+
+  async function sha(text) {
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+    return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+  async function enter() {
+    const nick = $("nick").value.trim().replace(/\s+/g, " ").slice(0, 16);
+    const code = $("code").value.trim().toUpperCase();
+    if (nick.length < 2) { $("err").textContent = "Napiš přezdívku, aspoň 2 znaky."; return; }
+    let ok = store.get("osada-code") === CODE_HASH && !code;
+    if (!ok) {
+      if (!code) { $("err").textContent = "Napiš kód, který najdeš na Instagramu."; return; }
+      try { ok = (await sha(code)) === CODE_HASH; } catch (e) { $("err").textContent = "Tenhle prohlížeč neumí kód ověřit. Zkus jiný."; return; }
+      if (!ok) { $("err").textContent = "Tenhle kód neplatí. Aktuální je v posledním příběhu na Instagramu."; return; }
+      store.set("osada-code", CODE_HASH);
+    }
+    me.name = nick; saveMe(); $("err").textContent = "";
+    $("gate").hidden = true; mode = "spawn"; openMap("spawn");
+  }
+  function spawnAt(x, y, homeIndex) {
+    $("mapView").hidden = true; mode = "play";
+    const [sx, sy] = freeNear(x, y);
+    P.x = sx; P.y = sy; P.fx = sx; P.fy = sy; P.path = []; P.job = null;
+    camX = sx * tile; camY = sy * tile;
+    if (online) {
+      myRef = db.ref("players/" + me.id);
+      myRef.onDisconnect().remove();
+      myRef.set({ n: me.name, c: me.c, x: P.x, y: P.y, ts: TS() });
+      if (me.pts > 0) saveScore();
+    }
+    if (homeIndex !== undefined) enterHouse(homeIndex);
+    else banner(online ? "Ťukni na strom nebo kámen. Domy, které postavíš, uvidí všichni." : "Offline zkouška: hra ještě není propojená s Firebase, ostatní hráče neuvidíš.", 4500);
+    ui();
+  }
+  function watch() {
+    mode = "watch"; $("gate").hidden = true; ui();
+    const n = Object.values(others).filter((o) => !o.inside).length;
+    banner(n ? "Díváš se. Ťuknutím přepneš na jiného hráče." : "Teď nikdo venku nehraje. Na mapě uvidíš celý svět.", 0);
+  }
+
+  // ---------- input ----------
+  cv.addEventListener("pointerdown", (e) => {
+    if (mode === "watch") { followIdx++; return; }
+    if (mode !== "play") return;
+    const r = cv.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
+    if (room) {
+      const { s, ox, oy } = roomView, x = Math.floor((px - ox) / s), y = Math.floor((py - oy) / s);
+      if (x >= 0 && y >= 0 && x < room.w && y < room.h) order(x, y);
+      return;
+    }
+    const x = Math.floor((px + camX) / tile), y = Math.floor((py + camY) / tile);
+    if (x >= 0 && y >= 0 && x < W && y < H) order(x, y);
+  });
+  $("mm").addEventListener("pointerdown", (e) => {
+    if ($("mapView").dataset.kind !== "spawn") return;
+    const r = $("mm").getBoundingClientRect();
+    spawnAt(Math.floor((e.clientX - r.left) / r.width * W), Math.floor((e.clientY - r.top) / r.height * H));
+  });
+  window.addEventListener("keydown", (e) => {
+    if (mode !== "play" || e.target.tagName === "INPUT") return;
+    const d = { ArrowUp: [0,-1], ArrowDown: [0,1], ArrowLeft: [-1,0], ArrowRight: [1,0], w: [0,-1], s: [0,1], a: [-1,0], d: [1,0] }[e.key];
+    if (d) { e.preventDefault(); order(P.x + d[0], P.y + d[1]); }
+    if (e.key === "Escape") { selected = null; ui(); }
+  });
+  $("go").addEventListener("click", enter);
+  $("code").addEventListener("keydown", (e) => { if (e.key === "Enter") enter(); });
+  $("watch").addEventListener("click", watch);
+  $("bHut").addEventListener("click", () => pick("hut"));
+  $("bHouse").addEventListener("click", () => pick("house"));
+  $("bTool").addEventListener("click", buyTool);
+  $("fBed").addEventListener("click", () => pick("bed"));
+  $("fTable").addEventListener("click", () => pick("table"));
+  $("fFire").addEventListener("click", () => pick("fire"));
+  $("fExit").addEventListener("click", () => { if (room) { selected = null; const p = pathTo(room.door[0], room.door[1], false); if (p) { P.path = p; P.job = { kind: "exit" }; } ui(); } });
+  $("mapBtn").addEventListener("click", () => openMap("view"));
+  $("mapClose").addEventListener("click", () => { $("mapView").hidden = true; });
+  $("randSpawn").addEventListener("click", () => spawnAt(10 + Math.floor(Math.random() * (W - 20)), 10 + Math.floor(Math.random() * (H - 20))));
+  $("bedSpawn").addEventListener("click", () => { const i = me.bed; spawnAt(i % W, Math.floor(i / W), i); });
+  $("board").addEventListener("click", () => $("board").classList.toggle("min"));
+  window.addEventListener("resize", resize);
+
+  // ---------- boot ----------
+  if (me.name) $("nick").value = me.name;
+  if (store.get("osada-code") === CODE_HASH) $("code").placeholder = "Kód máš uložený";
+  resize(); ui();
+  let last = performance.now();
+  function loop(t) { const dt = Math.min(.05, (t - last) / 1000); last = t; update(dt); draw(t); requestAnimationFrame(loop); }
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
