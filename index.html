@@ -42,6 +42,10 @@ body {
 .stat .w { background: var(--wood); }
 .stat .s { background: var(--stone); border-radius: 50%; }
 .stat .h { background: #d65a4a; clip-path: polygon(50% 0, 100% 50%, 85% 50%, 85% 100%, 15% 100%, 15% 50%, 0 50%); border-radius: 0; }
+.stat .hp { background: #7fbf4a; border-radius: 50% 50% 50% 0; }
+.stat .c { background: #f4cf6a; border-radius: 50%; box-shadow: inset 0 0 0 2px #c79a2a; }
+.stat.buff { color: #f4cf6a; }
+.tool.info { cursor: default; border-style: dashed; }
 .stat .o { background: var(--moss); border-radius: 50%; width: 10px; height: 10px; box-shadow: 0 0 0 3px rgba(143,209,106,.25); }
 .mapbtn {
   font-family: var(--display); font-size: 15px; font-weight: 700; color: var(--ink);
@@ -122,6 +126,9 @@ label.eyebrow { color: var(--muted); margin-bottom: -6px; }
     <div class="brand">Manazinie</div>
     <div class="stat" title="Dřevo"><i class="w"></i><span id="sWood">0</span></div>
     <div class="stat" title="Kámen"><i class="s"></i><span id="sStone">0</span></div>
+    <div class="stat" title="Chmel"><i class="hp"></i><span id="sHops">0</span></div>
+    <div class="stat" title="Groše"><i class="c"></i><span id="sCoins">0</span></div>
+    <div class="stat buff" id="sBuff" title="Posilněn pivem" hidden>Pivo <span id="sBuffT">60</span>s</div>
     <div class="stat" title="Tvoje body"><i class="h"></i><span id="sScore">0</span></div>
     <div class="stat" title="Hráčů online"><i class="o"></i><span id="sOnline">0</span></div>
     <button class="mapbtn" id="mapBtn" hidden>Mapa</button>
@@ -172,7 +179,18 @@ label.eyebrow { color: var(--muted); margin-bottom: -6px; }
   <nav class="tray" id="trayOut">
     <button class="tool" id="bHut" aria-pressed="false" disabled><b>Chatka</b><span>10 dřeva · 4 kamene</span></button>
     <button class="tool" id="bHouse" aria-pressed="false" disabled><b>Kamenný dům</b><span>6 dřeva · 14 kamene</span></button>
+    <button class="tool" id="bField" aria-pressed="false" disabled><b>Chmelnice</b><span>3 dřeva</span></button>
+    <button class="tool" id="bPub" aria-pressed="false" disabled><b>Hospoda</b><span>15 dřeva · 10 kamene</span></button>
     <button class="tool" id="bTool" disabled><b>Lepší nástroje</b><span id="toolCost">8 dřeva · 6 kamene</span></button>
+  </nav>
+  <nav class="tray" id="trayPub" hidden>
+    <div class="tool info" id="pStock"><b>Na čepu: 0</b><span id="pOwner">hospoda</span></div>
+    <button class="tool" id="pBrew"><b>Uvařit pivo</b><span>2 chmele</span></button>
+    <button class="tool" id="pBuy"><b>Koupit pivo</b><span id="pBuyCost">5 grošů</span></button>
+    <button class="tool" id="pDown"><b>Cena −</b><span id="pPrice1">5 grošů</span></button>
+    <button class="tool" id="pUp"><b>Cena +</b><span id="pPrice2">5 grošů</span></button>
+    <button class="tool" id="pTill"><b>Vybrat tržbu</b><span id="pTillV">0 grošů</span></button>
+    <button class="tool" id="pExit"><b>Ven</b><span>Odejít z hospody</span></button>
   </nav>
   <nav class="tray" id="trayIn" hidden>
     <button class="tool" id="fBed" aria-pressed="false"><b>Postel</b><span>8 dřeva</span></button>
@@ -199,10 +217,13 @@ const FIREBASE_CONFIG = {
 
 (() => {
   const W = 120, H = 120, SEED = 2026;
-  const T = { GRASS: 0, TREE: 1, ROCK: 2, WATER: 3, HUT: 4, HOUSE: 5, STUMP: 6, RUBBLE: 7, BRIDGE: 8 };
+  const T = { GRASS: 0, TREE: 1, ROCK: 2, WATER: 3, HUT: 4, HOUSE: 5, STUMP: 6, RUBBLE: 7, BRIDGE: 8, FIELD: 9, PUB: 10 };
+  const GROW = 45000, HOPS_PER_HARVEST = 3, HOPS_PER_BEER = 2, BUFF_MS = 60000;
   const BUILD = {
     hut:   { tile: T.HUT,   wood: 10, stone: 4,  pts: 100, name: "Chatka" },
     house: { tile: T.HOUSE, wood: 6,  stone: 14, pts: 300, name: "Kamenný dům" },
+    field: { tile: T.FIELD, wood: 3,  stone: 0,  pts: 20,  name: "Chmelnice" },
+    pub:   { tile: T.PUB,   wood: 15, stone: 10, pts: 500, name: "Hospoda" },
   };
   const FURN = {
     bed:   { id: 1, wood: 8, stone: 0,  pts: 20, name: "Postel" },
@@ -255,12 +276,18 @@ const FIREBASE_CONFIG = {
   const at = (x, y) => (x < 0 || y < 0 || x >= W || y >= H) ? T.WATER : eff(y * W + x);
   const walkable = (t) => t === T.GRASS || t === T.STUMP || t === T.RUBBLE || t === T.BRIDGE;
   const isHome = (t) => t === T.HUT || t === T.HOUSE;
+  const isPub = (t) => t === T.PUB;
+  const fieldGrowth = (o) => Math.max(0, Math.min(1, (now() - ((o && o.p) || 0)) / GROW));
 
   // ---------- me ----------
   let me = null;
   try { me = JSON.parse(store.get("osada-me") || "null"); } catch (e) {}
   if (!me || !me.id) me = { id: "p" + Math.random().toString(36).slice(2, 10), name: "", wood: 0, stone: 0, toolLvl: 0, pts: 0, c: SHIRTS[Math.floor(Math.random() * SHIRTS.length)] };
   if (me.bed === undefined) me.bed = null;
+  if (me.hops === undefined) me.hops = 0;
+  if (me.coins === undefined) me.coins = 20;
+  if (me.buffUntil === undefined) me.buffUntil = 0;
+  const buffed = () => Date.now() < me.buffUntil;
   const saveMe = () => store.set("osada-me", JSON.stringify(me));
   const hitsFor = (t) => Math.max(1, (t === T.TREE ? 3 : 4) - me.toolLvl);
   const myHome = (i) => i !== null && i !== undefined && isHome(eff(i)) && tiles[i] && tiles[i].oid === me.id;
@@ -269,7 +296,8 @@ const FIREBASE_CONFIG = {
   const P = { x: 60, y: 60, fx: 60, fy: 60, path: [], job: null, cd: 0, swing: 0, dir: 1 };
   let room = null;         // when inside: {i, w, h, items, door:[x,y]}
   let homesLocal = {};     // offline storage of furniture
-  let homeRef = null;
+  let homeRef = null, pubRef = null, pubsLocal = {};
+  try { pubsLocal = JSON.parse(store.get("osada-pubs") || "{}"); } catch (e) {}
   let others = {};
   let mode = "idle";       // idle | spawn | play | watch
   let selected = null, followIdx = 0;
@@ -289,7 +317,7 @@ const FIREBASE_CONFIG = {
         if (id === me.id || !p || typeof p.x !== "number" || now() - (p.ts || 0) > 120000) continue;
         const old = others[id];
         next[id] = { n: String(p.n || "Hráč").slice(0, 30), x: p.x, y: p.y, c: SHIRTS.includes(p.c) ? p.c : SHIRTS[0], act: p.a || 0,
-          inside: typeof p.in === "number", fx: old ? old.fx : p.x, fy: old ? old.fy : p.y, dir: old ? old.dir : 1, swing: 0 };
+          inside: typeof p.in === "number", inRoom: typeof p.in === "number" ? p.in : null, fx: old ? old.fx : p.x, fy: old ? old.fy : p.y, dir: old ? old.dir : 1, swing: 0 };
       }
       others = next; $("sOnline").textContent = Object.keys(others).length + (mode === "play" ? 1 : 0);
     });
@@ -309,10 +337,10 @@ const FIREBASE_CONFIG = {
   // claim a tile change so only one player gets each tree, rock or building spot
   function claim(i, test, value, done) {
     if (!online) {
-      if (test(eff(i))) { tiles[i] = value; store.set("osada-tiles", JSON.stringify(tiles)); done(true); } else done(false);
+      if (test(eff(i), tiles[i])) { tiles[i] = value; store.set("osada-tiles", JSON.stringify(tiles)); done(true); } else done(false);
       return;
     }
-    db.ref("world/tiles/" + i).transaction((cur) => test(effFrom(cur, i)) ? value : undefined, (err, ok) => done(!err && ok), false);
+    db.ref("world/tiles/" + i).transaction((cur) => test(effFrom(cur, i), cur) ? value : undefined, (err, ok) => done(!err && ok), false);
   }
   function saveScore() { saveMe(); if (online && me.name) db.ref("scores/" + me.id).set({ n: me.name, p: me.pts }); }
 
@@ -357,6 +385,18 @@ const FIREBASE_CONFIG = {
       const path = pathTo(tx, ty, true); if (!path) return banner("Tam se nedostaneš");
       P.path = path; P.job = { kind: "build", x: tx, y: ty, b: selected, prog: 0 }; S.marker = { x: tx, y: ty }; return;
     }
+    if (t === T.FIELD) {
+      const o = tiles[i] || {};
+      if (o.oid !== me.id) return banner(`Chmelnice hráče ${o.o || "neznámého"}`);
+      const g = fieldGrowth(o);
+      if (g < 1) return banner(`Chmel ještě roste, sklizeň za ${Math.ceil((1 - g) * GROW / 1000)} s`);
+      const path = pathTo(tx, ty, true); if (!path) return banner("K chmelnici se nedostaneš");
+      P.path = path; P.job = { kind: "reap", x: tx, y: ty, prog: 0 }; S.marker = { x: tx, y: ty }; return;
+    }
+    if (isPub(t)) {
+      const path = pathTo(tx, ty, true); if (!path) return banner("K hospodě se nedostaneš");
+      P.path = path; P.job = { kind: "enter", x: tx, y: ty }; S.marker = { x: tx, y: ty }; return;
+    }
     if (isHome(t)) {
       if (!myHome(i)) return banner(`Tohle je dům hráče ${(tiles[i] && tiles[i].o) || "neznámého"}`);
       const path = pathTo(tx, ty, true); if (!path) return banner("K domu se nedostaneš");
@@ -369,6 +409,12 @@ const FIREBASE_CONFIG = {
     if (walkable(t)) { const path = pathTo(tx, ty, false); if (path) { P.path = path; P.job = null; S.marker = { x: tx, y: ty }; } }
   }
   function orderInside(tx, ty) {
+    if (room.kind === "pub") {
+      const g = roomGrid(), isDoor = tx === room.door[0] && ty === room.door[1];
+      if (room.items[ty * room.w + tx] === 4) return banner(room.pub && room.pub.oid === me.id ? "Pivo uvaříš tlačítkem dole" : "Pivo si koupíš tlačítkem dole");
+      if (g.walk(tx, ty)) { const path = pathTo(tx, ty, false); if (path) { P.path = path; P.job = isDoor ? { kind: "exit" } : null; S.marker = { x: tx, y: ty }; } }
+      return;
+    }
     const g = roomGrid(), cell = ty * room.w + tx, item = room.items[cell];
     const isDoor = tx === room.door[0] && ty === room.door[1];
     if (selected && !isDoor) {
@@ -416,6 +462,7 @@ const FIREBASE_CONFIG = {
   function exitHouse() {
     const i = room.i, hx = i % W, hy = (i / W) | 0;
     if (homeRef) { homeRef.off(); homeRef = null; }
+    if (pubRef) { pubRef.off(); pubRef = null; }
     room = null; selected = null;
     const spot = [[0,1],[1,0],[-1,0],[0,-1],[1,1],[-1,1]].map(([dx, dy]) => [hx + dx, hy + dy]).find(([x, y]) => walkable(at(x, y))) || freeNear(hx, hy);
     P.x = spot[0]; P.y = spot[1]; P.fx = P.x; P.fy = P.y; P.path = []; P.job = null; S.marker = null;
@@ -426,6 +473,66 @@ const FIREBASE_CONFIG = {
     room.items[cell] = f.id;
     if (online) db.ref(`homes/${room.i}/items/${cell}`).set(f.id);
     else { homesLocal[room.i] = { items: room.items }; store.set("osada-homes", JSON.stringify(homesLocal)); }
+  }
+  // ---------- pubs ----------
+  function pubWrite(i, v) {
+    if (online) db.ref("pubs/" + i).set(v);
+    else { pubsLocal[i] = v; store.set("osada-pubs", JSON.stringify(pubsLocal)); }
+  }
+  function pubTx(i, fn, done) {
+    if (online) { db.ref("pubs/" + i).transaction(fn, (e, ok, snap) => done(!e && ok, snap && snap.val()), false); return; }
+    const cur = pubsLocal[i] ? JSON.parse(JSON.stringify(pubsLocal[i])) : null, next = fn(cur);
+    if (next === undefined) return done(false, cur);
+    pubsLocal[i] = next; store.set("osada-pubs", JSON.stringify(pubsLocal)); if (room && room.i === i) room.pub = next; done(true, next);
+  }
+  function enterPub(i) {
+    const items = {}, w = 9, h = 7;
+    for (let x = 2; x <= 6; x++) items[1 * w + x] = 4;
+    items[1 * w + 1] = 5; items[1 * w + 7] = 5; items[4 * w + 2] = 2; items[4 * w + 6] = 2;
+    room = { i, w, h, items, door: [4, 6], kind: "pub", pub: null };
+    if (online) { pubRef = db.ref("pubs/" + i); pubRef.on("value", (s) => { if (room && room.i === i) { room.pub = s.val(); ui(); } }); }
+    else room.pub = pubsLocal[i] || null;
+    P.x = room.door[0]; P.y = room.door[1] - 1; P.fx = P.x; P.fy = P.y; P.path = []; P.job = null; S.marker = null;
+    selected = null; sendPos({ in: i }); ui();
+    const o = tiles[i] || {};
+    banner(o.oid === me.id ? "Tvoje hospoda. Uvař pivo z chmele a prodávej ho ostatním." : `Hospoda hráče ${o.o || "neznámého"}. Pivo tě na minutu posílí.`, 4000);
+  }
+  function brew() {
+    if (!room || room.kind !== "pub") return;
+    if (me.hops < HOPS_PER_BEER) return banner(`Na pivo potřebuješ ${HOPS_PER_BEER} chmele. Postav si chmelnici.`);
+    pubTx(room.i, (cur) => { if (!cur || cur.oid !== me.id || (cur.beer || 0) >= 99) return; cur.beer = (cur.beer || 0) + 1; return cur; }, (ok) => {
+      if (!ok) return banner("Sud je plný, nejdřív něco prodej");
+      me.hops -= HOPS_PER_BEER; me.pts += 5; saveScore(); ui(); pop(P.x, P.y, "+1 pivo", "#f4cf6a");
+    });
+  }
+  function setPrice(d) {
+    if (!room || room.kind !== "pub") return;
+    pubTx(room.i, (cur) => { if (!cur || cur.oid !== me.id) return; cur.price = Math.max(1, Math.min(50, (cur.price || 5) + d)); return cur; }, () => ui());
+  }
+  function collect() {
+    if (!room || room.kind !== "pub") return;
+    let got = 0;
+    pubTx(room.i, (cur) => { if (!cur || cur.oid !== me.id) return; got = cur.till || 0; if (!got) return; cur.till = 0; return cur; }, (ok) => {
+      if (!ok || !got) return banner("V pokladně zatím nic není");
+      me.coins += got; me.pts += got * 3; saveScore(); ui(); pop(P.x, P.y, `+${got} grošů`, "#f4cf6a");
+    });
+  }
+  function buyBeer() {
+    if (!room || room.kind !== "pub") return;
+    const mine = room.pub && room.pub.oid === me.id;
+    let paid = 0;
+    pubTx(room.i, (cur) => {
+      if (!cur || (cur.beer || 0) < 1) return;
+      paid = cur.oid === me.id ? 0 : (cur.price || 5);
+      if (me.coins < paid) return;
+      cur.beer -= 1; if (paid) { cur.till = (cur.till || 0) + paid; cur.sold = (cur.sold || 0) + 1; }
+      return cur;
+    }, (ok, cur) => {
+      if (!ok) return banner(!cur || (cur.beer || 0) < 1 ? "Pivo došlo. Hostinský musí uvařit další." : "Nemáš dost grošů");
+      me.coins -= paid; me.buffUntil = Date.now() + BUFF_MS; saveMe(); ui();
+      pop(P.x, P.y, mine ? "Na zdraví!" : `−${paid} grošů`, "#f4cf6a");
+      banner("Posilněn pivem na 60 s: chodíš a pracuješ rychleji.", 3500);
+    });
   }
   function freeNear(x, y) {
     for (let r = 0; r < 40; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
@@ -450,21 +557,22 @@ const FIREBASE_CONFIG = {
     for (const f of S.fx) { f.life -= dt; f.y -= dt * .8; }
     S.fx = S.fx.filter((f) => f.life > 0);
     if (mode !== "play") return;
+    { const left = Math.ceil((me.buffUntil - Date.now()) / 1000); $("sBuff").hidden = left <= 0; if (left > 0) $("sBuffT").textContent = left; }
     heartbeat -= dt; if (heartbeat <= 0) { heartbeat = 30; sendPos(); }
     const g = grid();
     if (P.path.length) {
       const [nx, ny] = P.path[0];
       if (!g.walk(nx, ny)) { P.path = []; P.job = null; S.marker = null; }
       else {
-        const sp = (room ? 4 : 5.5) * dt, dx = nx - P.fx, dy = ny - P.fy, d = Math.hypot(dx, dy);
+        const sp = (room ? 4 : 5.5) * (buffed() ? 1.4 : 1) * dt, dx = nx - P.fx, dy = ny - P.fy, d = Math.hypot(dx, dy);
         if (dx) P.dir = Math.sign(dx);
-        if (d <= sp) { P.fx = nx; P.fy = ny; P.x = nx; P.y = ny; P.path.shift(); if (!room) sendPos(); }
+        if (d <= sp) { P.fx = nx; P.fy = ny; P.x = nx; P.y = ny; P.path.shift(); if (!room || room.kind === "pub") sendPos(); }
         else { P.fx += dx / d * sp; P.fy += dy / d * sp; }
       }
     } else if (P.job && !busy) {
       const j = P.job;
       if (j.kind === "exit") { if (room && P.x === room.door[0] && P.y === room.door[1]) exitHouse(); else P.job = null; return; }
-      if (j.kind === "enter") { const i = j.y * W + j.x; P.job = null; if (myHome(i)) enterHouse(i); return; }
+      if (j.kind === "enter") { const i = j.y * W + j.x; P.job = null; if (isPub(eff(i))) enterPub(i); else if (myHome(i)) enterHouse(i); return; }
       if (j.x !== P.x) P.dir = Math.sign(j.x - P.x);
       P.cd -= dt;
       if (j.kind === "furnish") {
@@ -483,7 +591,7 @@ const FIREBASE_CONFIG = {
         const i = j.y * W + j.x, t = eff(i);
         if (t !== T.TREE && t !== T.ROCK) { P.job = null; S.marker = null; delete S.hp[i]; }
         else if (P.cd <= 0) {
-          P.cd = .32; P.swing = .2; S.hp[i] = (S.hp[i] || 0) + 1;
+          P.cd = buffed() ? .18 : .32; P.swing = .2; S.hp[i] = (S.hp[i] || 0) + 1;
           if (S.hp[i] === 1) sendPos({ a: TS() });
           if (S.hp[i] >= hitsFor(t)) {
             busy = true;
@@ -500,19 +608,44 @@ const FIREBASE_CONFIG = {
             });
           }
         }
+      } else if (j.kind === "reap") {
+        const i = j.y * W + j.x, o = tiles[i];
+        if (eff(i) !== T.FIELD || !o || o.oid !== me.id || fieldGrowth(o) < 1) { P.job = null; S.marker = null; }
+        else {
+          if (P.cd <= 0) { P.cd = buffed() ? .14 : .25; P.swing = .18; j.prog += .34; }
+          if (j.prog >= 1) {
+            busy = true;
+            claim(i, (e, cur) => e === T.FIELD && cur && cur.oid === me.id && fieldGrowth(cur) >= 1, { t: T.FIELD, o: me.name, oid: me.id, p: now() }, (ok) => {
+              busy = false; P.job = null; S.marker = null;
+              if (!ok) return;
+              me.hops += HOPS_PER_HARVEST; me.pts += 10; saveScore(); ui();
+              pop(j.x, j.y, `+${HOPS_PER_HARVEST} chmel`, "#9fd36a");
+              const next = (() => { let best = null, bd = 1e9;
+                for (let y = j.y - 4; y <= j.y + 4; y++) for (let x = j.x - 4; x <= j.x + 4; x++) {
+                  const k = y * W + x, ok2 = x >= 0 && y >= 0 && x < W && y < H && eff(k) === T.FIELD && tiles[k] && tiles[k].oid === me.id && fieldGrowth(tiles[k]) >= 1;
+                  const d = Math.abs(x - j.x) + Math.abs(y - j.y); if (ok2 && d < bd) { bd = d; best = [x, y]; } }
+                return best; })();
+              if (next) { P.job = { kind: "reap", x: next[0], y: next[1], prog: 0 }; P.path = pathTo(next[0], next[1], true) || []; S.marker = { x: next[0], y: next[1] }; }
+            });
+          }
+        }
       } else if (j.kind === "build") {
         const b = BUILD[j.b], i = j.y * W + j.x, t = eff(i);
         if (!walkable(t) || !canAfford(b)) { P.job = null; S.marker = null; }
         else {
-          if (P.cd <= 0) { P.cd = .25; P.swing = .18; j.prog += .25; }
+          if (P.cd <= 0) { P.cd = buffed() ? .14 : .25; P.swing = .18; j.prog += .25; }
           if (j.prog >= 1) {
             busy = true;
-            claim(i, (e) => walkable(e) && e !== T.BRIDGE, { t: b.tile, o: me.name, oid: me.id }, (ok) => {
+            const val = { t: b.tile, o: me.name, oid: me.id }; if (b.tile === T.FIELD) val.p = now();
+            claim(i, (e) => walkable(e) && e !== T.BRIDGE, val, (ok) => {
               busy = false; P.job = null; S.marker = null;
               if (!ok) return banner("Tohle místo už někdo zabral");
-              me.wood -= b.wood; me.stone -= b.stone; me.pts += b.pts; saveScore(); selected = null;
-              pop(j.x, j.y, `+${b.pts} bodů`, "#8fd16a"); ui();
-              banner("Hotovo! Ťukni na svůj dům a vejdi dovnitř.", 3500);
+              me.wood -= b.wood; me.stone -= b.stone; me.pts += b.pts; saveScore();
+              pop(j.x, j.y, `+${b.pts} bodů`, "#8fd16a");
+              if (b.tile === T.PUB) { pubWrite(i, { oid: me.id, o: me.name, beer: 0, till: 0, price: 5, sold: 0 }); selected = null; banner("Hospoda stojí! Vejdi dovnitř a uvař pivo z chmele.", 4000); }
+              else if (b.tile === T.FIELD) banner(`Chmel zasazen. Sklizeň za ${GROW / 1000} s. Ťukni na další trávu, nebo zruš výběr.`, 3500);
+              else { selected = null; banner("Hotovo! Ťukni na svůj dům a vejdi dovnitř.", 3500); }
+              ui();
             });
           }
         }
@@ -588,7 +721,7 @@ const FIREBASE_CONFIG = {
     const s = Math.floor(Math.min(64, (w - 16) / room.w, (h - 16) / room.h));
     const ox = Math.floor((w - s * room.w) / 2), oy = Math.floor((h - s * room.h) / 2);
     roomView = { s, ox, oy };
-    const stoneHome = eff(room.i) === T.HOUSE;
+    const stoneHome = eff(room.i) === T.HOUSE, pubRoom = room.kind === "pub";
     for (let y = 0; y < room.h; y++) for (let x = 0; x < room.w; x++) {
       const X = ox + x * s, Y = oy + y * s;
       const wall = x === 0 || y === 0 || x === room.w - 1 || y === room.h - 1;
@@ -607,7 +740,7 @@ const FIREBASE_CONFIG = {
           ctx.fillStyle = "#3e2a18"; ctx.fillRect(X + s * .48, Y + s * .2, 3, s * .5); ctx.fillRect(X + s * .2, Y + s * .43, s * .6, 3);
         }
       } else {
-        ctx.fillStyle = (y % 2) ? "#b07d4a" : "#a87445"; ctx.fillRect(X, Y, s, s);
+        ctx.fillStyle = pubRoom ? ((x + y) % 2 ? "#6e4a2a" : "#7a5230") : (y % 2) ? "#b07d4a" : "#a87445"; ctx.fillRect(X, Y, s, s);
         ctx.fillStyle = "#946238"; ctx.fillRect(X, Y + s - 2, s, 2); ctx.fillRect(X + ((y % 2) ? s * .35 : s * .7), Y, 2, s);
       }
     }
@@ -615,10 +748,37 @@ const FIREBASE_CONFIG = {
       const x = cell % room.w, y = Math.floor(cell / room.w); drawFurniture(id, ox + x * s, oy + y * s, s, t);
     }
     if (S.marker) { const m = S.marker; ctx.strokeStyle = "rgba(255,240,180,.9)"; ctx.lineWidth = 2; ctx.strokeRect(ox + m.x * s + 3, oy + m.y * s + 3, s - 6, s - 6); }
+    const guests = pubRoom ? Object.values(others).filter((o) => o.inRoom === room.i) : [];
+    for (const o of guests) drawPerson({ fx: o.fx, fy: o.fy, dir: o.dir, swing: 0, moving: o.moving, c: o.c }, t, s, ox, oy);
     drawPerson({ fx: P.fx, fy: P.fy, dir: P.dir, swing: P.swing, moving: P.path.length > 0, c: me.c }, t, s, ox, oy);
+    ctx.textAlign = "center";
+    for (const o of guests) nameTag({ n: o.n, me: false }, ox + o.fx * s + s / 2, oy + o.fy * s + s * .02, s);
+    if (pubRoom) { // beer stock on the counter
+      const n = Math.min(5, (room.pub && room.pub.beer) || 0);
+      for (let k = 0; k < n; k++) drawMug(ox + (2 + k) * s + s * .3, oy + 1 * s + s * .08, s * .4);
+    }
     floaters(true, s, ox, oy);
   }
+  function drawMug(X, Y, s) {
+    ctx.fillStyle = "#f4cf6a"; ctx.fillRect(X, Y + s * .25, s * .6, s * .7);
+    ctx.fillStyle = "#f8f4e8"; ctx.fillRect(X - s * .04, Y + s * .1, s * .68, s * .22);
+    ctx.strokeStyle = "#e8b64c"; ctx.lineWidth = Math.max(2, s * .1); ctx.strokeRect(X + s * .6, Y + s * .4, s * .2, s * .32);
+  }
   function drawFurniture(id, X, Y, s, t) {
+    if (id === 4) { // bar counter
+      ctx.fillStyle = "#3e2a18"; ctx.fillRect(X, Y + s * .3, s, s * .66);
+      ctx.fillStyle = "#8a5d31"; ctx.fillRect(X, Y + s * .22, s, s * .18);
+      ctx.fillStyle = "#5a3d24"; ctx.fillRect(X, Y + s * .6, s, 2);
+      return;
+    }
+    if (id === 5) { // barrel
+      ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.fillRect(X + s * .16, Y + s * .82, s * .7, s * .1);
+      ctx.fillStyle = "#8a5d31"; ctx.fillRect(X + s * .16, Y + s * .14, s * .68, s * .72);
+      ctx.fillStyle = "#a8743f"; ctx.fillRect(X + s * .22, Y + s * .14, s * .56, s * .72);
+      ctx.fillStyle = "#4a4f55"; ctx.fillRect(X + s * .16, Y + s * .28, s * .68, 3); ctx.fillRect(X + s * .16, Y + s * .68, s * .68, 3);
+      ctx.fillStyle = "#c9d2da"; ctx.fillRect(X + s * .46, Y + s * .46, s * .08, s * .1);
+      return;
+    }
     if (id === 1) { // bed
       ctx.fillStyle = "rgba(0,0,0,.2)"; ctx.fillRect(X + s * .1, Y + s * .14, s * .84, s * .84);
       ctx.fillStyle = "#6b4a2b"; ctx.fillRect(X + s * .08, Y + s * .06, s * .84, s * .88);
@@ -638,6 +798,30 @@ const FIREBASE_CONFIG = {
       ctx.fillStyle = "#e86f2c"; ctx.beginPath(); ctx.moveTo(X + s * .3, Y + s * .84); ctx.lineTo(X + s * .5, Y + s * .44 + fl); ctx.lineTo(X + s * .7, Y + s * .84); ctx.closePath(); ctx.fill();
       ctx.fillStyle = "#f4cf6a"; ctx.beginPath(); ctx.moveTo(X + s * .4, Y + s * .84); ctx.lineTo(X + s * .5, Y + s * .6 - fl); ctx.lineTo(X + s * .6, Y + s * .84); ctx.closePath(); ctx.fill();
     }
+  }
+  function drawField(X, Y, s, o, t) {
+    const g = fieldGrowth(o), ripe = g >= 1;
+    ctx.fillStyle = "#6b4a2b"; ctx.fillRect(X + 1, Y + 1, s - 2, s - 2);
+    ctx.fillStyle = "#5a3d24"; for (let k = 0; k < 3; k++) ctx.fillRect(X + 2, Y + s * (.22 + k * .3), s - 4, s * .08);
+    for (let k = 0; k < 3; k++) {
+      const px = X + s * (.2 + k * .3), top = Y + s * (.9 - .78 * Math.max(.12, g));
+      ctx.fillStyle = "#8a6a40"; ctx.fillRect(px - 1, Y + s * .1, 2, s * .82);
+      ctx.fillStyle = ripe ? "#4f9a3a" : "#5fae46"; ctx.fillRect(px - s * .06, top, s * .12, Y + s * .9 - top);
+      if (ripe) { ctx.fillStyle = "#cfe39a"; for (let m = 0; m < 3; m++) ctx.fillRect(px - s * .09 + (m % 2) * s * .1, Y + s * (.2 + m * .2), s * .08, s * .1); }
+    }
+    if (ripe && o && o.oid === me.id) { const b = Math.sin(t * 5) * s * .03; ctx.fillStyle = "#f4cf6a"; ctx.fillRect(X + s * .44, Y - s * .12 + b, s * .12, s * .12); }
+  }
+  function drawPub(X, Y, s, t) {
+    ctx.fillStyle = "rgba(0,0,0,.2)"; ctx.fillRect(X + s * .04, Y + s * .86, s * .92, s * .08);
+    ctx.fillStyle = "#8a5d31"; ctx.fillRect(X + s * .06, Y + s * .42, s * .88, s * .46);
+    ctx.fillStyle = "#5a3d24"; ctx.fillRect(X + s * .06, Y + s * .42, s * .88, 3); ctx.fillRect(X + s * .3, Y + s * .42, 3, s * .46); ctx.fillRect(X + s * .68, Y + s * .42, 3, s * .46);
+    ctx.fillStyle = "#4a2f1a"; ctx.beginPath(); ctx.moveTo(X, Y + s * .46); ctx.lineTo(X + s * .5, Y + s * .08); ctx.lineTo(X + s, Y + s * .46); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#f4cf6a"; ctx.fillRect(X + s * .12, Y + s * .54, s * .14, s * .12); ctx.fillRect(X + s * .74, Y + s * .54, s * .14, s * .12);
+    ctx.fillStyle = "#2a1b10"; ctx.fillRect(X + s * .42, Y + s * .6, s * .16, s * .28);
+    const sw = Math.sin(t * 2) * s * .02;
+    ctx.fillStyle = "#3e2a18"; ctx.fillRect(X + s * .78, Y + s * .2, 2, s * .1);
+    ctx.fillStyle = "#e9e2d0"; ctx.fillRect(X + s * .66 + sw, Y + s * .28, s * .26, s * .2);
+    drawMug(X + s * .72 + sw, Y + s * .29, s * .18);
   }
   function drawGround(x, y, t) {
     const s = tile, X = x * s, Y = y * s, v = eff(y * W + x), r = hash(x, y);
@@ -662,6 +846,8 @@ const FIREBASE_CONFIG = {
   function drawObj(x, y, t) {
     const s = tile, X = x * s, Y = y * s, i = y * W + x, v = eff(i);
     const shake = P.job && P.job.x === x && P.job.y === y && P.swing > 0 ? Math.sin(t * 60) * 2 : 0;
+    if (v === T.FIELD) { drawField(X, Y, s, tiles[i], t); return; }
+    if (v === T.PUB) { drawPub(X, Y, s, t); return; }
     if (v === T.TREE) {
       ctx.fillStyle = "rgba(0,0,0,.18)"; ctx.beginPath(); ctx.ellipse(X + s / 2, Y + s * .88, s * .34, s * .1, 0, 0, 7); ctx.fill();
       ctx.fillStyle = "#6b4a2b"; ctx.fillRect(X + s * .43, Y + s * .55, s * .14, s * .33);
@@ -726,7 +912,7 @@ const FIREBASE_CONFIG = {
   }
 
   // ---------- world map ----------
-  const MINI = { [T.GRASS]: "#5d9e3f", [T.TREE]: "#2f6b2c", [T.ROCK]: "#8d98a3", [T.WATER]: "#3b7fb0", [T.BRIDGE]: "#a8743f",
+  const MINI = { [T.FIELD]: "#b58b3a", [T.PUB]: "#f0a030", [T.GRASS]: "#5d9e3f", [T.TREE]: "#2f6b2c", [T.ROCK]: "#8d98a3", [T.WATER]: "#3b7fb0", [T.BRIDGE]: "#a8743f",
     [T.HUT]: "#e8574a", [T.HOUSE]: "#e8574a", [T.STUMP]: "#6a9a45", [T.RUBBLE]: "#7aa252" };
   function drawMini() {
     const mm = $("mm"), m = mm.getContext("2d"), k = mm.width / W;
@@ -765,11 +951,23 @@ const FIREBASE_CONFIG = {
     const tc = TOOL_COST[me.toolLvl];
     $("toolCost").textContent = tc ? `${tc.wood} dřeva · ${tc.stone} kamene` : "Maximum";
     const play = mode === "play";
-    $("trayOut").hidden = !!room; $("trayIn").hidden = !room;
+    const inPub = !!room && room.kind === "pub";
+    $("trayOut").hidden = !!room; $("trayIn").hidden = !room || inPub; $("trayPub").hidden = !inPub;
+    $("sHops").textContent = me.hops; $("sCoins").textContent = me.coins;
+    if (inPub) {
+      const pb = room.pub || {}, owner = pb.oid === me.id, price = pb.price || 5;
+      $("pStock").querySelector("b").textContent = `Na čepu: ${pb.beer || 0}`;
+      $("pOwner").textContent = owner ? "tvoje hospoda" : `hostinský ${pb.o || (tiles[room.i] && tiles[room.i].o) || "?"}`;
+      for (const id of ["pBrew", "pDown", "pUp", "pTill"]) $(id).hidden = !owner;
+      $("pBuy").querySelector("b").textContent = owner ? "Vypít pivo" : "Koupit pivo";
+      $("pBuyCost").textContent = owner ? "zdarma" : `${price} grošů`;
+      $("pPrice1").textContent = $("pPrice2").textContent = `${price} grošů`;
+      $("pTillV").textContent = `${pb.till || 0} grošů`;
+    }
     $("board").hidden = !!room;
     $("mapBtn").hidden = !(play || mode === "watch") || !!room;
-    $("bTool").disabled = !play || !tc; $("bHut").disabled = $("bHouse").disabled = !play;
-    for (const [id, k] of [["bHut", "hut"], ["bHouse", "house"], ["fBed", "bed"], ["fTable", "table"], ["fFire", "fire"]]) $(id).setAttribute("aria-pressed", selected === k);
+    $("bTool").disabled = !play || !tc; $("bHut").disabled = $("bHouse").disabled = $("bField").disabled = $("bPub").disabled = !play;
+    for (const [id, k] of [["bField", "field"], ["bPub", "pub"], ["bHut", "hut"], ["bHouse", "house"], ["fBed", "bed"], ["fTable", "table"], ["fFire", "fire"]]) $(id).setAttribute("aria-pressed", selected === k);
   }
   function pick(k) {
     selected = selected === k ? null : k; ui();
@@ -857,6 +1055,14 @@ const FIREBASE_CONFIG = {
   $("bHut").addEventListener("click", () => pick("hut"));
   $("bHouse").addEventListener("click", () => pick("house"));
   $("bTool").addEventListener("click", buyTool);
+  $("bField").addEventListener("click", () => pick("field"));
+  $("bPub").addEventListener("click", () => pick("pub"));
+  $("pBrew").addEventListener("click", brew);
+  $("pBuy").addEventListener("click", buyBeer);
+  $("pDown").addEventListener("click", () => setPrice(-1));
+  $("pUp").addEventListener("click", () => setPrice(1));
+  $("pTill").addEventListener("click", collect);
+  $("pExit").addEventListener("click", () => { if (room) { const p = pathTo(room.door[0], room.door[1], false); if (p) { P.path = p; P.job = { kind: "exit" }; } } });
   $("fBed").addEventListener("click", () => pick("bed"));
   $("fTable").addEventListener("click", () => pick("table"));
   $("fFire").addEventListener("click", () => pick("fire"));
