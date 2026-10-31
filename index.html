@@ -424,12 +424,18 @@ const FIREBASE_CONFIG = {
   // ---------- tiles (overrides stored online) ----------
   let tiles = {}, keyOf = {}, offset = 0;
   const now = () => Date.now() + offset;
+  // Keys: below 14400 = original 120-wide map index, 20000+ = new 200-wide index (both pass the original database rules), "x_y" also accepted.
+  const NEWKEY = 20000;
   function idxFromKey(k) {
-    if (/^\d+$/.test(k)) { const n = +k; return Math.floor(n / OLDW) * W + (n % OLDW); }
+    if (/^\d+$/.test(k)) { const n = +k; if (n >= NEWKEY) return n - NEWKEY < W * H ? n - NEWKEY : -1; if (n >= OLDW * OLDW) return -1; return Math.floor(n / OLDW) * W + (n % OLDW); }
     const m = /^(\d{1,3})_(\d{1,3})$/.exec(k); if (!m) return -1;
     const x = +m[1], y = +m[2]; return x < W && y < H ? y * W + x : -1;
   }
-  const keyFor = (i) => keyOf[i] || `${i % W}_${Math.floor(i / W)}`;
+  const keyFor = (i) => {
+    if (keyOf[i]) return keyOf[i];
+    const x = i % W, y = Math.floor(i / W);
+    return x < OLDW && y < OLDW ? String(y * OLDW + x) : String(NEWKEY + i);
+  };
   function effFrom(o, i) { if (!o) return base[i]; if (o.r && now() > o.r) return base[i]; return o.t; }
   const eff = (i) => effFrom(tiles[i], i);
   const at = (x, y) => (x < 0 || y < 0 || x >= W || y >= H) ? T.CLIFF : eff(y * W + x);
@@ -540,7 +546,10 @@ const FIREBASE_CONFIG = {
       } else done(false);
       return;
     }
-    db.ref("world/tiles/" + key).transaction((cur) => test(effFrom(cur, i), cur) ? value : undefined, (err, ok) => done(!err && ok), false);
+    db.ref("world/tiles/" + key).transaction((cur) => test(effFrom(cur, i), cur) ? value : undefined, (err, ok) => {
+      if (err) { console.warn("Uložení políčka selhalo", err); banner("Server odmítl uložení. Vlož do Firebase nová pravidla z admin stránky.", 5000); }
+      done(!err && ok, err);
+    }, false);
   }
   function saveScore() { saveMe(); if (online && me.name) db.ref("scores/" + me.id).set({ n: me.name, p: me.pts }); }
   // =================== GAMEPLAY ===================
@@ -1249,14 +1258,14 @@ const FIREBASE_CONFIG = {
       if (S.hp[i] < hitsFor(t)) return;
       busy = true;
       const isTree = t === T.TREE, isOre = t === T.ORE;
-      claim(i, (e) => e === t, { t: isTree ? T.STUMP : isOre ? T.DUG : T.RUBBLE, r: now() + (isTree ? 25000 : isOre ? 90000 : 35000) }, (ok) => {
+      claim(i, (e) => e === t, { t: isTree ? T.STUMP : isOre ? T.DUG : T.RUBBLE, r: now() + (isTree ? 25000 : isOre ? 90000 : 35000) }, (ok, err) => {
         busy = false; delete S.hp[i];
         if (ok) {
           if (isTree) { me.wood += 3; addXP(3); pop(j.x, j.y, "+3 dřevo", "#e0a45a"); }
           else if (isOre) { add("ore", 2); addXP(6); pop(j.x, j.y, "+2 ruda", "#b5734a"); }
           else { me.stone += 2; addXP(4); pop(j.x, j.y, "+2 kámen", "#a9b8c6"); }
           saveMe(); ui();
-        } else pop(j.x, j.y, "Někdo byl rychlejší", "#ff8a6b");
+        } else if (err) { P.job = null; S.marker = null; return; } else pop(j.x, j.y, "Někdo byl rychlejší", "#ff8a6b");
         const next = nearest(t, j.x, j.y, 4);
         if (next) { P.job = { kind: "harvest", x: next[0], y: next[1] }; P.path = pathTo(next[0], next[1], true) || []; S.marker = { x: next[0], y: next[1] }; }
         else { P.job = null; S.marker = null; }
