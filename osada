@@ -3,7 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Osada</title>
+<title>Manazinie</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%20shape-rendering%3D%22crispEdges%22%3E%3Crect%20width%3D%2216%22%20height%3D%2216%22%20rx%3D%223%22%20fill%3D%22%232c5a2a%22/%3E%3Crect%20x%3D%220%22%20y%3D%2213%22%20width%3D%2216%22%20height%3D%223%22%20fill%3D%22%2364a744%22/%3E%3Crect%20x%3D%220.5%22%20y%3D%224%22%20width%3D%223%22%20height%3D%224%22%20rx%3D%221%22%20fill%3D%22%233d8a37%22/%3E%3Crect%20x%3D%221.5%22%20y%3D%228%22%20width%3D%221%22%20height%3D%225%22%20fill%3D%22%236b4a2b%22/%3E%3Crect%20x%3D%2211%22%20y%3D%222%22%20width%3D%222%22%20height%3D%224%22%20fill%3D%22%236d6d73%22/%3E%3Crect%20x%3D%227%22%20y%3D%222%22%20width%3D%222%22%20height%3D%221%22%20fill%3D%22%23c2523f%22/%3E%3Crect%20x%3D%226%22%20y%3D%223%22%20width%3D%224%22%20height%3D%221%22%20fill%3D%22%23c2523f%22/%3E%3Crect%20x%3D%225%22%20y%3D%224%22%20width%3D%226%22%20height%3D%221%22%20fill%3D%22%23c2523f%22/%3E%3Crect%20x%3D%224%22%20y%3D%225%22%20width%3D%228%22%20height%3D%221%22%20fill%3D%22%23c2523f%22/%3E%3Crect%20x%3D%223%22%20y%3D%226%22%20width%3D%2210%22%20height%3D%221%22%20fill%3D%22%23c2523f%22/%3E%3Crect%20x%3D%222%22%20y%3D%227%22%20width%3D%2212%22%20height%3D%221%22%20fill%3D%22%23a8402f%22/%3E%3Crect%20x%3D%224%22%20y%3D%228%22%20width%3D%228%22%20height%3D%225%22%20fill%3D%22%23a8743f%22/%3E%3Crect%20x%3D%224%22%20y%3D%2210%22%20width%3D%228%22%20height%3D%221%22%20fill%3D%22%238a5d31%22/%3E%3Crect%20x%3D%227%22%20y%3D%2210%22%20width%3D%222%22%20height%3D%223%22%20fill%3D%22%234a2f1a%22/%3E%3Crect%20x%3D%225%22%20y%3D%229%22%20width%3D%221%22%20height%3D%221%22%20fill%3D%22%23f4cf6a%22/%3E%3Crect%20x%3D%2210%22%20y%3D%229%22%20width%3D%221%22%20height%3D%221%22%20fill%3D%22%23f4cf6a%22/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
+<meta name="theme-color" content="#1f2e25">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
 <style>
@@ -113,7 +116,7 @@ label.eyebrow { color: var(--muted); margin-bottom: -6px; }
 <body>
 <div id="app">
   <header class="hud">
-    <div class="brand">Osada</div>
+    <div class="brand">Manazinie</div>
     <div class="stat" title="Dřevo"><i class="w"></i><span id="sWood">0</span></div>
     <div class="stat" title="Kámen"><i class="s"></i><span id="sStone">0</span></div>
     <div class="stat" title="Tvoje body"><i class="h"></i><span id="sScore">0</span></div>
@@ -122,7 +125,7 @@ label.eyebrow { color: var(--muted); margin-bottom: -6px; }
   </header>
 
   <main class="stage">
-    <canvas id="cv" aria-label="Společná mapa osady"></canvas>
+    <canvas id="cv" aria-label="Společná mapa Manazinie"></canvas>
     <aside class="board" id="board">
       <h3>Nejlepší stavitelé</h3>
       <ol id="top"></ol>
@@ -133,7 +136,7 @@ label.eyebrow { color: var(--muted); margin-bottom: -6px; }
     <section class="overlay" id="gate">
       <div class="card">
         <div class="eyebrow">Společná hra pro sledující</div>
-        <h1>Osada</h1>
+        <h1>Manazinie</h1>
         <p>Kácej stromy, těž kámen, stav domy a zařiď si je. Všichni hrají v jednom velkém světě.</p>
         <label class="eyebrow" for="nick">Přezdívka</label>
         <input id="nick" maxlength="16" autocomplete="nickname" placeholder="třeba tvůj Instagram">
@@ -736,7 +739,7 @@ const CODE_HASH = "b450d021dbddedaf805c6f125465e385dd3d82de6bd319afc002b56313b48
   }
   function openMap(kind) {
     const spawn = kind === "spawn";
-    $("mapEyebrow").textContent = spawn ? "Krok 2 ze 2" : "Svět osady";
+    $("mapEyebrow").textContent = spawn ? "Krok 2 ze 2" : "Svět Manazinie";
     $("mapTitle").textContent = spawn ? "Ťukni na mapu, kde začneš" : (mode === "play" ? "Tady jsi ty, zelený čtvereček" : "Bílé tečky jsou hráči");
     $("bedSpawn").hidden = !(spawn && myHome(me.bed));
     $("randSpawn").hidden = !spawn; $("mapClose").hidden = spawn;
