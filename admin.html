@@ -127,6 +127,14 @@ ol.help b { color: var(--ink); }
       <div class="list" id="list"></div>
     </section>
 
+    <section>
+      <div class="step">Po aktualizaci hry</div>
+      <h2>Pravidla pro Firebase</h2>
+      <p>Když přibude ve hře něco nového (třeba hospody), zkopíruj tahle pravidla znovu a ve Firebase je vlož do Realtime Database → Rules. Pak klikni na Publish.</p>
+      <button class="btn" id="copyRules2">Zkopírovat pravidla</button>
+      <div class="msg" id="rulesMsg"></div>
+    </section>
+
     <button class="btn ghost" id="signout">Odhlásit</button>
   </div>
 </main>
@@ -160,6 +168,7 @@ const FIREBASE_CONFIG = {
       players: { ".read": true, "$id": { ".write": true, ".validate": "!newData.exists() || (newData.child('x').isNumber() && newData.child('y').isNumber())" } },
       scores: { ".read": true, ".indexOn": ["p"], "$id": { ".write": true, ".validate": "newData.child('p').isNumber() && newData.child('p').val() <= 1000000 && newData.child('n').isString() && newData.child('n').val().length <= 30" } },
       homes: { ".read": true, "$i": { items: { "$cell": { ".write": true, ".validate": "$cell.matches(/^[0-9]{1,3}$/) && newData.isNumber() && newData.val() >= 1 && newData.val() <= 3" } } } },
+      pubs: { ".read": true, "$i": { ".write": true, ".validate": "$i.matches(/^[0-9]{1,5}$/) && newData.child('oid').isString() && newData.child('beer').isNumber() && newData.child('beer').val() >= 0 && newData.child('beer').val() <= 99 && newData.child('price').isNumber() && newData.child('price').val() >= 1 && newData.child('price').val() <= 50 && newData.child('till').isNumber() && newData.child('till').val() >= 0" } },
       allowed: { ".read": A, ".write": A, "$u": { ".read": true, ".validate": "newData.isBoolean()" } },
       claims: { ".read": A, ".write": A, "$u": { ".read": true, ".write": "!data.exists() && newData.isString() && root.child('allowed').child($u).exists()" } },
     } }, null, 2);
@@ -177,6 +186,10 @@ const FIREBASE_CONFIG = {
     }
   };
   $("signout").onclick = () => auth.signOut();
+  $("copyRules2").onclick = async () => {
+    try { await navigator.clipboard.writeText($("rules").textContent); msg("rulesMsg", "Zkopírováno. Vlož je do Firebase a klikni na Publish.", "ok"); }
+    catch (e) { msg("rulesMsg", "Kopírování nešlo. Pravidla najdeš i v souboru pravidla-firebase.json.", "bad"); }
+  };
   $("copyRules").onclick = async () => {
     try { await navigator.clipboard.writeText($("rules").textContent); msg("setupMsg", "Zkopírováno. Teď je vlož do Firebase a klikni na Publish.", "ok"); }
     catch (e) { const r = document.createRange(); r.selectNodeContents($("rules")); getSelection().removeAllRanges(); getSelection().addRange(r); msg("setupMsg", "Text je označený, zkopíruj ho přes Ctrl+C.", ""); }
