@@ -486,7 +486,9 @@ const FIREBASE_CONFIG = {
   const gearOf = (slot) => me.gear[slot] ? GEAR[me.gear[slot]] : null;
   const weaponDmg = () => Math.round(((gearOf("weapon") || {}).dmg || 3) * (buffed() ? 1.3 : 1));
   const defense = () => Math.min(.7, ((gearOf("shield") || {}).def || 0) + ((gearOf("armor") || {}).def || 0));
-  const myHome = (i) => i !== null && i !== undefined && isHome(eff(i)) && tiles[i] && tiles[i].oid === me.id;
+  // a building is yours if this device built it, or your verified Instagram name built it on another device
+  const mine = (o) => !!o && (o.oid === me.id || (!!me.name && me.name !== "admin" && o.o === me.name));
+  const myHome = (i) => i !== null && i !== undefined && isHome(eff(i)) && tiles[i] && mine(tiles[i]);
 
   const S = { hp: {}, fx: [], marker: null, arrows: [] };
   const P = { x: PLAZA[0], y: PLAZA[1] + 2, fx: PLAZA[0], fy: PLAZA[1] + 2, path: [], job: null, cd: 0, swing: 0, dir: 1, hurt: 0, lastHit: 0 };
@@ -606,7 +608,7 @@ const FIREBASE_CONFIG = {
     }
   }
   const isProtected = (i) => protMask[i] === 1;
-  function plotOwnerAt(i) { if (!enclosed[i]) return null; const o = compOwner[comp[i]]; return o && o.id !== me.id ? o : null; }
+  function plotOwnerAt(i) { if (!enclosed[i]) return null; const o = compOwner[comp[i]]; return o && o.id !== me.id && !(me.name && o.n === me.name) ? o : null; }
 
   // ---------- crops (night trampling for unprotected fields) ----------
   function cropStart(i, o) {
@@ -668,7 +670,7 @@ const FIREBASE_CONFIG = {
     const t = at(tx, ty), i = ty * W + tx, o = tiles[i];
     if (selected) return orderBuild(tx, ty, t, i);
     if (CROPS[t]) {
-      if (!o || o.oid !== me.id) return banner(`${CROPS[t].name} hráče ${(o && o.o) || "neznámého"}`);
+      if (!o || !mine(o)) return banner(`${CROPS[t].name} hráče ${(o && o.o) || "neznámého"}`);
       const g = cropGrowth(i, o, t);
       if (g < 1) return banner(`${trampled(i, o) ? "V noci ji pošlapali vlci. " : ""}Ještě roste, sklizeň za ${Math.ceil((1 - g) * CROPS[t].grow / 1000)} s`);
       return goAdj(tx, ty, { kind: "reap", x: tx, y: ty, prog: 0 });
@@ -688,11 +690,11 @@ const FIREBASE_CONFIG = {
     if (t === T.FURNACE) return goAdj(tx, ty, { kind: "open", what: "furnace", x: tx, y: ty });
     if (t === T.SMITHY) return goAdj(tx, ty, { kind: "open", what: "smithy", x: tx, y: ty });
     if (LIVE[t]) {
-      if (!o || o.oid !== me.id) return banner(`${LIVE[t].name} hráče ${(o && o.o) || "neznámého"}`);
+      if (!o || !mine(o)) return banner(`${LIVE[t].name} hráče ${(o && o.o) || "neznámého"}`);
       return goAdj(tx, ty, { kind: "open", what: "live", x: tx, y: ty });
     }
     if (t === T.WALL_WOOD || t === T.WALL_STONE || t === T.TORCH || t === T.TOWER || t === T.GATE) {
-      if (o && o.oid === me.id) { if (t === T.GATE && walkable(t)) { const p = pathTo(tx, ty, false); if (p) { P.path = p; P.job = null; S.marker = { x: tx, y: ty }; } return; }
+      if (o && mine(o)) { if (t === T.GATE && walkable(t)) { const p = pathTo(tx, ty, false); if (p) { P.path = p; P.job = null; S.marker = { x: tx, y: ty }; } return; }
         return openSheet("demolish", { i, t }); }
       if (t !== T.GATE) return banner(`${nameOfTile(t)} hráče ${(o && o.o) || "neznámého"}`);
     }
@@ -738,7 +740,7 @@ const FIREBASE_CONFIG = {
   function orderInside(tx, ty) {
     if (room.kind === "pub") {
       const g = roomGrid(), isDoor = tx === room.door[0] && ty === room.door[1];
-      if (room.items[ty * room.w + tx] === 4) return banner(room.pub && room.pub.oid === me.id ? "Pivo uvaříš tlačítkem dole" : "Pivo si koupíš tlačítkem dole");
+      if (room.items[ty * room.w + tx] === 4) return banner(room.pub && mine(room.pub) ? "Pivo uvaříš tlačítkem dole" : "Pivo si koupíš tlačítkem dole");
       if (g.walk(tx, ty)) { const path = pathTo(tx, ty, false); if (path) { P.path = path; P.job = isDoor ? { kind: "exit" } : null; S.marker = { x: tx, y: ty }; } }
       return;
     }
@@ -793,7 +795,7 @@ const FIREBASE_CONFIG = {
     if (!up) return;
     if (level() < up.req) return banner(`${up.name} se odemkne na úrovni ${up.req}`);
     if (!canPay(up.cost)) return banner(`Chybí ti: ${missingText(up.cost)}`);
-    claim(i, (e, cur) => isHome(e) && cur && cur.oid === me.id && homeLv(cur, e) === lv, Object.assign({}, o, { t: T.HOUSE, lv: lv + 1 }), (ok) => {
+    claim(i, (e, cur) => isHome(e) && cur && mine(cur) && homeLv(cur, e) === lv, Object.assign({}, o, { t: T.HOUSE, lv: lv + 1 }), (ok) => {
       if (!ok) return banner("Vylepšení se nepovedlo, zkus to znovu");
       pay(up.cost); me.pts += up.pts; addXP(Math.round(up.pts / 5)); saveScore();
       pop(i % W, (i / W) | 0, `${up.name}!`, "#8fd16a"); banner(`Tvůj domov je teď ${up.name.toLowerCase()}.`, 3500); closeSheet(); ui();
@@ -801,7 +803,7 @@ const FIREBASE_CONFIG = {
   }
   function demolish(i) {
     const o = tiles[i], t = eff(i), b = Object.values(BUILD).find((b) => b.t === t);
-    claim(i, (e, cur) => cur && cur.oid === me.id && e === t, null, (ok) => {
+    claim(i, (e, cur) => cur && mine(cur) && e === t, null, (ok) => {
       if (!ok) return;
       if (b) for (const [k, n] of Object.entries(b.cost)) add(k, Math.floor(n / 2));
       saveMe(); closeSheet(); ui(); pop(i % W, (i / W) | 0, "Zbouráno", "#ff8a6b");
@@ -810,7 +812,7 @@ const FIREBASE_CONFIG = {
 
   // ---------- pubs ----------
   function pubWrite(i, v) {
-    if (online) db.ref("pubs/" + keyFor(i)).set(v);
+    if (online) db.ref("pubs/" + keyFor(i)).set(v).catch(() => banner("Hospoda se nedá uložit. Vlož do Firebase nová pravidla z admin stránky.", 6000));
     else { pubsLocal[keyFor(i)] = v; store.set("osada-pubs", JSON.stringify(pubsLocal)); }
   }
   function pubTx(i, fn, done) {
@@ -825,47 +827,56 @@ const FIREBASE_CONFIG = {
     for (let x = 2; x <= 6; x++) items[1 * w + x] = 4;
     items[1 * w + 1] = 5; items[1 * w + 7] = 5; items[4 * w + 2] = 2; items[4 * w + 6] = 2;
     room = { i, w, h, items, door: [4, 6], kind: "pub", pub: null };
-    if (online) { pubRef = db.ref("pubs/" + keyFor(i)); pubRef.on("value", (s) => { if (room && room.i === i) { room.pub = s.val(); ui(); } }); }
-    else room.pub = pubsLocal[keyFor(i)] || null;
+    const fresh = () => ({ oid: me.id, o: me.name, beer: 0, till: 0, price: 5, sold: 0 });
+    if (online) {
+      pubRef = db.ref("pubs/" + keyFor(i));
+      pubRef.on("value", (s) => {
+        if (!room || room.i !== i) return;
+        room.pub = s.val();
+        if (!room.pub && mine(tiles[i])) { room.pub = fresh(); pubWrite(i, room.pub); }
+        else if (room.pub && mine(tiles[i]) && room.pub.oid !== me.id) pubRef.update({ oid: me.id, o: me.name });
+        ui();
+      }, () => banner("Hospoda se nedá načíst. Vlož do Firebase nová pravidla z admin stránky.", 6000));
+    } else { room.pub = pubsLocal[keyFor(i)] || null; if (!room.pub && mine(tiles[i])) { room.pub = fresh(); pubWrite(i, room.pub); } }
     P.x = room.door[0]; P.y = room.door[1] - 1; P.fx = P.x; P.fy = P.y; P.path = []; P.job = null; S.marker = null;
     selected = null; sendPos({ in: i }); ui();
     const o = tiles[i] || {};
-    banner(o.oid === me.id ? "Tvoje hospoda. Uvař pivo z chmele a prodávej ho ostatním." : `Hospoda hráče ${o.o || "neznámého"}. Pivo tě na minutu posílí.`, 4000);
+    banner(mine(o) ? "Tvoje hospoda. Uvař pivo z chmele a prodávej ho ostatním." : `Hospoda hráče ${o.o || "neznámého"}. Pivo tě na minutu posílí.`, 4000);
   }
   function brew() {
     if (!room || room.kind !== "pub") return;
     if (me.hops < HOPS_PER_BEER) return banner(`Na pivo potřebuješ ${HOPS_PER_BEER} chmele. Postav si chmelnici.`);
-    pubTx(room.i, (cur) => { if (!cur || cur.oid !== me.id || (cur.beer || 0) >= 99) return; cur.beer = (cur.beer || 0) + 1; return cur; }, (ok) => {
-      if (!ok) return banner("Sud je plný, nejdřív něco prodej");
+    pubTx(room.i, (cur) => { if (!cur || !mine(cur) || (cur.beer || 0) >= 99) return; cur.beer = (cur.beer || 0) + 1; return cur; }, (ok) => {
+      if (!ok) return banner(room && room.pub && (room.pub.beer || 0) >= 99 ? "Sud je plný, nejdřív něco prodej" : "Pivo se nepodařilo uložit. Zkus to znovu.");
       me.hops -= HOPS_PER_BEER; me.pts += 5; addXP(2); saveScore(); ui(); pop(P.x, P.y, "+1 pivo", "#f4cf6a");
     });
   }
   function setPrice(d) {
     if (!room || room.kind !== "pub") return;
-    pubTx(room.i, (cur) => { if (!cur || cur.oid !== me.id) return; cur.price = Math.max(1, Math.min(50, (cur.price || 5) + d)); return cur; }, () => ui());
+    pubTx(room.i, (cur) => { if (!cur || !mine(cur)) return; cur.price = Math.max(1, Math.min(50, (cur.price || 5) + d)); return cur; }, () => ui());
   }
   function collect() {
     if (!room || room.kind !== "pub") return;
     let got = 0;
-    pubTx(room.i, (cur) => { if (!cur || cur.oid !== me.id) return; got = cur.till || 0; if (!got) return; cur.till = 0; return cur; }, (ok) => {
+    pubTx(room.i, (cur) => { if (!cur || !mine(cur)) return; got = cur.till || 0; if (!got) return; cur.till = 0; return cur; }, (ok) => {
       if (!ok || !got) return banner("V pokladně zatím nic není");
       me.coins += got; me.pts += got * 3; saveScore(); ui(); pop(P.x, P.y, `+${got} grošů`, "#f4cf6a");
     });
   }
   function buyBeer() {
     if (!room || room.kind !== "pub") return;
-    const mine = room.pub && room.pub.oid === me.id;
+    const isMine = !!room.pub && mine(room.pub);
     let paid = 0;
     pubTx(room.i, (cur) => {
       if (!cur || (cur.beer || 0) < 1) return;
-      paid = cur.oid === me.id ? 0 : (cur.price || 5);
+      paid = mine(cur) ? 0 : (cur.price || 5);
       if (me.coins < paid) return;
       cur.beer -= 1; if (paid) { cur.till = (cur.till || 0) + paid; cur.sold = (cur.sold || 0) + 1; }
       return cur;
     }, (ok, cur) => {
       if (!ok) return banner(!cur || (cur.beer || 0) < 1 ? "Pivo došlo. Hostinský musí uvařit další." : "Nemáš dost grošů");
       me.coins -= paid; me.buffUntil = Date.now() + BUFF_MS; heal(10); saveMe(); ui();
-      pop(P.x, P.y, mine ? "Na zdraví!" : `−${paid} grošů`, "#f4cf6a");
+      pop(P.x, P.y, isMine ? "Na zdraví!" : `−${paid} grošů`, "#f4cf6a");
       banner("Posilněn pivem na 60 s: chodíš, pracuješ i bojuješ líp.", 3500);
     });
   }
@@ -873,7 +884,7 @@ const FIREBASE_CONFIG = {
   // ---------- livestock, furnace, smithy, food ----------
   function liveCollect(i, thenFeed) {
     const t = eff(i), L = LIVE[t]; let got = 0;
-    claim(i, (e, cur) => { if (e !== t || !cur || cur.oid !== me.id) return false; got = livePending(cur); return got > 0 || thenFeed; },
+    claim(i, (e, cur) => { if (e !== t || !cur || !mine(cur)) return false; got = livePending(cur); return got > 0 || thenFeed; },
       (() => { const o = Object.assign({}, tiles[i]); const n = livePending(o); o.c = n > 0 ? now() : (o.c || now());
         if (thenFeed) { o.c = Math.max(o.c, Math.min(now(), o.f || 0)); if ((o.f || 0) < now()) o.c = now(); o.f = Math.min(now() + FEED_MAX, Math.max(o.f || 0, now()) + FEED_MS); } return o; })(),
       (ok) => {
@@ -944,28 +955,31 @@ const FIREBASE_CONFIG = {
   }
   function marketBuy(id) {
     let got = null;
-    marketTx(id, (cur) => { if (!cur || cur.sid === me.id || me.coins < cur.price) return; got = cur; return null; }, (ok) => {
+    marketTx(id, (cur) => { if (!cur || cur.sid === me.id || (me.name && cur.s === me.name) || me.coins < cur.price) return; got = cur; return null; }, (ok) => {
       if (!ok || !got) return banner("Nabídka už není k mání nebo nemáš dost grošů");
       me.coins -= got.price; add(got.item, got.qty); saveMe(); ui(); refreshSheet();
-      if (online) db.ref("payouts/" + got.sid).transaction((v) => (v || 0) + got.price);
+      if (online) db.ref("payouts/" + (got.s ? got.s.replace(/\./g, ",") : got.sid)).transaction((v) => (v || 0) + got.price);
       banner(`Koupeno: ${got.qty}× ${ITEMS[got.item].s}`);
     });
   }
   function marketCancel(id) {
     let got = null;
-    marketTx(id, (cur) => { if (!cur || cur.sid !== me.id) return; got = cur; return null; }, (ok) => {
+    marketTx(id, (cur) => { if (!cur || (cur.sid !== me.id && !(me.name && cur.s === me.name))) return; got = cur; return null; }, (ok) => {
       if (!ok || !got) return; add(got.item, got.qty); saveMe(); ui(); refreshSheet(); banner("Nabídka stažena");
     });
   }
   function watchPayouts() {
     if (!online) return;
-    db.ref("payouts/" + me.id).on("value", (s) => {
-      const v = s.val() || 0; if (v <= 0) return;
-      let got = 0;
-      db.ref("payouts/" + me.id).transaction((cur) => { got = cur || 0; return got > 0 ? 0 : undefined; }, (e, ok) => {
-        if (!e && ok && got > 0) { me.coins += got; me.pts += got; saveScore(); ui(); banner(`Na trhu se prodalo tvoje zboží: +${got} grošů`, 4000); }
-      }, false);
-    });
+    for (const key of new Set([me.id, (me.name || "").replace(/\./g, ",")].filter(Boolean))) {
+      const ref = db.ref("payouts/" + key);
+      ref.on("value", (s) => {
+        const v = s.val() || 0; if (v <= 0) return;
+        let got = 0;
+        ref.transaction((cur) => { got = cur || 0; return got > 0 ? 0 : undefined; }, (e, ok) => {
+          if (!e && ok && got > 0) { me.coins += got; me.pts += got; saveScore(); ui(); banner(`Na trhu se prodalo tvoje zboží: +${got} grošů`, 4000); }
+        }, false);
+      });
+    }
   }
 
   // ---------- wild animals (same for everyone, by time window) ----------
@@ -1277,11 +1291,11 @@ const FIREBASE_CONFIG = {
     }
     if (j.kind === "reap") {
       const i = j.y * W + j.x, o = tiles[i], t = eff(i);
-      if (!CROPS[t] || !o || o.oid !== me.id || cropGrowth(i, o, t) < 1) { P.job = null; S.marker = null; return; }
+      if (!CROPS[t] || !o || !mine(o) || cropGrowth(i, o, t) < 1) { P.job = null; S.marker = null; return; }
       if (P.cd <= 0) { P.cd = fast ? .14 : .25; P.swing = .18; j.prog += .34; }
       if (j.prog < 1) return;
       busy = true;
-      claim(i, (e, cur) => e === t && cur && cur.oid === me.id && cropGrowth(i, cur, t) >= 1, { t, o: me.name, oid: me.id, p: now() }, (ok) => {
+      claim(i, (e, cur) => e === t && cur && mine(cur) && cropGrowth(i, cur, t) >= 1, { t, o: me.name, oid: me.id, p: now() }, (ok) => {
         busy = false; P.job = null; S.marker = null;
         if (!ok) return;
         const C = CROPS[t]; add(C.item, C.n); me.pts += 10; addXP(5); saveScore(); ui();
@@ -1289,7 +1303,7 @@ const FIREBASE_CONFIG = {
         let best = null, bd = 1e9;
         for (let y = j.y - 4; y <= j.y + 4; y++) for (let x = j.x - 4; x <= j.x + 4; x++) {
           const k = y * W + x; if (x < 0 || y < 0 || x >= W || y >= H) continue;
-          const tk = eff(k); if (!CROPS[tk] || !tiles[k] || tiles[k].oid !== me.id || cropGrowth(k, tiles[k], tk) < 1) continue;
+          const tk = eff(k); if (!CROPS[tk] || !tiles[k] || !mine(tiles[k]) || cropGrowth(k, tiles[k], tk) < 1) continue;
           const d = Math.abs(x - j.x) + Math.abs(y - j.y); if (d < bd) { bd = d; best = [x, y]; }
         }
         if (best) { P.job = { kind: "reap", x: best[0], y: best[1], prog: 0 }; P.path = pathTo(best[0], best[1], true) || []; S.marker = { x: best[0], y: best[1] }; }
@@ -1697,8 +1711,8 @@ const FIREBASE_CONFIG = {
       ctx.fillStyle = ripe ? "#d9b84a" : "#7fbf4a"; ctx.fillRect(px, base - hgt, 2, hgt);
       if (ripe) { ctx.fillStyle = "#e8c860"; ctx.fillRect(px - 1, base - hgt - 3, 4, 4); }
     }
-    if (ripe && o && o.oid === me.id) { const b = Math.sin(t * 5) * s * .03; ctx.fillStyle = "#f4cf6a"; ctx.fillRect(X + s * .44, Y - s * .12 + b, s * .12, s * .12); }
-    if (!isProtected(i) && isNight() && o && o.oid === me.id) { ctx.fillStyle = "rgba(255,90,70,.8)"; ctx.fillRect(X + s * .04, Y + s * .04, s * .1, s * .1); }
+    if (ripe && o && mine(o)) { const b = Math.sin(t * 5) * s * .03; ctx.fillStyle = "#f4cf6a"; ctx.fillRect(X + s * .44, Y - s * .12 + b, s * .12, s * .12); }
+    if (!isProtected(i) && isNight() && o && mine(o)) { ctx.fillStyle = "rgba(255,90,70,.8)"; ctx.fillRect(X + s * .04, Y + s * .04, s * .1, s * .1); }
   }
   function drawPen(X, Y, s, v, o, t) {
     ctx.fillStyle = "#7a9a46"; ctx.fillRect(X + 1, Y + 1, s - 2, s - 2);
@@ -1715,7 +1729,7 @@ const FIREBASE_CONFIG = {
       if (!sheep) { ctx.fillRect(X + s * .3, Y + s * .46 + bob, s * .12, s * .1); ctx.fillRect(X + s * .5, Y + s * .56 + bob, s * .1, s * .1); }
       ctx.fillStyle = "#3b3330"; ctx.fillRect(X + s * .24, Y + s * .7, s * .05, s * .12); ctx.fillRect(X + s * .6, Y + s * .7, s * .05, s * .12);
     }
-    if (o && o.oid === me.id) {
+    if (o && mine(o)) {
       const n = livePending(o);
       if (n > 0) { ctx.fillStyle = "#f4cf6a"; ctx.fillRect(X + s * .44, Y - s * .12 + Math.sin(t * 5) * s * .03, s * .12, s * .12); }
       else if (fedLeft(o) <= 0) { ctx.fillStyle = "#ff8a6b"; ctx.font = `700 ${Math.round(s * .3)}px "Pixelify Sans", monospace`; ctx.textAlign = "center"; ctx.fillText("hlad", X + s / 2, Y + s * .1); }
@@ -1931,7 +1945,7 @@ const FIREBASE_CONFIG = {
     $("bagBtn").hidden = !play;
     if (!room && !dun) renderTray();
     if (inPub) {
-      const pb = room.pub || {}, owner = pb.oid === me.id, price = pb.price || 5;
+      const pb = room.pub || {}, owner = mine(pb) || mine(tiles[room.i]), price = pb.price || 5;
       $("pStock").querySelector("b").textContent = `Na čepu: ${pb.beer || 0}`;
       $("pOwner").textContent = owner ? "tvoje hospoda" : `hostinský ${pb.o || (tiles[room.i] && tiles[room.i].o) || "?"}`;
       for (const id of ["pBrew", "pDown", "pUp", "pTill"]) $(id).hidden = !owner;
@@ -2028,9 +2042,9 @@ const FIREBASE_CONFIG = {
       add2(el("div", { class: "sec" }, "Nabídky"));
       if (!offers.length) add2(el("div", { class: "note" }, "Zatím nikdo nic neprodává."));
       for (const [id, of] of offers) {
-        if (!of || !ITEMS[of.item]) continue; const mine = of.sid === me.id;
-        add2(row(`${of.qty}× ${ITEMS[of.item].n}`, `${of.price} grošů · prodává ${mine ? "ty" : of.s || "?"}`,
-          mine ? btn("Stáhnout", () => marketCancel(id), { ghost: true }) : btn("Koupit", () => marketBuy(id), { disabled: me.coins < of.price })));
+        if (!of || !ITEMS[of.item]) continue; const isMine = of.sid === me.id || (!!me.name && of.s === me.name);
+        add2(row(`${of.qty}× ${ITEMS[of.item].n}`, `${of.price} grošů · prodává ${isMine ? "ty" : of.s || "?"}`,
+          isMine ? btn("Stáhnout", () => marketCancel(id), { ghost: true }) : btn("Koupit", () => marketBuy(id), { disabled: me.coins < of.price })));
       }
       add2(el("div", { class: "sec" }, "Prodat"));
       const sel = el("select", { id: "mItem", "aria-label": "Zboží" }); for (const k of TRADE) sel.append(el("option", { value: k }, `${ITEMS[k].n} (${have(k)})`));
@@ -2181,7 +2195,7 @@ const FIREBASE_CONFIG = {
   function tstRipen() {
     let n = 0;
     for (const [k, o] of Object.entries(tiles)) {
-      const i = +k, t = effFrom(o, i); if (!o || o.oid !== me.id) continue;
+      const i = +k, t = effFrom(o, i); if (!o || !mine(o)) continue;
       if (CROPS[t]) { tiles[i] = Object.assign({}, o, { p: now() - 3600000 }); n++; }
       if (LIVE[t]) { tiles[i] = Object.assign({}, o, { c: now() - LIVE_RATE * LIVE_CAP, f: now() + FEED_MAX }); n++; }
       rawLocal[keyFor(i)] = tiles[i];
