@@ -1,0 +1,2244 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Manazinie test</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%20shape-rendering%3D%22crispEdges%22%3E%3Crect%20width%3D%2216%22%20height%3D%2216%22%20rx%3D%223%22%20fill%3D%22%232c5a2a%22/%3E%3Crect%20x%3D%220%22%20y%3D%2213%22%20width%3D%2216%22%20height%3D%223%22%20fill%3D%22%2364a744%22/%3E%3Crect%20x%3D%220.5%22%20y%3D%224%22%20width%3D%223%22%20height%3D%224%22%20rx%3D%221%22%20fill%3D%22%233d8a37%22/%3E%3Crect%20x%3D%221.5%22%20y%3D%228%22%20width%3D%221%22%20height%3D%225%22%20fill%3D%22%236b4a2b%22/%3E%3Crect%20x%3D%2211%22%20y%3D%222%22%20width%3D%222%22%20height%3D%224%22%20fill%3D%22%236d6d73%22/%3E%3Crect%20x%3D%227%22%20y%3D%222%22%20width%3D%222%22%20height%3D%221%22%20fill%3D%22%23c2523f%22/%3E%3Crect%20x%3D%226%22%20y%3D%223%22%20width%3D%224%22%20height%3D%221%22%20fill%3D%22%23c2523f%22/%3E%3Crect%20x%3D%225%22%20y%3D%224%22%20width%3D%226%22%20height%3D%221%22%20fill%3D%22%23c2523f%22/%3E%3Crect%20x%3D%224%22%20y%3D%225%22%20width%3D%228%22%20height%3D%221%22%20fill%3D%22%23c2523f%22/%3E%3Crect%20x%3D%223%22%20y%3D%226%22%20width%3D%2210%22%20height%3D%221%22%20fill%3D%22%23c2523f%22/%3E%3Crect%20x%3D%222%22%20y%3D%227%22%20width%3D%2212%22%20height%3D%221%22%20fill%3D%22%23a8402f%22/%3E%3Crect%20x%3D%224%22%20y%3D%228%22%20width%3D%228%22%20height%3D%225%22%20fill%3D%22%23a8743f%22/%3E%3Crect%20x%3D%224%22%20y%3D%2210%22%20width%3D%228%22%20height%3D%221%22%20fill%3D%22%238a5d31%22/%3E%3Crect%20x%3D%227%22%20y%3D%2210%22%20width%3D%222%22%20height%3D%223%22%20fill%3D%22%234a2f1a%22/%3E%3Crect%20x%3D%225%22%20y%3D%229%22%20width%3D%221%22%20height%3D%221%22%20fill%3D%22%23f4cf6a%22/%3E%3Crect%20x%3D%2210%22%20y%3D%229%22%20width%3D%221%22%20height%3D%221%22%20fill%3D%22%23f4cf6a%22/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAAA9zQYyAAAHOElEQVR4AeyavYpkRRiGi4UFERRFRJzAC1hFBA1MDQUNTRSvwBswMNTUcC/AizDRQDDQwMDcTHDBREUNVhSUapnl9ExVddU59fP9PAs1O336nKr3e95nm4WZO2HBn5fevfcvyz6DBWqF4UKnxF0xKGfOJ7Ci+yFCbweZj5ETJRMY7UZXoa/DSgZKNjkERvjSRegRweRgJ8loAj39OSR0zyCjobG/fAI9fNotdDxcPiISaiRwxK1dQh85UCNgMs8nsNexZqH3HjQfCSdqJ7DHtWqh4+ZxaYdEfl0EonNx1aauErplw9qDuQ8CLQRqHawSuuVgjfeS2Q6Bi0LX/suwg4RJpBKocbEodM0GUocnl00Cl5zMCn3pQZu4mEoDgZKbSaFLD2gYmIz2CeQcTQptHwcTWiVwS+hz862OzVwWCKRcvSW0hUGZwS+BM6FTxvtFw+QaCNx09kxoDQOQEQIlAo+Evml66SHeg4AkAlt3HwktKSBZFhAwciRCHyjy/sNnw4h1INLFR9945s0wYl08eNINJ6G3H9mTzuUYCHQlcO3wSeiuO7MZBBYSQOiF8Dm6PwGE7s+UHRcSuHP9f4+FGaQfTT5FBPiEVlQWUcsE4oczQpcZ8a4yAgitrDDilgkgdJkP7yojgNDKCiNumcAxoct7q3y35UfZowZsyRDvHZVD474IrbE1MmcJIHQWDW9oJIDQGlsjc5YAQmfR8IZGAgitsbUFmbUcidBamiJnFQGErsLETVoIILSWpshZRQChqzBxkxYCCK2lKXJWEdgt9NOvPBGOrqqEB2+KPxpuWe3HrX/C+nwthJuE3grcckju3t775c7huh8C1UJH+UZiGb3/yOzsLYdAldCzZJt1jhz8JOlN4KLQsyWbfV5voOy3lkBR6FVyrTp3bRWc3oNAUeijB/A8BGYTyAq9+lNy9fmzi+C8PgSyQvfZnl0gMJcAQs/lzWmDCSD0YMBsP5eASqH5Ue9+Sd756btQuxpOEXOrSqHF0COIOAIILa4SAh0hgNBH6PGsOAIILa4SAh0hgNBH6PGsOAIIPboS9p9KAKGn4uaw0QQQejRh9p9KAKGn4uaw0QQQejRh9p9KAKGn4uaw0QRWCn022yffPhZurtzvbJw9yIthBGp/5yPeNyxE48ZihG7Mze0QSBJA6CQWLmolgNBamyN3kgBCJ7FwUSsBhNbanKrc88Ii9DzWnDSBAEJPgMwR8wgg9DzWnDSBAEJPgMwR8wgg9DzWnDSBwFChP/j8YahdD375LXhcVmb+6MHd0LJGuT1U6FGh2RcCOQIInSPDdZUEEFplbYTOEcgK/ev3f+Se4ToExBLICi02McEgUCBQFHrtp3QhNW9BIEOgKHR8BqkjBZYWAheFjoMgdaTA0kCgSug4CFJHCizpBKqFjoNEqa9XfM2CgDQCTUJvw1+LHf9++as/Q2p9/fg/4eb6+OrvcHSF154KrPEMjvZUen7rUuj4YrfQHTOwFQS6EUDobijZSAIBhJbQAhm6EUDobijZSAIBhJbQAhm6EUDobiiHbMSmjQQQuhEYt8smgNCy+yFdIwGEbgTG7bIJILTsfkjXSMC80G+992JoWY38RNxufb4WyHqFbpmSe90QQGg3VfsYFKF99OxmSoR2U7WPQRHaR89upkRoN1XrHbQlOUK30OJe8QQQWnxFBGwhgNAttLhXPAGEFl8RAVsIIHQLLe4VT0Cl0D/+/HuoXfc//Sa0rNp9432fffFDGLHi3nXrfw6j5hNvbyKgSqETc3AJAicCCH3CwBcrBBDaSpPMcSKA0CcMfLFCAKGtNMkcJwJmhT5Nxxd3BBDaXeW2B0Zo2/26mw6h3VVue2CEtt2vu+lUCv3Cc08GCWuULRJmixlGzdd537PtVAp9NgEvILAhgNAbGHyrnwBC6++QCTYEEHoDg2/1E0Bo/R0ywYYAQm9gmPvW4UAI7bB0yyMjtOV2Hc6G0A5LtzwyQltu1+FsCO2wdMsjexXacqeuZ0No1/XbGx6h7XXqeiKEdl2/veER2l6nridCaNf12xv+ttD2ZmQiRwQQ2lHZHkZFaA8tO5oRoR2V7WHUO6+/fRWOrr/efz7UrqNnxee/fPVukLCuPrwXRiwJs8UMkbW2xSe0h4+tzIwWLyO0xVYdz4TQjsu3ODpCW2zV8UwI7bh8i6MjtMVWHc+E0MnyuaiVAEJrbY7cSQIIncTCRa0EEFprc+ROEkDoJBYuaiWA0FqbI3eSQLPQyV24CAEhBBBaSBHE6EMAoftwZBchBBBaSBHE6EMAoftwZBchBBBaSBECY6iMhNAqayN0jgBC58hwXSUBhFZZG6FzBBA6R4brKgkgtMraCJ0jgNA5MqXrvCeWAEKLrYZgewgg9B5qPCOWAEKLrYZgewgg9B5qPCOWAEKLrYZgewj0FnpPBp6BQDcCCN0NJRtJIIDQElogQzcCCN0NJRtJIPAfAAAA//+nZet6AAAABklEQVQDAJPEfIzoteJJAAAAAElFTkSuQmCC">
+<meta name="theme-color" content="#1f2e25">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one-screen game. Two-row HUD on top, shared map in the middle, tabbed build tray at the bottom, bottom sheets for menus. */
+:root {
+  --frame: #15201a; --frame-2: #1f2e25; --line: #34493c;
+  --ink: #eef3e6; --muted: #9fb3a3; --wood: #e0a45a; --stone: #a9b8c6; --moss: #8fd16a; --danger: #ff8a6b; --gold: #f4cf6a; --hp: #e0574a;
+  --display: "Pixelify Sans", "Courier New", monospace;
+  --body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--frame); color: var(--ink); font-family: var(--body); font-size: 15px;
+  overflow: hidden; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+[hidden] { display: none !important; }
+#app { height: 100%; display: flex; flex-direction: column; }
+.hud, .tray {
+  padding-left: max(12px, env(safe-area-inset-left, 0px));
+  padding-right: max(12px, env(safe-area-inset-right, 0px));
+  background: var(--frame-2);
+}
+.hud { border-bottom: 2px solid var(--line); padding-block: 6px; display: flex; flex-direction: column; gap: 6px; }
+.hudrow { display: flex; align-items: center; gap: 6px 8px; flex-wrap: wrap; }
+.brand { font-family: var(--display); font-weight: 700; font-size: 19px; color: var(--moss); margin-right: auto; }
+.stat { display: flex; align-items: center; gap: 3px; font-family: var(--display); font-size: 14px; font-variant-numeric: tabular-nums; }
+.stat i { width: 10px; height: 10px; display: inline-block; border-radius: 3px; }
+.stat .w { background: var(--wood); }
+.stat .s { background: var(--stone); border-radius: 50%; }
+.stat .c { background: var(--gold); border-radius: 50%; box-shadow: inset 0 0 0 2px #c79a2a; }
+.stat .g { background: #ffd84a; clip-path: polygon(50% 0, 100% 40%, 80% 100%, 20% 100%, 0 40%); border-radius: 0; }
+.stat .o { background: var(--moss); border-radius: 50%; width: 9px; height: 9px; box-shadow: 0 0 0 3px rgba(143,209,106,.25); }
+.stat.buff { color: var(--gold); }
+.lvl { font-family: var(--display); font-size: 13px; background: var(--frame); border: 2px solid var(--line); border-radius: 6px; padding: 0 5px; display: flex; align-items: center; gap: 4px; }
+.bar { width: 28px; height: 8px; background: #0b120e; border-radius: 4px; overflow: hidden; }
+.bar b { display: block; height: 100%; background: var(--moss); width: 0; }
+.bar.hp b { background: var(--hp); }
+.clock { font-family: var(--display); font-size: 13px; color: var(--muted); }
+.clock.night { color: #9fb4ff; }
+.hbtn {
+  font-family: var(--display); font-size: 13px; font-weight: 700; color: var(--ink);
+  background: var(--frame); border: 2px solid var(--line); border-radius: 6px; padding: 2px 7px; cursor: pointer;
+}
+.stage { position: relative; flex: 1; min-height: 0; }
+#cv { display: block; width: 100%; height: 100%; cursor: pointer; }
+.tray { border-top: 2px solid var(--line); padding-block: 6px 8px; }
+.tabs { display: flex; gap: 6px; margin-bottom: 6px; overflow-x: auto; }
+.tab { font-family: var(--display); font-size: 14px; padding: 3px 10px; border-radius: 999px; background: transparent; color: var(--muted); border: 2px solid var(--line); cursor: pointer; flex: none; }
+.tab[aria-pressed="true"] { color: #10200f; background: var(--moss); border-color: var(--moss); }
+.items { display: flex; gap: 8px; overflow-x: auto; }
+.tool {
+  flex: 0 0 auto; min-width: 104px; display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+  padding: 7px 9px; background: var(--frame); color: var(--ink);
+  border: 2px solid var(--line); border-radius: 6px; font-family: var(--body); font-size: 12px; text-align: left; cursor: pointer;
+}
+.tool b { font-family: var(--display); font-size: 15px; }
+.tool span { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tool[aria-pressed="true"] { border-color: var(--moss); box-shadow: inset 0 0 0 1px var(--moss); }
+.tool:disabled { opacity: .45; cursor: not-allowed; }
+.tool.lock span { color: var(--danger); }
+.tool.info { cursor: default; border-style: dashed; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--moss); outline-offset: 2px; }
+.banner {
+  position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); max-width: calc(100% - 32px); z-index: 5;
+  background: rgba(21,32,26,.92); border: 2px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; font-size: 13px; color: var(--ink); text-align: center; pointer-events: none;
+}
+.board {
+  position: absolute; top: 8px; right: max(8px, env(safe-area-inset-right, 0px)); width: 160px; cursor: pointer; z-index: 4;
+  background: rgba(21,32,26,.88); border: 2px solid var(--line); border-radius: 8px; padding: 6px 9px; font-size: 12px;
+}
+.board h3 { margin: 0 0 4px; font-family: var(--display); font-size: 13px; color: var(--wood); }
+.board ol { margin: 0; padding-left: 18px; display: grid; gap: 2px; }
+.board li { font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.board li span { float: right; color: var(--muted); }
+.board li.me { color: var(--moss); }
+.board .empty { color: var(--muted); }
+.board.min ol, .board.min .empty { display: none; }
+.board.min h3 { margin: 0; }
+.overlay {
+  position: absolute; inset: 0; display: grid; place-items: center; overflow-y: auto; z-index: 20;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 16px;
+  background: rgba(13,20,16,.78);
+}
+.card {
+  width: 100%; max-width: 380px; background: var(--frame-2); border: 2px solid var(--line); border-radius: 10px;
+  padding: 22px 20px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 6px 0 #0b120e;
+}
+.card h1 { margin: 0; font-family: var(--display); font-size: 44px; color: var(--moss); line-height: 1; }
+.card h2 { margin: 0; font-family: var(--display); font-size: 26px; text-wrap: balance; }
+.card p { margin: 0; color: var(--muted); line-height: 1.5; }
+.eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--wood); font-weight: 700; }
+label.eyebrow { color: var(--muted); margin-bottom: -6px; }
+.card input { width: 100%; padding: 12px; font-size: 18px; font-family: var(--display); background: var(--frame); color: var(--ink); border: 2px solid var(--line); border-radius: 6px; }
+.igfield { position: relative; }
+.igfield span { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-family: var(--display); font-size: 18px; color: var(--muted); pointer-events: none; }
+.igfield input { padding-left: 30px; text-transform: lowercase; }
+.hint { font-size: 13px; color: var(--muted); line-height: 1.45; }
+.btn {
+  padding: 11px 16px; font-family: var(--display); font-size: 17px; font-weight: 700;
+  background: var(--moss); color: #10200f; border: 0; border-radius: 6px; cursor: pointer; box-shadow: 0 3px 0 #4f8a35;
+}
+.btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #4f8a35; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.ghost { background: transparent; color: var(--ink); border: 2px solid var(--line); box-shadow: none; }
+.btn.small { padding: 6px 11px; font-size: 14px; box-shadow: 0 2px 0 #4f8a35; }
+.btn.small.ghost { box-shadow: none; }
+.err { color: var(--danger); font-size: 14px; min-height: 1.2em; }
+.mapcard { max-width: 460px; }
+#mm { width: 100%; max-width: 100%; aspect-ratio: 1; image-rendering: pixelated; border: 2px solid var(--line); border-radius: 6px; cursor: crosshair; display: block; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 12px; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.btnrow { display: flex; gap: 8px; flex-wrap: wrap; }
+.btnrow .btn { flex: 1 1 140px; font-size: 15px; }
+/* bottom sheet for building menus, inventory, quests, market */
+.sheet { position: absolute; inset: 0; z-index: 15; display: flex; align-items: flex-end; justify-content: center; background: rgba(13,20,16,.55); }
+.sheetCard {
+  width: 100%; max-width: 520px; max-height: 82%; overflow-y: auto; background: var(--frame-2);
+  border: 2px solid var(--line); border-bottom: 0; border-radius: 12px 12px 0 0; padding: 14px max(14px, env(safe-area-inset-left, 0px)) 18px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.sheetHead { display: flex; align-items: center; gap: 10px; }
+.sheetHead h2 { margin: 0; font-family: var(--display); font-size: 22px; margin-right: auto; }
+.sec { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--wood); font-weight: 700; margin-top: 4px; }
+.row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--frame); border: 1px solid var(--line); border-radius: 8px; }
+.row .grow { flex: 1; min-width: 0; }
+.row .t { font-family: var(--display); font-size: 15px; }
+.row .d { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.row.done { opacity: .55; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 6px; }
+.cell { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: var(--frame); border: 1px solid var(--line); border-radius: 6px; font-size: 13px; }
+.cell b { font-family: var(--display); font-size: 15px; margin-left: auto; font-variant-numeric: tabular-nums; }
+.dot { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.form { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.form select, .form input { padding: 8px; font: 15px var(--body); background: var(--frame); color: var(--ink); border: 2px solid var(--line); border-radius: 6px; min-width: 0; }
+.form input { width: 76px; }
+.note { font-size: 13px; color: var(--muted); line-height: 1.45; }
+.ok { color: var(--moss); } .bad { color: var(--danger); }
+@media (prefers-reduced-motion: reduce) { .btn:active { transform: none; } }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="hud">
+    <div class="hudrow">
+      <div class="brand">Manazinie</div>
+      <div class="clock" id="clock">Den</div>
+      <button class="hbtn" id="adminBtn" hidden style="border-color:#ff8a6b;color:#ff8a6b">Admin</button>
+      <button class="hbtn" id="bagBtn" hidden>Batoh</button>
+      <button class="hbtn" id="mapBtn" hidden>Mapa</button>
+    </div>
+    <div class="hudrow">
+      <div class="lvl" title="Úroveň a zkušenosti">Úr. <span id="sLvl">1</span><span class="bar"><b id="xpBar"></b></span></div>
+      <div class="lvl" title="Zdraví">HP <span class="bar hp"><b id="hpBar"></b></span></div>
+      <div class="stat" title="Dřevo"><i class="w"></i><span id="sWood">0</span></div>
+      <div class="stat" title="Kámen"><i class="s"></i><span id="sStone">0</span></div>
+      <div class="stat" title="Groše"><i class="c"></i><span id="sCoins">0</span></div>
+      <div class="stat" title="Zlato"><i class="g"></i><span id="sGold">0</span></div>
+      <div class="stat buff" id="sBuff" title="Posilněn pivem" hidden>Pivo <span id="sBuffT">60</span>s</div>
+    </div>
+  </header>
+
+  <main class="stage">
+    <canvas id="cv" aria-label="Společná mapa Manazinie"></canvas>
+    <aside class="board" id="board">
+      <h3>Žebříček · online <span id="sOnline">0</span></h3>
+      <ol id="top"></ol>
+      <div class="empty" id="topEmpty">Zatím nikdo nic nepostavil</div>
+    </aside>
+    <div class="banner" id="banner" hidden></div>
+
+    <section class="sheet" id="sheet" hidden>
+      <div class="sheetCard" role="dialog" aria-modal="true" aria-labelledby="shTitle">
+        <div class="sheetHead"><h2 id="shTitle">Batoh</h2><button class="btn small ghost" id="shClose">Zavřít</button></div>
+        <div id="shBody" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+    </section>
+
+    <section class="overlay" id="gate">
+      <div class="card">
+        <div class="eyebrow">Společná hra pro sledující</div>
+        <h1>Manazinie</h1>
+        <p>Kácej stromy, těž kámen a železo, stav domy, hradby a hospody, choď na lov a do jeskyní pro zlato. Všichni hrají v jednom velkém světě.</p>
+        <label class="eyebrow" for="nick">Tvoje jméno na Instagramu</label>
+        <div class="igfield"><span>@</span><input id="nick" maxlength="30" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="jmeno.na.instagramu"></div>
+        <div class="hint">Hrát můžou sledující účtu. Nové sledující přidáváme do hry průběžně, takže pokud tě hra ještě nepustí, zkus to za den nebo dva.</div>
+        <div class="err" id="err" role="status"></div>
+        <button class="btn" id="go">Vstoupit</button>
+        <button class="btn ghost" id="watch">Jen se dívat</button>
+      </div>
+    </section>
+
+    <section class="overlay" id="mapView" hidden>
+      <div class="card mapcard">
+        <div class="eyebrow" id="mapEyebrow">Krok 2 ze 2</div>
+        <h2 id="mapTitle">Ťukni na mapu, kde začneš</h2>
+        <canvas id="mm" width="400" height="400" aria-label="Mapa celého světa"></canvas>
+        <div class="legend">
+          <span><i style="background:#2f6b2c"></i>les</span><span><i style="background:#6f6a63"></i>hory</span>
+          <span><i style="background:#3b7fb0"></i>voda</span><span><i style="background:#ffffff;outline:2px solid #000"></i>náves</span>
+          <span><i style="background:#1b1b1b;outline:1px solid #888"></i>jeskyně</span><span><i style="background:#e8574a"></i>domy</span><span><i style="background:#8fd16a"></i>ty</span>
+        </div>
+        <div class="btnrow">
+          <button class="btn" id="bedSpawn" hidden>Začít u své postele</button>
+          <button class="btn ghost" id="plazaSpawn">U návsi</button>
+          <button class="btn ghost" id="randSpawn">Náhodné místo</button>
+          <button class="btn ghost" id="mapClose" hidden>Zavřít mapu</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tray" id="trayOut">
+    <div class="tabs" id="tabs"></div>
+    <div class="items" id="buildItems"></div>
+  </nav>
+  <nav class="tray" id="trayIn" hidden>
+    <div class="items">
+      <button class="tool" id="fBed" aria-pressed="false"><b>Postel</b><span>dřevo 8</span></button>
+      <button class="tool" id="fTable" aria-pressed="false"><b>Stůl</b><span>dřevo 5</span></button>
+      <button class="tool" id="fFire" aria-pressed="false"><b>Krb</b><span>kámen 10</span></button>
+      <button class="tool" id="fExit"><b>Ven</b><span>Odejít z domu</span></button>
+    </div>
+  </nav>
+  <nav class="tray" id="trayPub" hidden>
+    <div class="items">
+      <div class="tool info" id="pStock"><b>Na čepu: 0</b><span id="pOwner">hospoda</span></div>
+      <button class="tool" id="pBrew"><b>Uvařit pivo</b><span>chmel 2</span></button>
+      <button class="tool" id="pBuy"><b>Koupit pivo</b><span id="pBuyCost">5 grošů</span></button>
+      <button class="tool" id="pDown"><b>Cena −</b><span id="pPrice1">5 grošů</span></button>
+      <button class="tool" id="pUp"><b>Cena +</b><span id="pPrice2">5 grošů</span></button>
+      <button class="tool" id="pTill"><b>Vybrat tržbu</b><span id="pTillV">0 grošů</span></button>
+      <button class="tool" id="pExit"><b>Ven</b><span>Odejít z hospody</span></button>
+    </div>
+  </nav>
+  <nav class="tray" id="trayDun" hidden>
+    <div class="items">
+      <div class="tool info"><b id="dFloor">Jeskyně · patro 1</b><span id="dGold">nalezeno zlata: 0</span></div>
+      <button class="tool" id="dEat"><b>Najíst se</b><span id="dEatT">nemáš jídlo</span></button>
+      <button class="tool" id="dBack"><b>K žebříku</b><span>cesta ven</span></button>
+    </div>
+  </nav>
+</div>
+
+<script>
+window.MZ_TEST = true;
+// ======================= NASTAVENÍ =======================
+// 1) Nastavení Firebase projektu "manazinie".
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBhe7RX5LSEsVCkyAfWl2Fd2y8LnQbQlWk",
+  authDomain: "manazinie.firebaseapp.com",
+  databaseURL: "https://manazinie-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "manazinie",
+  storageBucket: "manazinie.firebasestorage.app",
+  messagingSenderId: "448691563099",
+  appId: "1:448691563099:web:ef9a1a2f02f324a7f46d7e",
+};
+// 2) Hrát můžou jen jména ze seznamu sledujících. Seznam se nahrává přes stránku admin.html.
+// =========================================================
+
+(() => {
+  // =================== CORE: constants, world, state, network ===================
+  const W = 200, H = 200, OLDW = 120, SEED = 2026;
+  const T = {
+    GRASS: 0, TREE: 1, ROCK: 2, WATER: 3, HUT: 4, HOUSE: 5, STUMP: 6, RUBBLE: 7, BRIDGE: 8, FIELD: 9, PUB: 10,
+    ORE: 11, CLIFF: 12, CAVE: 13, MAYOR: 14, MARKET: 15, WALL_WOOD: 16, WALL_STONE: 17, GATE: 18, TORCH: 19, TOWER: 20,
+    FURNACE: 21, SMITHY: 22, COOP: 23, SHEEP: 24, COWS: 25, WHEAT: 26, DUG: 27,
+  };
+  const SHIRTS = ["#d9533f", "#3f7fd9", "#9b4fd1", "#e0a020", "#2fae8e", "#e26aa8", "#6b8f23", "#e86f2c"];
+  const PLAZA = [128, 64];
+  const CAVES = [[162, 30], [184, 76], [168, 128], [186, 176]];
+  const CYCLE = 20 * 60000, NIGHT = 5 * 60000, BUFF_MS = 60000;
+  const HOPS_PER_BEER = 2;
+
+  const ITEMS = {
+    wood: { n: "Dřevo", s: "dřevo", c: "#e0a45a" }, stone: { n: "Kámen", s: "kámen", c: "#a9b8c6" },
+    coins: { n: "Groše", s: "groše", c: "#f4cf6a" }, gold: { n: "Zlato", s: "zlato", c: "#ffd84a" },
+    ore: { n: "Železná ruda", s: "ruda", c: "#b5734a" }, iron: { n: "Železo", s: "železo", c: "#c9d2da" },
+    hops: { n: "Chmel", s: "chmel", c: "#7fbf4a" }, grain: { n: "Obilí", s: "obilí", c: "#e8c860" },
+    meat: { n: "Maso", s: "maso", c: "#c2523f" }, hide: { n: "Kůže", s: "kůže", c: "#a8743f" },
+    egg: { n: "Vejce", s: "vejce", c: "#f2efe6" }, milk: { n: "Mléko", s: "mléko", c: "#e9eef5" }, wool: { n: "Vlna", s: "vlna", c: "#ddd6c8" },
+  };
+  const FOOD = { meat: 30, milk: 15, egg: 10 };
+
+  const BUILD = {
+    hut:      { t: T.HUT,   lv: 1, req: 1, cat: "domy",   cost: { wood: 10, stone: 4 }, pts: 100, name: "Chatka" },
+    house:    { t: T.HOUSE, lv: 2, req: 2, cat: "domy",   cost: { wood: 6, stone: 14 }, pts: 300, name: "Kamenný dům" },
+    pub:      { t: T.PUB,   req: 3, cat: "domy",   cost: { wood: 15, stone: 10 }, pts: 500, name: "Hospoda" },
+    field:    { t: T.FIELD, req: 1, cat: "farma",  cost: { wood: 3 }, pts: 20, name: "Chmelnice", multi: true },
+    wheat:    { t: T.WHEAT, req: 1, cat: "farma",  cost: { wood: 2 }, pts: 15, name: "Pole obilí", multi: true },
+    coop:     { t: T.COOP,  req: 2, cat: "farma",  cost: { wood: 8 }, pts: 60, name: "Kurník" },
+    sheep:    { t: T.SHEEP, req: 3, cat: "farma",  cost: { wood: 12, stone: 4 }, pts: 90, name: "Ovčín" },
+    cows:     { t: T.COWS,  req: 4, cat: "farma",  cost: { wood: 14, stone: 8 }, pts: 120, name: "Kravín" },
+    palisade: { t: T.WALL_WOOD, req: 2, cat: "obrana", cost: { wood: 2 }, pts: 4, name: "Palisáda", multi: true },
+    wall:     { t: T.WALL_STONE, req: 4, cat: "obrana", cost: { stone: 3 }, pts: 6, name: "Kamenná hradba", multi: true },
+    gate:     { t: T.GATE,  req: 2, cat: "obrana", cost: { wood: 4, stone: 2 }, pts: 8, name: "Brána" },
+    torch:    { t: T.TORCH, req: 2, cat: "obrana", cost: { wood: 2 }, pts: 3, name: "Pochodeň", multi: true },
+    tower:    { t: T.TOWER, req: 5, cat: "obrana", cost: { wood: 10, stone: 12, iron: 2 }, pts: 150, name: "Strážní věž" },
+    furnace:  { t: T.FURNACE, req: 3, cat: "remesla", cost: { stone: 10, wood: 4 }, pts: 80, name: "Pec" },
+    smithy:   { t: T.SMITHY, req: 4, cat: "remesla", cost: { stone: 12, wood: 8, iron: 3 }, pts: 200, name: "Kovárna" },
+  };
+  const CATS = [["domy", "Domy"], ["farma", "Farma"], ["obrana", "Obrana"], ["remesla", "Řemesla"]];
+  const TOOLS = [
+    null,
+    { name: "Lepší nástroje", cost: { wood: 8, stone: 6 }, req: 1 },
+    { name: "Kvalitní nástroje", cost: { wood: 16, stone: 14 }, req: 2 },
+    { name: "Železné nástroje", cost: { iron: 5, wood: 4 }, req: 3 },
+    { name: "Ocelové nástroje", cost: { iron: 12, gold: 4 }, req: 5 },
+  ];
+  const HOME_UP = {
+    2: { name: "Kamenný dům", cost: { wood: 6, stone: 14 }, pts: 300, req: 2 },
+    3: { name: "Statek", cost: { wood: 25, stone: 20, iron: 2 }, pts: 600, req: 3 },
+    4: { name: "Tvrz", cost: { stone: 40, iron: 8, gold: 10 }, pts: 1200, req: 5 },
+    5: { name: "Hrad", cost: { stone: 80, iron: 20, gold: 40 }, pts: 2500, req: 7 },
+  };
+  const HOME_NAMES = ["", "Chatka", "Kamenný dům", "Statek", "Tvrz", "Hrad"];
+  const CROPS = { [T.FIELD]: { grow: 45000, item: "hops", n: 3, name: "Chmelnice" }, [T.WHEAT]: { grow: 60000, item: "grain", n: 3, name: "Pole obilí" } };
+  const LIVE = { [T.COOP]: { item: "egg", name: "Kurník", animal: "slepice" }, [T.SHEEP]: { item: "wool", name: "Ovčín", animal: "ovce" }, [T.COWS]: { item: "milk", name: "Kravín", animal: "krávy" } };
+  const LIVE_RATE = 10 * 60000, LIVE_CAP = 4, FEED_MS = 2 * 3600000, FEED_MAX = 12 * 3600000;
+  const GEAR = {
+    bow1:       { slot: "bow", name: "Luk", cost: { wood: 6 }, dmg: 1 },
+    bow2:       { slot: "bow", name: "Lovecký luk", cost: { wood: 6, hide: 2, iron: 1 }, dmg: 2 },
+    sword_iron: { slot: "weapon", name: "Železný meč", cost: { iron: 4, wood: 1 }, dmg: 8 },
+    sword_gold: { slot: "weapon", name: "Zlatý meč", cost: { iron: 6, gold: 10 }, dmg: 14 },
+    shield:     { slot: "shield", name: "Štít", cost: { iron: 3, wood: 3 }, def: .15 },
+    armor_iron: { slot: "armor", name: "Železné brnění", cost: { iron: 8, hide: 3 }, def: .3 },
+    armor_gold: { slot: "armor", name: "Zlaté brnění", cost: { iron: 10, gold: 15, hide: 4 }, def: .45 },
+  };
+  const SOLID_BUILD = new Set([T.HUT, T.HOUSE, T.PUB, T.WALL_WOOD, T.WALL_STONE, T.TORCH, T.TOWER, T.FURNACE, T.SMITHY, T.COOP, T.SHEEP, T.COWS, T.FIELD, T.WHEAT]);
+
+  const $ = (id) => document.getElementById(id);
+  let bannerT;
+  const cv = $("cv"), ctx = cv.getContext("2d");
+  const TEST_MODE = typeof window.MZ_TEST !== "undefined" && window.MZ_TEST === true;
+  const PFX = TEST_MODE ? "tst-" : "";
+  const store = {
+    get(k) { try { return localStorage.getItem(k.startsWith("tst-") ? k : PFX + k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k.startsWith("tst-") ? k : PFX + k, v); } catch (e) {} },
+  };
+  function rng(seed) { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
+  function hstr(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+
+  // ---------- world generation ----------
+  // The north-west 120x120 corner is the original map, generated exactly as before so old builds keep their places.
+  const base = (() => {
+    const m = new Uint8Array(W * H);
+    { // original map
+      const OW = OLDW, OH = OLDW, r = rng(SEED), o = new Array(OW * OH).fill(T.GRASS);
+      for (let k = 0; k < 14; k++) {
+        const px = Math.floor(r() * OW), py = Math.floor(r() * OH), rad = 2.2 + r() * 3.5;
+        for (let y = Math.max(0, py - 8); y < Math.min(OH, py + 8); y++) for (let x = Math.max(0, px - 8); x < Math.min(OW, px + 8); x++)
+          if (Math.hypot((x - px) * 1.2, y - py) < rad) o[y * OW + x] = T.WATER;
+      }
+      const scatter = (type, clusters, n, spread) => {
+        for (let c = 0; c < clusters; c++) {
+          const cx = Math.floor(r() * OW), cy = Math.floor(r() * OH);
+          for (let i = 0; i < n; i++) {
+            const x = Math.round(cx + (r() - .5) * spread), y = Math.round(cy + (r() - .5) * spread);
+            if (x >= 0 && y >= 0 && x < OW && y < OH && o[y * OW + x] === T.GRASS) o[y * OW + x] = type;
+          }
+        }
+      };
+      scatter(T.TREE, 150, 22, 9); scatter(T.ROCK, 80, 11, 6);
+      for (let y = 0; y < OH; y++) {
+        const cx = Math.round(OW * .55 + Math.sin(y / 11) * 14 + Math.sin(y / 4.3) * 2);
+        for (let x = cx - 1; x <= cx + 1; x++) o[y * OW + x] = (y % 17 === 8) ? T.BRIDGE : T.WATER;
+      }
+      for (let y = 0; y < OH; y++) for (let x = 0; x < OW; x++) m[y * W + x] = o[y * OW + x];
+    }
+    // new lands
+    const r = rng(SEED * 7 + 11);
+    const vn = (x, y, sc, sd) => { // value noise 0..1
+      const gx = x / sc, gy = y / sc, x0 = Math.floor(gx), y0 = Math.floor(gy), fx = gx - x0, fy = gy - y0;
+      const h = (a, b) => { let v = (a * 374761393 + b * 668265263 + sd * 1442695041) | 0; v = Math.imul(v ^ (v >>> 13), 1274126177); return ((v ^ (v >>> 16)) >>> 0) / 4294967296; };
+      const sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
+      const a = h(x0, y0) + (h(x0 + 1, y0) - h(x0, y0)) * sx, b = h(x0, y0 + 1) + (h(x0 + 1, y0 + 1) - h(x0, y0 + 1)) * sx;
+      return a + (b - a) * sy;
+    };
+    const isNew = (x, y) => x >= OLDW || y >= OLDW;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      if (!isNew(x, y)) continue;
+      const i = y * W + x;
+      const n1 = vn(x, y, 14, 1), n2 = vn(x, y, 6, 2), mtn = Math.max(0, (x - 140) / 50) * .7 + vn(x, y, 18, 3) * .45;
+      if (mtn > .62) { m[i] = n2 > .72 ? T.ORE : n2 > .45 ? T.CLIFF : n2 > .3 ? T.ROCK : T.GRASS; if (mtn > .8 && n2 > .35 && n2 <= .72) m[i] = T.CLIFF; continue; }
+      if (vn(x, y, 11, 4) > .74) { m[i] = T.WATER; continue; }
+      if (n1 > .6) { m[i] = n2 > .35 ? T.TREE : T.GRASS; continue; }
+      m[i] = r() < .04 ? T.TREE : r() < .015 ? T.ROCK : T.GRASS;
+    }
+    // ore sprinkled into mountain edges
+    for (let y = 0; y < H; y++) for (let x = 140; x < W; x++) { const i = y * W + x; if (m[i] === T.ROCK && vn(x, y, 3, 9) > .78) m[i] = T.ORE; }
+    // the river continues south of the old map
+    for (let y = OLDW; y < H; y++) {
+      const cx = Math.round(OLDW * .55 + Math.sin(y / 11) * 14 + Math.sin(y / 4.3) * 2);
+      for (let x = cx - 1; x <= cx + 1; x++) m[y * W + x] = (y % 17 === 8) ? T.BRIDGE : T.WATER;
+    }
+    // east river along the old border with bridges
+    for (let y = 0; y < H; y++) for (let x = OLDW + 1; x <= OLDW + 2; x++) if (y % 13 === 6) { if (m[y * W + x] === T.WATER) m[y * W + x] = T.BRIDGE; }
+    // clear plaza and cave mouths, carve paths to caves
+    const clear = (cx, cy, rad, keepTrees) => { for (let y = cy - rad; y <= cy + rad; y++) for (let x = cx - rad; x <= cx + rad; x++) {
+      if (x < 0 || y < 0 || x >= W || y >= H || Math.hypot(x - cx, y - cy) > rad + .3) continue; const i = y * W + x;
+      if (!keepTrees || m[i] === T.CLIFF || m[i] === T.WATER) m[i] = T.GRASS; } };
+    clear(PLAZA[0], PLAZA[1], 5);
+    m[PLAZA[1] * W + PLAZA[0]] = T.MAYOR; m[PLAZA[1] * W + PLAZA[0] + 3] = T.MARKET;
+    for (const [cx, cy] of CAVES) {
+      clear(cx, cy, 2);
+      for (let x = cx; x >= 136; x--) for (const d of [0, 1]) { const i = (cy + d) * W + x; if (m[i] === T.CLIFF || m[i] === T.WATER) m[i] = T.GRASS; }
+      m[(cy - 1) * W + cx] = T.CLIFF; m[(cy - 1) * W + cx - 1] = T.CLIFF; m[(cy - 1) * W + cx + 1] = T.CLIFF;
+      m[cy * W + cx] = T.CAVE;
+    }
+    for (let x = OLDW - 2; x <= PLAZA[0]; x++) for (const y of [PLAZA[1], PLAZA[1] + 1]) { const i = y * W + x; if (m[i] === T.WATER) m[i] = T.BRIDGE; else if (m[i] !== T.MAYOR && m[i] !== T.MARKET && m[i] !== T.BRIDGE) m[i] = T.GRASS; }
+    return m;
+  })();
+
+  // ---------- tiles (overrides stored online) ----------
+  let tiles = {}, keyOf = {}, offset = 0;
+  const now = () => Date.now() + offset;
+  // Keys: below 14400 = original 120-wide map index, 20000+ = new 200-wide index (both pass the original database rules), "x_y" also accepted.
+  const NEWKEY = 20000;
+  function idxFromKey(k) {
+    if (/^\d+$/.test(k)) { const n = +k; if (n >= NEWKEY) return n - NEWKEY < W * H ? n - NEWKEY : -1; if (n >= OLDW * OLDW) return -1; return Math.floor(n / OLDW) * W + (n % OLDW); }
+    const m = /^(\d{1,3})_(\d{1,3})$/.exec(k); if (!m) return -1;
+    const x = +m[1], y = +m[2]; return x < W && y < H ? y * W + x : -1;
+  }
+  const keyFor = (i) => {
+    if (keyOf[i]) return keyOf[i];
+    const x = i % W, y = Math.floor(i / W);
+    return x < OLDW && y < OLDW ? String(y * OLDW + x) : String(NEWKEY + i);
+  };
+  function effFrom(o, i) { if (!o) return base[i]; if (o.r && now() > o.r) return base[i]; return o.t; }
+  const eff = (i) => effFrom(tiles[i], i);
+  const at = (x, y) => (x < 0 || y < 0 || x >= W || y >= H) ? T.CLIFF : eff(y * W + x);
+  const walkable = (t) => t === T.GRASS || t === T.STUMP || t === T.RUBBLE || t === T.BRIDGE || t === T.GATE || t === T.DUG;
+  const isHome = (t) => t === T.HUT || t === T.HOUSE;
+  const isPub = (t) => t === T.PUB;
+  const homeLv = (o, t) => (o && o.lv) || (t === T.HUT ? 1 : 2);
+  const isNight = (tm = now()) => (tm % CYCLE) >= CYCLE - NIGHT;
+  function darkness(tm = now()) {
+    const p = tm % CYCLE, ns = CYCLE - NIGHT, ramp = 60000;
+    if (p < ns - ramp) return p < ramp ? Math.max(0, 1 - p / ramp) : 0;
+    if (p < ns) return (p - (ns - ramp)) / ramp;
+    return 1;
+  }
+
+  // ---------- me ----------
+  let me = null;
+  try { me = JSON.parse(store.get("osada-me") || "null"); } catch (e) {}
+  if (!me || !me.id) me = { id: "p" + Math.random().toString(36).slice(2, 10), name: "", wood: 0, stone: 0, toolLvl: 0, pts: 0, c: SHIRTS[Math.floor(Math.random() * SHIRTS.length)] };
+  if (me.bed === undefined) me.bed = null;
+  if (me.v !== 2) { if (typeof me.bed === "number") me.bed = Math.floor(me.bed / OLDW) * W + (me.bed % OLDW); me.v = 2; }
+  if (me.hops === undefined) me.hops = 0;
+  if (me.coins === undefined) me.coins = 20;
+  if (me.buffUntil === undefined) me.buffUntil = 0;
+  if (!me.inv) me.inv = {};
+  if (!me.gear) me.gear = {};
+  if (me.xp === undefined) me.xp = Math.floor((me.pts || 0) / 5);
+  if (me.deep === undefined) me.deep = 0;
+  if (!me.q) me.q = { day: -1, done: [] };
+  const level = () => Math.floor(Math.sqrt(me.xp / 40)) + 1;
+  const xpAt = (l) => 40 * (l - 1) * (l - 1);
+  const maxHp = () => 90 + level() * 10;
+  if (me.hp === undefined) me.hp = maxHp();
+  const buffed = () => Date.now() < me.buffUntil;
+  const saveMe = () => store.set("osada-me", JSON.stringify(me));
+  const BASE_RES = new Set(["wood", "stone", "hops", "coins"]);
+  const have = (k) => BASE_RES.has(k) ? (me[k] || 0) : (me.inv[k] || 0);
+  function add(k, n) { if (BASE_RES.has(k)) me[k] = (me[k] || 0) + n; else me.inv[k] = (me.inv[k] || 0) + n; }
+  const canPay = (cost) => Object.entries(cost).every(([k, n]) => have(k) >= n);
+  function pay(cost) { for (const [k, n] of Object.entries(cost)) add(k, -n); }
+  const costText = (cost) => Object.entries(cost).map(([k, n]) => `${ITEMS[k].s} ${n}`).join(" · ");
+  const missingText = (cost) => Object.entries(cost).filter(([k, n]) => have(k) < n).map(([k, n]) => `${ITEMS[k].s} ${n - have(k)}`).join(", ");
+  const toolBase = (t) => t === T.TREE ? 3 : t === T.ORE ? 6 : 4;
+  const hitsFor = (t) => Math.max(1, toolBase(t) - me.toolLvl);
+  const gearOf = (slot) => me.gear[slot] ? GEAR[me.gear[slot]] : null;
+  const weaponDmg = () => Math.round(((gearOf("weapon") || {}).dmg || 3) * (buffed() ? 1.3 : 1));
+  const defense = () => Math.min(.7, ((gearOf("shield") || {}).def || 0) + ((gearOf("armor") || {}).def || 0));
+  const myHome = (i) => i !== null && i !== undefined && isHome(eff(i)) && tiles[i] && tiles[i].oid === me.id;
+
+  const S = { hp: {}, fx: [], marker: null, arrows: [] };
+  const P = { x: PLAZA[0], y: PLAZA[1] + 2, fx: PLAZA[0], fy: PLAZA[1] + 2, path: [], job: null, cd: 0, swing: 0, dir: 1, hurt: 0, lastHit: 0 };
+  let room = null, dun = null;
+  let homesLocal = {}, pubsLocal = {}, rawLocal = {}, marketLocal = {};
+  try { pubsLocal = JSON.parse(store.get("osada-pubs") || "{}"); } catch (e) {}
+  let homeRef = null, pubRef = null;
+  let others = {}, market = {};
+  let mode = "idle";       // idle | spawn | play | watch
+  let selected = null, followIdx = 0, tab = "domy";
+  let tile = 32, camX = PLAZA[0] * 32, camY = PLAZA[1] * 32, dpr = 1;
+  let protDirty = true;
+
+  // ---------- network ----------
+  const online = !TEST_MODE && typeof firebase !== "undefined" && !String(FIREBASE_CONFIG.apiKey).startsWith("DOPLN");
+  let db = null, myRef = null;
+  function loadRaw(v) {
+    const nt = {}, nk = {};
+    for (const [k, o] of Object.entries(v || {})) { const i = idxFromKey(k); if (i < 0 || !o) continue; nt[i] = o; nk[i] = k; }
+    tiles = nt; keyOf = nk; protDirty = true;
+  }
+  if (online) {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.database();
+    db.ref(".info/serverTimeOffset").on("value", (s) => { offset = s.val() || 0; });
+    db.ref("world/tiles").on("value", (s) => { loadRaw(s.val()); if (!$("mapView").hidden) drawMini(); });
+    db.ref("players").on("value", (s) => {
+      const v = s.val() || {}, next = {};
+      for (const [id, p] of Object.entries(v)) {
+        if (id === me.id || !p || typeof p.x !== "number" || now() - (p.ts || 0) > 120000) continue;
+        const old = others[id];
+        let x = p.x, y = p.y; if (p.mv !== 2 && typeof p.in !== "number") { /* old clients use 120-wide coordinates, which match ours */ }
+        next[id] = { n: String(p.n || "Hráč").slice(0, 30), x, y, c: SHIRTS.includes(p.c) ? p.c : SHIRTS[0], act: p.a || 0,
+          inside: typeof p.in === "number", inRoom: typeof p.in === "number" ? p.in : null, fx: old ? old.fx : x, fy: old ? old.fy : y, dir: old ? old.dir : 1, swing: 0 };
+      }
+      others = next; $("sOnline").textContent = Object.keys(others).length + (mode === "play" ? 1 : 0);
+    });
+    db.ref("scores").orderByChild("p").limitToLast(5).on("value", (s) => {
+      const rows = []; s.forEach((c) => { const v = c.val(); if (v && v.p > 0) rows.push({ id: c.key, n: String(v.n || "Hráč").slice(0, 30), p: v.p | 0 }); });
+      rows.sort((a, b) => b.p - a.p); renderTop(rows);
+    });
+    db.ref("market").limitToLast(80).on("value", (s) => { market = s.val() || {}; if (sheetKind === "market") refreshSheet(); });
+  } else {
+    try { homesLocal = JSON.parse(store.get("osada-homes") || "{}"); rawLocal = JSON.parse(store.get("osada-raw") || "{}"); marketLocal = JSON.parse(store.get("osada-market") || "{}"); } catch (e) {}
+    loadRaw(rawLocal); market = marketLocal;
+    setTimeout(() => renderTop([]), 0);
+  }
+  const TS = () => online ? firebase.database.ServerValue.TIMESTAMP : Date.now();
+  function sendPos(extra) {
+    if (!online || mode !== "play" || !myRef) return;
+    myRef.update(Object.assign({ x: P.x, y: P.y, ts: TS() }, extra || {}));
+  }
+  // claim a tile change atomically so only one player gets each tree, rock or building spot
+  function claim(i, test, value, done) {
+    const key = keyFor(i);
+    if (!online) {
+      if (test(eff(i), tiles[i])) {
+        if (value === null) { delete tiles[i]; delete rawLocal[key]; } else { tiles[i] = value; rawLocal[key] = value; keyOf[i] = key; }
+        store.set("osada-raw", JSON.stringify(rawLocal)); protDirty = true; done(true);
+      } else done(false);
+      return;
+    }
+    db.ref("world/tiles/" + key).transaction((cur) => test(effFrom(cur, i), cur) ? value : undefined, (err, ok) => {
+      if (err) { console.warn("Uložení políčka selhalo", err); banner("Server odmítl uložení. Vlož do Firebase nová pravidla z admin stránky.", 5000); }
+      done(!err && ok, err);
+    }, false);
+  }
+  function saveScore() { saveMe(); if (online && me.name) db.ref("scores/" + me.id).set({ n: me.name, p: me.pts }); }
+  // =================== GAMEPLAY ===================
+  const pop = (x, y, text, color) => S.fx.push({ x: x + .5, y: y + .2, text, color, life: 1.2, room: !!room, dun: !!dun });
+  function addXP(n) {
+    const before = level(); me.xp += n;
+    const after = level();
+    if (after > before) {
+      me.hp = maxHp();
+      banner(`Nová úroveň ${after}! ${unlockText(after)}`, 4500);
+      pop(P.x, P.y - .4, `Úroveň ${after}!`, "#8fd16a");
+    }
+  }
+  function unlockText(l) {
+    const names = Object.values(BUILD).filter((b) => b.req === l).map((b) => b.name);
+    const up = Object.values(HOME_UP).filter((u) => u.req === l).map((u) => u.name);
+    const all = names.concat(up);
+    return all.length ? `Odemčeno: ${all.join(", ")}.` : "Máš víc zdraví.";
+  }
+  function heal(n) { me.hp = Math.min(maxHp(), me.hp + n); }
+
+  // ---------- protection: walls enclose land, torches and towers light it ----------
+  let protMask = new Uint8Array(W * H), enclosed = new Uint8Array(W * H), comp = new Int32Array(W * H), compOwner = [];
+  const BLOCKS = (t) => t === T.WALL_WOOD || t === T.WALL_STONE || t === T.GATE || t === T.CLIFF || SOLID_BUILD.has(t) && t !== T.FIELD && t !== T.WHEAT;
+  function computeProtection() {
+    protDirty = false;
+    const out = new Uint8Array(W * H), q = new Int32Array(W * H); let qh = 0, qt = 0;
+    const push = (i) => { if (!out[i] && !BLOCKS(eff(i))) { out[i] = 1; q[qt++] = i; } };
+    for (let x = 0; x < W; x++) { push(x); push((H - 1) * W + x); }
+    for (let y = 0; y < H; y++) { push(y * W); push(y * W + W - 1); }
+    while (qh < qt) { const i = q[qh++], x = i % W, y = (i / W) | 0;
+      if (x > 0) push(i - 1); if (x < W - 1) push(i + 1); if (y > 0) push(i - W); if (y < H - 1) push(i + W); }
+    enclosed = new Uint8Array(W * H); comp = new Int32Array(W * H).fill(-1); compOwner = [];
+    for (let i = 0; i < W * H; i++) {
+      if (out[i] || BLOCKS(eff(i)) || comp[i] >= 0) continue;
+      const id = compOwner.length; let owner = null; qh = 0; qt = 0; q[qt++] = i; comp[i] = id;
+      while (qh < qt) { const j = q[qh++], x = j % W, y = (j / W) | 0; enclosed[j] = 1;
+        for (const n of [x > 0 ? j - 1 : -1, x < W - 1 ? j + 1 : -1, y > 0 ? j - W : -1, y < H - 1 ? j + W : -1]) {
+          if (n < 0) continue; const tn = eff(n);
+          if (BLOCKS(tn)) { const o = tiles[n]; if (!owner && o && o.oid && (tn === T.WALL_WOOD || tn === T.WALL_STONE || tn === T.GATE)) owner = { id: o.oid, n: o.o }; continue; }
+          if (comp[n] < 0 && !out[n]) { comp[n] = id; q[qt++] = n; }
+        } }
+      compOwner.push(owner);
+    }
+    protMask = new Uint8Array(enclosed);
+    for (const [k, o] of Object.entries(tiles)) {
+      const i = +k, t = effFrom(o, i), rad = t === T.TORCH ? 3 : t === T.TOWER ? 7 : 0; if (!rad) continue;
+      const cx = i % W, cy = (i / W) | 0;
+      for (let y = cy - rad; y <= cy + rad; y++) for (let x = cx - rad; x <= cx + rad; x++)
+        if (x >= 0 && y >= 0 && x < W && y < H && Math.hypot(x - cx, y - cy) <= rad + .2) protMask[y * W + x] = 1;
+    }
+  }
+  const isProtected = (i) => protMask[i] === 1;
+  function plotOwnerAt(i) { if (!enclosed[i]) return null; const o = compOwner[comp[i]]; return o && o.id !== me.id ? o : null; }
+
+  // ---------- crops (night trampling for unprotected fields) ----------
+  function cropStart(i, o) {
+    let p = (o && o.p) || 0; const tm = now();
+    if (isProtected(i)) return p;
+    for (let n = Math.floor(p / CYCLE); n <= Math.floor(tm / CYCLE); n++) {
+      const ns = n * CYCLE + CYCLE - NIGHT;
+      if (ns > p && ns < tm && hash(i, n) < .4) p = Math.min(tm, ns + NIGHT);
+    }
+    return p;
+  }
+  const cropGrowth = (i, o, t) => Math.max(0, Math.min(1, (now() - cropStart(i, o)) / CROPS[t].grow));
+  const trampled = (i, o) => o && cropStart(i, o) !== (o.p || 0);
+
+  // ---------- livestock ----------
+  function livePending(o) { if (!o) return 0; const f = o.f || 0, c = o.c || 0, end = Math.min(now(), f); return end > c ? Math.min(LIVE_CAP, Math.floor((end - c) / LIVE_RATE)) : 0; }
+  const fedLeft = (o) => Math.max(0, ((o && o.f) || 0) - now());
+
+  // ---------- grids & pathfinding ----------
+  const outside = { w: W, h: H, walk: (x, y) => walkable(at(x, y)) };
+  function roomGrid() {
+    return { w: room.w, h: room.h, walk: (x, y) => {
+      if (x === room.door[0] && y === room.door[1]) return true;
+      return x >= 1 && y >= 1 && x < room.w - 1 && y < room.h - 1 && !room.items[y * room.w + x];
+    } };
+  }
+  const dunGrid = () => ({ w: dun.w, h: dun.h, walk: (x, y) => x >= 0 && y >= 0 && x < dun.w && y < dun.h && dun.g[y * dun.w + x] === 1 && !chestAt(x, y) });
+  const grid = () => dun ? dunGrid() : room ? roomGrid() : outside;
+  function pathTo(tx, ty, adjacent, g = grid()) {
+    const sx = P.x, sy = P.y, gw = g.w;
+    const goal = (x, y) => adjacent ? (Math.abs(x - tx) + Math.abs(y - ty) === 1) : (x === tx && y === ty);
+    if (goal(sx, sy)) return [];
+    const prev = new Int32Array(g.w * g.h).fill(-2), q = [sy * gw + sx]; prev[sy * gw + sx] = -1;
+    for (let h = 0; h < q.length; h++) {
+      const i = q[h], x = i % gw, y = (i / gw) | 0;
+      for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+        const nx = x + dx, ny = y + dy;
+        if (nx < 0 || ny < 0 || nx >= g.w || ny >= g.h) continue;
+        const ni = ny * gw + nx;
+        if (prev[ni] !== -2 || !g.walk(nx, ny)) continue;
+        prev[ni] = i;
+        if (goal(nx, ny)) { const out = []; let c = ni; while (c !== sy * gw + sx) { out.unshift([c % gw, (c / gw) | 0]); c = prev[c]; } return out; }
+        q.push(ni);
+      }
+      if (q.length > 30000) break;
+    }
+    return null;
+  }
+  function goAdj(tx, ty, job, fail) {
+    const path = pathTo(tx, ty, true); if (!path) { banner(fail || "Tam se nedostaneš"); return false; }
+    P.path = path; P.job = job; S.marker = { x: tx, y: ty }; return true;
+  }
+
+  // ---------- actions: tapping the world ----------
+  function order(tx, ty) {
+    if (dun) return orderDungeon(tx, ty);
+    if (room) return orderInside(tx, ty);
+    const ent = entityAt(tx, ty); if (ent) return attackEntity(ent);
+    const t = at(tx, ty), i = ty * W + tx, o = tiles[i];
+    if (selected) return orderBuild(tx, ty, t, i);
+    if (CROPS[t]) {
+      if (!o || o.oid !== me.id) return banner(`${CROPS[t].name} hráče ${(o && o.o) || "neznámého"}`);
+      const g = cropGrowth(i, o, t);
+      if (g < 1) return banner(`${trampled(i, o) ? "V noci ji pošlapali vlci. " : ""}Ještě roste, sklizeň za ${Math.ceil((1 - g) * CROPS[t].grow / 1000)} s`);
+      return goAdj(tx, ty, { kind: "reap", x: tx, y: ty, prog: 0 });
+    }
+    if (isPub(t)) return goAdj(tx, ty, { kind: "enter", x: tx, y: ty }, "K hospodě se nedostaneš");
+    if (isHome(t)) {
+      if (!myHome(i)) return banner(`${HOME_NAMES[homeLv(o, t)]} hráče ${(o && o.o) || "neznámého"}`);
+      return goAdj(tx, ty, { kind: "open", what: "home", x: tx, y: ty }, "K domu se nedostaneš");
+    }
+    if (t === T.TREE || t === T.ROCK || t === T.ORE) {
+      if (t === T.ORE && me.toolLvl < 1) return banner("Na železnou rudu potřebuješ lepší nástroje (Řemesla)");
+      return goAdj(tx, ty, { kind: "harvest", x: tx, y: ty });
+    }
+    if (t === T.CAVE) return goAdj(tx, ty, { kind: "cave", x: tx, y: ty });
+    if (t === T.MAYOR) return goAdj(tx, ty, { kind: "open", what: "quests", x: tx, y: ty });
+    if (t === T.MARKET) return goAdj(tx, ty, { kind: "open", what: "market", x: tx, y: ty });
+    if (t === T.FURNACE) return goAdj(tx, ty, { kind: "open", what: "furnace", x: tx, y: ty });
+    if (t === T.SMITHY) return goAdj(tx, ty, { kind: "open", what: "smithy", x: tx, y: ty });
+    if (LIVE[t]) {
+      if (!o || o.oid !== me.id) return banner(`${LIVE[t].name} hráče ${(o && o.o) || "neznámého"}`);
+      return goAdj(tx, ty, { kind: "open", what: "live", x: tx, y: ty });
+    }
+    if (t === T.WALL_WOOD || t === T.WALL_STONE || t === T.TORCH || t === T.TOWER || t === T.GATE) {
+      if (o && o.oid === me.id) { if (t === T.GATE && walkable(t)) { const p = pathTo(tx, ty, false); if (p) { P.path = p; P.job = null; S.marker = { x: tx, y: ty }; } return; }
+        return openSheet("demolish", { i, t }); }
+      if (t !== T.GATE) return banner(`${nameOfTile(t)} hráče ${(o && o.o) || "neznámého"}`);
+    }
+    if (t === T.CLIFF) return banner("Skály se nedají přelézt. Hledej průsmyk.");
+    if (walkable(t)) { const path = pathTo(tx, ty, false); if (path) { P.path = path; P.job = null; S.marker = { x: tx, y: ty }; } else banner("Tam se nedostaneš"); }
+  }
+  function nameOfTile(t) { const b = Object.values(BUILD).find((b) => b.t === t); return b ? b.name : "Stavba"; }
+  function orderBuild(tx, ty, t, i) {
+    const b = BUILD[selected];
+    if (level() < b.req) return banner(`${b.name} se odemkne na úrovni ${b.req}`);
+    if (!walkable(t) || t === T.BRIDGE || t === T.GATE || (tx === P.x && ty === P.y)) return banner("Stavět jde jen na volnou trávu");
+    if (Math.abs(tx - PLAZA[0]) <= 3 && Math.abs(ty - PLAZA[1]) <= 2) return banner("Na návsi se nestaví");
+    const plot = plotOwnerAt(i); if (plot) return banner(`Tohle je pozemek hráče ${plot.n || "neznámého"}`);
+    if (!canPay(b.cost)) return banner(`Chybí ti: ${missingText(b.cost)}`);
+    goAdj(tx, ty, { kind: "build", x: tx, y: ty, b: selected, prog: 0 });
+  }
+  function buyTool() {
+    const next = TOOLS[me.toolLvl + 1]; if (!next) return;
+    if (level() < next.req) return banner(`${next.name} se odemknou na úrovni ${next.req}`);
+    if (!canPay(next.cost)) return banner(`Chybí ti: ${missingText(next.cost)}`);
+    pay(next.cost); me.toolLvl++; saveMe(); addXP(10);
+    pop(P.x, P.y, next.name, "#8fd16a"); ui();
+  }
+  function nearest(type, ox, oy, maxD) {
+    let best = null, bd = 1e9;
+    for (let y = Math.max(0, oy - maxD); y <= Math.min(H - 1, oy + maxD); y++) for (let x = Math.max(0, ox - maxD); x <= Math.min(W - 1, ox + maxD); x++) {
+      if (eff(y * W + x) !== type) continue;
+      const d = Math.abs(x - ox) + Math.abs(y - oy); if (d < bd && d <= maxD) { bd = d; best = [x, y]; }
+    }
+    return best;
+  }
+  function freeNear(x, y) {
+    for (let r = 0; r < 40; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+      const nx = x + dx, ny = y + dy;
+      if (nx >= 0 && ny >= 0 && nx < W && ny < H && walkable(at(nx, ny)) && at(nx, ny) !== T.BRIDGE) return [nx, ny];
+    }
+    return [PLAZA[0], PLAZA[1] + 2];
+  }
+
+  // ---------- inside houses ----------
+  const HOME_SIZE = [null, [7, 6], [9, 7], [11, 8], [13, 9], [15, 10]];
+  function orderInside(tx, ty) {
+    if (room.kind === "pub") {
+      const g = roomGrid(), isDoor = tx === room.door[0] && ty === room.door[1];
+      if (room.items[ty * room.w + tx] === 4) return banner(room.pub && room.pub.oid === me.id ? "Pivo uvaříš tlačítkem dole" : "Pivo si koupíš tlačítkem dole");
+      if (g.walk(tx, ty)) { const path = pathTo(tx, ty, false); if (path) { P.path = path; P.job = isDoor ? { kind: "exit" } : null; S.marker = { x: tx, y: ty }; } }
+      return;
+    }
+    const g = roomGrid(), cell = ty * room.w + tx, item = room.items[cell];
+    const isDoor = tx === room.door[0] && ty === room.door[1];
+    if (selected && FURN[selected] && !isDoor) {
+      const f = FURN[selected];
+      if (item || !g.walk(tx, ty) || (tx === P.x && ty === P.y)) return banner("Sem nic postavit nejde");
+      if (!canPay(f.cost)) return banner(`Chybí ti: ${missingText(f.cost)}`);
+      if (selected === "bed" && Object.values(room.items).includes(1)) return banner("Postel už tady máš");
+      room.items[cell] = f.id; const free = pathTo(room.door[0], room.door[1], false); delete room.items[cell];
+      if (!free) return banner("Tím by sis zatarasil dveře");
+      const path = pathTo(tx, ty, true); if (!path) return banner("Tam se nedostaneš");
+      P.path = path; P.job = { kind: "furnish", x: tx, y: ty, f: selected, prog: 0 }; S.marker = { x: tx, y: ty }; return;
+    }
+    if (item === 1) { me.bed = room.i; saveMe(); heal(maxHp()); ui(); return banner("Vyspal ses a máš plné zdraví. Tady se budeš objevovat."); }
+    if (item) return;
+    if (g.walk(tx, ty)) { const path = pathTo(tx, ty, false); if (path) { P.path = path; P.job = isDoor ? { kind: "exit" } : null; S.marker = { x: tx, y: ty }; } }
+  }
+  const FURN = {
+    bed:   { id: 1, cost: { wood: 8 }, pts: 20, name: "Postel" },
+    table: { id: 2, cost: { wood: 5 }, pts: 10, name: "Stůl" },
+    fire:  { id: 3, cost: { stone: 10 }, pts: 30, name: "Krb" },
+  };
+  function enterHouse(i) {
+    const lv = homeLv(tiles[i], eff(i)), [w, h] = HOME_SIZE[lv];
+    room = { i, w, h, items: {}, door: [Math.floor(w / 2), h - 1], kind: "home" };
+    const load = (v) => { room && room.i === i && (room.items = (v && v.items) || {}); };
+    if (online) { homeRef = db.ref("homes/" + keyFor(i)); homeRef.on("value", (s) => load(s.val())); }
+    else load(homesLocal[keyFor(i)]);
+    P.x = room.door[0]; P.y = room.door[1] - 1; P.fx = P.x; P.fy = P.y; P.path = []; P.job = null; S.marker = null;
+    selected = null; sendPos({ in: i }); ui();
+    banner(`Jsi doma (${HOME_NAMES[lv].toLowerCase()}). Ťukni na postel a vyspíš se do plného zdraví.`);
+  }
+  function exitHouse() {
+    const i = room.i, hx = i % W, hy = (i / W) | 0;
+    if (homeRef) { homeRef.off(); homeRef = null; }
+    if (pubRef) { pubRef.off(); pubRef = null; }
+    room = null; selected = null;
+    const spot = [[0,1],[1,0],[-1,0],[0,-1],[1,1],[-1,1]].map(([dx, dy]) => [hx + dx, hy + dy]).find(([x, y]) => walkable(at(x, y))) || freeNear(hx, hy);
+    P.x = spot[0]; P.y = spot[1]; P.fx = P.x; P.fy = P.y; P.path = []; P.job = null; S.marker = null;
+    camX = P.fx * tile; camY = P.fy * tile;
+    sendPos({ in: null }); ui();
+  }
+  function placeFurniture(cell, f) {
+    room.items[cell] = f.id;
+    if (online) db.ref(`homes/${keyFor(room.i)}/items/${cell}`).set(f.id);
+    else { homesLocal[keyFor(room.i)] = { items: room.items }; store.set("osada-homes", JSON.stringify(homesLocal)); }
+  }
+  function upgradeHome(i) {
+    const o = tiles[i], t = eff(i), lv = homeLv(o, t), up = HOME_UP[lv + 1];
+    if (!up) return;
+    if (level() < up.req) return banner(`${up.name} se odemkne na úrovni ${up.req}`);
+    if (!canPay(up.cost)) return banner(`Chybí ti: ${missingText(up.cost)}`);
+    claim(i, (e, cur) => isHome(e) && cur && cur.oid === me.id && homeLv(cur, e) === lv, Object.assign({}, o, { t: T.HOUSE, lv: lv + 1 }), (ok) => {
+      if (!ok) return banner("Vylepšení se nepovedlo, zkus to znovu");
+      pay(up.cost); me.pts += up.pts; addXP(Math.round(up.pts / 5)); saveScore();
+      pop(i % W, (i / W) | 0, `${up.name}!`, "#8fd16a"); banner(`Tvůj domov je teď ${up.name.toLowerCase()}.`, 3500); closeSheet(); ui();
+    });
+  }
+  function demolish(i) {
+    const o = tiles[i], t = eff(i), b = Object.values(BUILD).find((b) => b.t === t);
+    claim(i, (e, cur) => cur && cur.oid === me.id && e === t, null, (ok) => {
+      if (!ok) return;
+      if (b) for (const [k, n] of Object.entries(b.cost)) add(k, Math.floor(n / 2));
+      saveMe(); closeSheet(); ui(); pop(i % W, (i / W) | 0, "Zbouráno", "#ff8a6b");
+    });
+  }
+
+  // ---------- pubs ----------
+  function pubWrite(i, v) {
+    if (online) db.ref("pubs/" + keyFor(i)).set(v);
+    else { pubsLocal[keyFor(i)] = v; store.set("osada-pubs", JSON.stringify(pubsLocal)); }
+  }
+  function pubTx(i, fn, done) {
+    const key = keyFor(i);
+    if (online) { db.ref("pubs/" + key).transaction(fn, (e, ok, snap) => done(!e && ok, snap && snap.val()), false); return; }
+    const cur = pubsLocal[key] ? JSON.parse(JSON.stringify(pubsLocal[key])) : null, next = fn(cur);
+    if (next === undefined) return done(false, cur);
+    pubsLocal[key] = next; store.set("osada-pubs", JSON.stringify(pubsLocal)); if (room && room.i === i) room.pub = next; done(true, next);
+  }
+  function enterPub(i) {
+    const items = {}, w = 9, h = 7;
+    for (let x = 2; x <= 6; x++) items[1 * w + x] = 4;
+    items[1 * w + 1] = 5; items[1 * w + 7] = 5; items[4 * w + 2] = 2; items[4 * w + 6] = 2;
+    room = { i, w, h, items, door: [4, 6], kind: "pub", pub: null };
+    if (online) { pubRef = db.ref("pubs/" + keyFor(i)); pubRef.on("value", (s) => { if (room && room.i === i) { room.pub = s.val(); ui(); } }); }
+    else room.pub = pubsLocal[keyFor(i)] || null;
+    P.x = room.door[0]; P.y = room.door[1] - 1; P.fx = P.x; P.fy = P.y; P.path = []; P.job = null; S.marker = null;
+    selected = null; sendPos({ in: i }); ui();
+    const o = tiles[i] || {};
+    banner(o.oid === me.id ? "Tvoje hospoda. Uvař pivo z chmele a prodávej ho ostatním." : `Hospoda hráče ${o.o || "neznámého"}. Pivo tě na minutu posílí.`, 4000);
+  }
+  function brew() {
+    if (!room || room.kind !== "pub") return;
+    if (me.hops < HOPS_PER_BEER) return banner(`Na pivo potřebuješ ${HOPS_PER_BEER} chmele. Postav si chmelnici.`);
+    pubTx(room.i, (cur) => { if (!cur || cur.oid !== me.id || (cur.beer || 0) >= 99) return; cur.beer = (cur.beer || 0) + 1; return cur; }, (ok) => {
+      if (!ok) return banner("Sud je plný, nejdřív něco prodej");
+      me.hops -= HOPS_PER_BEER; me.pts += 5; addXP(2); saveScore(); ui(); pop(P.x, P.y, "+1 pivo", "#f4cf6a");
+    });
+  }
+  function setPrice(d) {
+    if (!room || room.kind !== "pub") return;
+    pubTx(room.i, (cur) => { if (!cur || cur.oid !== me.id) return; cur.price = Math.max(1, Math.min(50, (cur.price || 5) + d)); return cur; }, () => ui());
+  }
+  function collect() {
+    if (!room || room.kind !== "pub") return;
+    let got = 0;
+    pubTx(room.i, (cur) => { if (!cur || cur.oid !== me.id) return; got = cur.till || 0; if (!got) return; cur.till = 0; return cur; }, (ok) => {
+      if (!ok || !got) return banner("V pokladně zatím nic není");
+      me.coins += got; me.pts += got * 3; saveScore(); ui(); pop(P.x, P.y, `+${got} grošů`, "#f4cf6a");
+    });
+  }
+  function buyBeer() {
+    if (!room || room.kind !== "pub") return;
+    const mine = room.pub && room.pub.oid === me.id;
+    let paid = 0;
+    pubTx(room.i, (cur) => {
+      if (!cur || (cur.beer || 0) < 1) return;
+      paid = cur.oid === me.id ? 0 : (cur.price || 5);
+      if (me.coins < paid) return;
+      cur.beer -= 1; if (paid) { cur.till = (cur.till || 0) + paid; cur.sold = (cur.sold || 0) + 1; }
+      return cur;
+    }, (ok, cur) => {
+      if (!ok) return banner(!cur || (cur.beer || 0) < 1 ? "Pivo došlo. Hostinský musí uvařit další." : "Nemáš dost grošů");
+      me.coins -= paid; me.buffUntil = Date.now() + BUFF_MS; heal(10); saveMe(); ui();
+      pop(P.x, P.y, mine ? "Na zdraví!" : `−${paid} grošů`, "#f4cf6a");
+      banner("Posilněn pivem na 60 s: chodíš, pracuješ i bojuješ líp.", 3500);
+    });
+  }
+
+  // ---------- livestock, furnace, smithy, food ----------
+  function liveCollect(i, thenFeed) {
+    const t = eff(i), L = LIVE[t]; let got = 0;
+    claim(i, (e, cur) => { if (e !== t || !cur || cur.oid !== me.id) return false; got = livePending(cur); return got > 0 || thenFeed; },
+      (() => { const o = Object.assign({}, tiles[i]); const n = livePending(o); o.c = n > 0 ? now() : (o.c || now());
+        if (thenFeed) { o.c = Math.max(o.c, Math.min(now(), o.f || 0)); if ((o.f || 0) < now()) o.c = now(); o.f = Math.min(now() + FEED_MAX, Math.max(o.f || 0, now()) + FEED_MS); } return o; })(),
+      (ok) => {
+        if (!ok) return banner("Zatím tu nic není");
+        if (got) { add(L.item, got); addXP(got * 3); pop(i % W, (i / W) | 0, `+${got} ${ITEMS[L.item].s}`, ITEMS[L.item].c); }
+        if (thenFeed) { add("grain", -1); pop(i % W, (i / W) | 0, "Nakrmeno", "#e8c860"); }
+        saveMe(); ui(); refreshSheet();
+      });
+  }
+  function smelt(n) {
+    const k = Math.min(n, Math.floor(have("ore") / 2), have("wood"));
+    if (k <= 0) return banner("Na 1 železo potřebuješ 2 rudy a 1 dřevo");
+    add("ore", -2 * k); add("wood", -k); add("iron", k); addXP(4 * k); saveMe(); ui(); refreshSheet();
+    pop(P.x, P.y, `+${k} železo`, "#c9d2da");
+  }
+  function craft(id) {
+    const g = GEAR[id]; if (!canPay(g.cost)) return banner(`Chybí ti: ${missingText(g.cost)}`);
+    pay(g.cost); const cur = gearOf(g.slot);
+    if (!cur || (g.dmg || g.def || 0) >= (cur.dmg || cur.def || 0)) me.gear[g.slot] = id;
+    addXP(15); saveMe(); ui(); refreshSheet(); banner(`Vyrobeno: ${g.name}`);
+  }
+  function eat(k) {
+    if (have(k) < 1) return; if (me.hp >= maxHp()) return banner("Máš plné zdraví");
+    add(k, -1); heal(FOOD[k]); saveMe(); ui(); refreshSheet(); pop(P.x, P.y, `+${FOOD[k]} HP`, "#e0574a");
+  }
+  function bestFood() { return ["meat", "milk", "egg"].find((k) => have(k) > 0); }
+
+  // ---------- daily quests from the mayor ----------
+  const QT = [
+    { item: "wood", a: 20, b: 40, req: 1, v: 1 }, { item: "stone", a: 15, b: 30, req: 1, v: 1 }, { item: "hops", a: 6, b: 10, req: 1, v: 2 },
+    { item: "grain", a: 6, b: 10, req: 1, v: 2 }, { item: "meat", a: 2, b: 5, req: 2, v: 5 }, { item: "egg", a: 3, b: 6, req: 2, v: 4 },
+    { item: "hide", a: 2, b: 4, req: 2, v: 6 }, { item: "wool", a: 2, b: 4, req: 3, v: 6 }, { item: "ore", a: 6, b: 10, req: 3, v: 3 },
+    { item: "iron", a: 3, b: 6, req: 3, v: 8 }, { item: "milk", a: 2, b: 4, req: 4, v: 7 }, { item: "gold", a: 5, b: 15, req: 4, v: 4 },
+  ];
+  const today = () => Math.floor(now() / 86400000);
+  function quests() {
+    const d = today(), r = rng(d * 31 + hstr(me.id)), pool = QT.filter((q) => q.req <= level()), out = [];
+    while (out.length < 3 && pool.length) {
+      const q = pool.splice(Math.floor(r() * pool.length), 1)[0], qty = q.a + Math.floor(r() * (q.b - q.a + 1));
+      out.push({ item: q.item, qty, coins: Math.round(qty * q.v * (1.4 + level() * .1)), xp: qty * q.v * 2 });
+    }
+    if (me.q.day !== d) me.q = { day: d, done: [] };
+    return out;
+  }
+  function turnIn(k) {
+    const q = quests()[k]; if (!q || me.q.done[k]) return;
+    if (have(q.item) < q.qty) return banner(`Chybí ti ${ITEMS[q.item].s} ${q.qty - have(q.item)}`);
+    add(q.item, -q.qty); me.coins += q.coins; me.q.done[k] = true; me.pts += Math.round(q.coins / 2); addXP(q.xp); saveScore(); ui(); refreshSheet();
+    banner(`Zakázka splněna! +${q.coins} grošů`, 3000);
+  }
+
+  // ---------- market between players ----------
+  const TRADE = ["wood", "stone", "ore", "iron", "gold", "hops", "grain", "meat", "hide", "egg", "milk", "wool"];
+  function marketList(item, qty, price) {
+    qty = Math.floor(qty); price = Math.floor(price);
+    if (!TRADE.includes(item) || !(qty >= 1) || !(price >= 0)) return banner("Zadej množství a cenu");
+    if (have(item) < qty) return banner(`Máš jen ${have(item)} ${ITEMS[item].s}`);
+    const offer = { sid: me.id, s: me.name, item, qty, price, ts: Date.now() };
+    add(item, -qty); saveMe(); ui();
+    if (online) db.ref("market").push(offer);
+    else { marketLocal["l" + Date.now()] = offer; store.set("osada-market", JSON.stringify(marketLocal)); market = marketLocal; }
+    banner("Zboží je na trhu"); refreshSheet();
+  }
+  function marketTx(id, fn, done) {
+    if (online) { db.ref("market/" + id).transaction(fn, (e, ok, snap) => done(!e && ok), false); return; }
+    const r = fn(marketLocal[id] || null); if (r === undefined) return done(false);
+    if (r === null) delete marketLocal[id]; else marketLocal[id] = r; store.set("osada-market", JSON.stringify(marketLocal)); market = marketLocal; done(true);
+  }
+  function marketBuy(id) {
+    let got = null;
+    marketTx(id, (cur) => { if (!cur || cur.sid === me.id || me.coins < cur.price) return; got = cur; return null; }, (ok) => {
+      if (!ok || !got) return banner("Nabídka už není k mání nebo nemáš dost grošů");
+      me.coins -= got.price; add(got.item, got.qty); saveMe(); ui(); refreshSheet();
+      if (online) db.ref("payouts/" + got.sid).transaction((v) => (v || 0) + got.price);
+      banner(`Koupeno: ${got.qty}× ${ITEMS[got.item].s}`);
+    });
+  }
+  function marketCancel(id) {
+    let got = null;
+    marketTx(id, (cur) => { if (!cur || cur.sid !== me.id) return; got = cur; return null; }, (ok) => {
+      if (!ok || !got) return; add(got.item, got.qty); saveMe(); ui(); refreshSheet(); banner("Nabídka stažena");
+    });
+  }
+  function watchPayouts() {
+    if (!online) return;
+    db.ref("payouts/" + me.id).on("value", (s) => {
+      const v = s.val() || 0; if (v <= 0) return;
+      let got = 0;
+      db.ref("payouts/" + me.id).transaction((cur) => { got = cur || 0; return got > 0 ? 0 : undefined; }, (e, ok) => {
+        if (!e && ok && got > 0) { me.coins += got; me.pts += got; saveScore(); ui(); banner(`Na trhu se prodalo tvoje zboží: +${got} grošů`, 4000); }
+      }, false);
+    });
+  }
+
+  // ---------- wild animals (same for everyone, by time window) ----------
+  const CH = 16, EPOCH = 8 * 60000;
+  const killed = new Set();
+  function animalsNear(cx0, cy0, rad) {
+    if (isNight()) return [];
+    const e = Math.floor(now() / EPOCH), out = [], tm = now() / 1000;
+    for (let cy = Math.floor((cy0 - rad) / CH); cy <= Math.floor((cy0 + rad) / CH); cy++) for (let cx = Math.floor((cx0 - rad) / CH); cx <= Math.floor((cx0 + rad) / CH); cx++) {
+      if (cx < 0 || cy < 0 || cx * CH >= W || cy * CH >= H) continue;
+      const r = rng(cx * 7349 + cy * 1931 + e * 97 + 5), n = r() < .4 ? 0 : r() < .75 ? 1 : 2;
+      for (let k = 0; k < n; k++) {
+        const id = `${cx},${cy},${e},${k}`, deer = r() < .4, sx = cx * CH + Math.floor(r() * CH), sy = cy * CH + Math.floor(r() * CH), ph = r() * 6.28;
+        if (killed.has(id) || sx >= W || sy >= H || !walkable(at(sx, sy))) continue;
+        let fx = sx + Math.sin(tm / 6 + ph) * 2.2, fy = sy + Math.cos(tm / 8 + ph * 1.7) * 2.2;
+        if (!walkable(at(Math.round(fx), Math.round(fy)))) { fx = sx; fy = sy; }
+        out.push({ id, kind: deer ? "deer" : "rabbit", fx, fy, x: Math.round(fx), y: Math.round(fy), hp: (deer ? 2 : 1) - (S.hp[id] || 0), dir: Math.cos(tm / 6 + ph) > 0 ? 1 : -1 });
+      }
+    }
+    return out;
+  }
+  // ---------- wolves at night (each player fights their own) ----------
+  let wolves = [], wolfSpawn = 0;
+  function updateWolves(dt) {
+    if (!isNight() || room || dun || mode !== "play") { wolves = []; return; }
+    wolfSpawn -= dt;
+    const pi = P.y * W + P.x;
+    if (wolfSpawn <= 0 && wolves.length < 3 && !isProtected(pi)) {
+      wolfSpawn = 9;
+      for (let k = 0; k < 12; k++) {
+        const a = Math.random() * 6.28, d = 8 + Math.random() * 4, x = Math.round(P.x + Math.cos(a) * d), y = Math.round(P.y + Math.sin(a) * d);
+        if (x >= 0 && y >= 0 && x < W && y < H && walkable(at(x, y)) && !isProtected(y * W + x)) { wolves.push({ fx: x, fy: y, hp: 14, cd: 0, dir: 1 }); break; }
+      }
+    }
+    for (const wv of wolves) {
+      const dx = P.fx - wv.fx, dy = P.fy - wv.fy, d = Math.hypot(dx, dy);
+      wv.dir = dx >= 0 ? 1 : -1; wv.cd -= dt;
+      if (d > 1.05) {
+        const sp = 2.6 * dt, nx = wv.fx + dx / d * sp, ny = wv.fy + dy / d * sp;
+        const ok = (x, y) => { const tx = Math.round(x), ty = Math.round(y); return walkable(at(tx, ty)) && !isProtected(ty * W + tx); };
+        if (ok(nx, ny)) { wv.fx = nx; wv.fy = ny; } else if (ok(nx, wv.fy)) wv.fx = nx; else if (ok(wv.fx, ny)) wv.fy = ny;
+      } else if (wv.cd <= 0) { wv.cd = 1.2; hurt(7); }
+      if (d > 22) wv.hp = 0;
+    }
+    wolves = wolves.filter((wv) => wv.hp > 0);
+  }
+  function hurt(n) {
+    const dmgTaken = Math.max(1, Math.round(n * (1 - defense())));
+    me.hp -= dmgTaken; P.hurt = .3; P.lastHit = Date.now(); pop(P.fx, P.fy - .3, `−${dmgTaken}`, "#ff5a4a");
+    if (me.hp <= 0) faint(); ui();
+  }
+  function faint() {
+    let lost = "";
+    if (dun) { const g = Math.floor(dun.runGold / 2); add("gold", -g); lost = g ? ` Ztratil jsi ${g} zlata z výpravy.` : ""; dun = null; }
+    else { const w = Math.floor(me.wood * .2), s = Math.floor(me.stone * .2); me.wood -= w; me.stone -= s; lost = w + s ? ` Ztratil jsi dřevo ${w} a kámen ${s}.` : ""; }
+    wolves = []; me.hp = Math.round(maxHp() / 2); saveMe();
+    if (room) exitHouse();
+    if (me.bed !== null && myHome(me.bed)) { const b = me.bed; P.x = b % W; P.y = (b / W) | 0; enterHouse(b); }
+    else { const [sx, sy] = freeNear(PLAZA[0], PLAZA[1] + 2); P.x = sx; P.y = sy; P.fx = sx; P.fy = sy; P.path = []; P.job = null; camX = sx * tile; camY = sy * tile; sendPos({ in: null }); }
+    banner(`Omdlel jsi.${lost}`, 4500); ui();
+  }
+  function entityAt(tx, ty) {
+    for (const wv of wolves) if (Math.round(wv.fx) === tx && Math.round(wv.fy) === ty) return { kind: "wolf", ref: wv };
+    for (const a of animalsNear(P.x, P.y, 12)) if (a.x === tx && a.y === ty) return { kind: a.kind, ref: a };
+    return null;
+  }
+  function attackEntity(ent) {
+    if (ent.kind === "wolf") { P.job = { kind: "fight", ref: ent.ref }; P.path = []; return; }
+    if (!gearOf("bow")) return banner("Na lov potřebuješ luk. Vyrobíš ho v batohu ze 6 dřeva.");
+    const a = ent.ref, d = Math.max(Math.abs(a.x - P.x), Math.abs(a.y - P.y));
+    if (d > 5) { const p = pathTo(a.x, a.y, true); if (p) { P.path = p.slice(0, Math.max(0, p.length - 3)); P.job = { kind: "hunt", id: a.id }; } else banner("Ke zvířeti se nedostaneš"); return; }
+    P.job = { kind: "hunt", id: a.id }; P.path = [];
+  }
+  // =================== DUNGEONS ===================
+  const ENEMY = {
+    skeleton: { name: "Kostlivec", hp: 10, hpF: 4, dmg: 5, dmgF: 2, step: .55 },
+    spider:   { name: "Pavouk", hp: 6, hpF: 3, dmg: 4, dmgF: 2, step: .32 },
+    goblin:   { name: "Goblin", hp: 14, hpF: 5, dmg: 7, dmgF: 2, step: .48 },
+    troll:    { name: "Jeskynní troll", hp: 60, hpF: 18, dmg: 12, dmgF: 3, step: .7 },
+  };
+  function makeDungeon(cave, floor) {
+    const w = 35, h = 35, g = new Uint8Array(w * h), r = rng(cave * 100003 + floor * 977 + today() * 13);
+    const rooms = [];
+    for (let k = 0; k < 40 && rooms.length < 8; k++) {
+      const rw = 4 + Math.floor(r() * 5), rh = 4 + Math.floor(r() * 4), rx = 1 + Math.floor(r() * (w - rw - 2)), ry = 1 + Math.floor(r() * (h - rh - 2));
+      if (rooms.some((o) => rx < o.x + o.w + 1 && rx + rw + 1 > o.x && ry < o.y + o.h + 1 && ry + rh + 1 > o.y)) continue;
+      rooms.push({ x: rx, y: ry, w: rw, h: rh, cx: rx + (rw >> 1), cy: ry + (rh >> 1) });
+    }
+    for (const o of rooms) for (let y = o.y; y < o.y + o.h; y++) for (let x = o.x; x < o.x + o.w; x++) g[y * w + x] = 1;
+    rooms.sort((a, b) => a.cx + a.cy - b.cx - b.cy);
+    for (let k = 1; k < rooms.length; k++) {
+      const a = rooms[k - 1], b = rooms[k];
+      for (let x = Math.min(a.cx, b.cx); x <= Math.max(a.cx, b.cx); x++) g[a.cy * w + x] = 1;
+      for (let y = Math.min(a.cy, b.cy); y <= Math.max(a.cy, b.cy); y++) g[y * w + b.cx] = 1;
+    }
+    const first = rooms[0], last = rooms[rooms.length - 1];
+    const d = { cave, floor, w, h, g, rooms, ladder: [first.cx, first.cy], stairs: [last.cx, last.cy], chests: [], enemies: [], seen: new Uint8Array(w * h), runGold: 0 };
+    const types = floor >= 3 ? ["skeleton", "spider", "goblin"] : floor === 2 ? ["skeleton", "spider", "goblin"] : ["skeleton", "spider"];
+    for (let k = 1; k < rooms.length; k++) {
+      const o = rooms[k];
+      if (k < rooms.length - 1 && r() < .55) d.chests.push({ x: o.x + Math.floor(r() * o.w), y: o.y, open: false });
+      const n = 1 + Math.floor(r() * (1 + floor * .7));
+      for (let m = 0; m < n; m++) {
+        const ex = o.x + Math.floor(r() * o.w), ey = o.y + 1 + Math.floor(r() * Math.max(1, o.h - 1));
+        if (g[ey * w + ex] !== 1 || (ex === d.stairs[0] && ey === d.stairs[1])) continue;
+        const type = types[Math.floor(r() * types.length)], E = ENEMY[type], hp = E.hp + E.hpF * floor;
+        d.enemies.push({ type, x: ex, y: ey, fx: ex, fy: ey, hp, max: hp, cd: 0, step: 0, dir: 1 });
+      }
+    }
+    if (floor % 3 === 0) { const E = ENEMY.troll, hp = E.hp + E.hpF * floor; d.enemies.push({ type: "troll", x: last.cx - 1, y: last.cy, fx: last.cx - 1, fy: last.cy, hp, max: hp, cd: 0, step: 0, dir: 1 }); }
+    d.chests = d.chests.filter((c) => g[c.y * w + c.x] === 1 && !(c.x === first.cx && c.y === first.cy));
+    return d;
+  }
+  const chestAt = (x, y) => dun && dun.chests.find((c) => c.x === x && c.y === y && !c.open);
+  const enemyAt = (x, y) => dun && dun.enemies.find((e) => e.hp > 0 && e.x === x && e.y === y);
+  let caveReturn = null;
+  function enterCave(cx, cy, floor = 1) {
+    const cave = CAVES.findIndex(([x, y]) => x === cx && y === cy);
+    if (floor === 1) { caveReturn = [cx, cy + 1]; }
+    const keep = dun ? dun.runGold : 0;
+    dun = makeDungeon(Math.max(0, cave), floor); dun.cx = cx; dun.cy = cy; dun.runGold = keep;
+    P.x = dun.ladder[0]; P.y = dun.ladder[1] + 1; if (dun.g[P.y * dun.w + P.x] !== 1) P.y = dun.ladder[1];
+    P.fx = P.x; P.fy = P.y; P.path = []; P.job = null; S.marker = null; selected = null; wolves = [];
+    camX = P.fx * tile; camY = P.fy * tile;
+    if (floor > me.deep) { me.deep = floor; if (floor > 1) { me.pts += 100 * floor; saveScore(); } }
+    sendPos({ in: -1 }); ui();
+    banner(floor === 1 ? "Jsi v jeskyni. Žebřík tě vyvede ven, schody vedou hlouběji. Čím hlouběji, tím víc zlata." : `Patro ${floor}. Nepřátelé tu jsou silnější.`, 4500);
+  }
+  function leaveCave() {
+    const got = dun.runGold; dun = null;
+    const [x, y] = caveReturn && walkable(at(caveReturn[0], caveReturn[1])) ? caveReturn : freeNear(caveReturn ? caveReturn[0] : PLAZA[0], caveReturn ? caveReturn[1] : PLAZA[1]);
+    P.x = x; P.y = y; P.fx = x; P.fy = y; P.path = []; P.job = null; S.marker = null; camX = x * tile; camY = y * tile;
+    sendPos({ in: null }); ui(); saveScore();
+    banner(got ? `Vylezl jsi z jeskyně se ziskem ${got} zlata.` : "Vylezl jsi z jeskyně.", 3500);
+  }
+  function orderDungeon(tx, ty) {
+    const e = enemyAt(tx, ty); if (e) { P.job = { kind: "fightE", ref: e }; P.path = []; return; }
+    const c = chestAt(tx, ty); if (c) return goAdj(tx, ty, { kind: "chest", ref: c });
+    const g = dunGrid(); if (!g.walk(tx, ty)) return;
+    const path = pathTo(tx, ty, false); if (!path) return;
+    P.path = path; S.marker = { x: tx, y: ty };
+    P.job = tx === dun.ladder[0] && ty === dun.ladder[1] ? { kind: "ladder" } : tx === dun.stairs[0] && ty === dun.stairs[1] ? { kind: "stairs" } : null;
+  }
+  function openChest(c) {
+    if (c.open) return; c.open = true;
+    const r = Math.random(), f = dun.floor, gold = (5 + Math.floor(Math.random() * 8)) * f;
+    add("gold", gold); dun.runGold += gold; let extra = "";
+    if (r < .3) { const n = 1 + Math.floor(Math.random() * 2); add("iron", n); extra = ` +${n} železo`; }
+    else if (r < .5) { const n = 2 + Math.floor(Math.random() * 2); add("ore", n); extra = ` +${n} ruda`; }
+    else if (r < .65) { add("meat", 1); extra = " +1 maso"; }
+    addXP(5 * f); saveMe(); ui(); pop(c.x, c.y, `+${gold} zlata${extra}`, "#ffd84a");
+  }
+  function updateDungeon(dt) {
+    const d = dun, vis = 6;
+    for (let y = P.y - vis; y <= P.y + vis; y++) for (let x = P.x - vis; x <= P.x + vis; x++)
+      if (x >= 0 && y >= 0 && x < d.w && y < d.h && Math.hypot(x - P.x, y - P.y) <= vis) d.seen[y * d.w + x] = 1;
+    for (const e of d.enemies) {
+      if (e.hp <= 0) continue;
+      const E = ENEMY[e.type], dist = Math.abs(e.x - P.x) + Math.abs(e.y - P.y);
+      e.fx += (e.x - e.fx) * Math.min(1, dt * 10); e.fy += (e.y - e.fy) * Math.min(1, dt * 10);
+      e.cd -= dt; e.step -= dt;
+      if (dist === 1) { e.dir = P.x >= e.x ? 1 : -1; if (e.cd <= 0) { e.cd = 1.1; hurt(E.dmg + E.dmgF * d.floor); if (!dun) return; } continue; }
+      if (dist <= 7 && e.step <= 0) {
+        e.step = E.step;
+        let best = null, bd = dist;
+        for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+          const nx = e.x + dx, ny = e.y + dy, nd = Math.abs(nx - P.x) + Math.abs(ny - P.y);
+          if (d.g[ny * d.w + nx] !== 1 || enemyAt(nx, ny) || chestAt(nx, ny) || (nx === P.x && ny === P.y)) continue;
+          if (nd < bd) { bd = nd; best = [nx, ny]; }
+        }
+        if (best) { e.dir = best[0] >= e.x ? 1 : -1; e.x = best[0]; e.y = best[1]; }
+      }
+    }
+  }
+  function strike(target, isWolf) {
+    const dmgDone = weaponDmg();
+    target.hp -= dmgDone; P.swing = .2; pop(isWolf ? target.fx : target.x, (isWolf ? target.fy : target.y) - .3, `−${dmgDone}`, "#f4cf6a");
+    if (target.hp > 0) return false;
+    if (isWolf) { add("meat", 1); add("hide", 1); addXP(10); pop(target.fx, target.fy, "+maso +kůže", "#c2523f"); }
+    else {
+      const E = ENEMY[target.type], f = dun.floor, gold = (1 + Math.floor(Math.random() * 3)) * f * (target.type === "troll" ? 6 : 1);
+      add("gold", gold); dun.runGold += gold; addXP((target.type === "troll" ? 40 : 6) * f); pop(target.x, target.y, `+${gold} zlata`, "#ffd84a");
+      if (target.type === "troll") banner(`${E.name} poražen!`, 3000);
+    }
+    saveMe(); ui(); return true;
+  }
+
+  // =================== UPDATE LOOP ===================
+  let busy = false, heartbeat = 0, regen = 0, autoCd = 0;
+  function update(dt) {
+    if (protDirty) computeProtection();
+    for (const o of Object.values(others)) {
+      const dx = o.x - o.fx, dy = o.y - o.fy;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) { o.fx = o.x; o.fy = o.y; }
+      else { o.fx += dx * Math.min(1, dt * 10); o.fy += dy * Math.min(1, dt * 10); }
+      if (Math.abs(dx) > .05) o.dir = Math.sign(dx);
+      o.moving = Math.hypot(dx, dy) > .05;
+      o.swing = o.act && now() - o.act < 800 ? (Math.sin(now() / 50) > 0 ? .15 : 0) : 0;
+    }
+    for (const f of S.fx) { f.life -= dt; f.y -= dt * .8; }
+    S.fx = S.fx.filter((f) => f.life > 0);
+    if (P.hurt > 0) P.hurt -= dt;
+    if (mode !== "play") return;
+    { const left = Math.ceil((me.buffUntil - Date.now()) / 1000); $("sBuff").hidden = left <= 0; if (left > 0) $("sBuffT").textContent = left; }
+    regen -= dt;
+    if (regen <= 0) { regen = 4; if (!dun && me.hp < maxHp() && Date.now() - P.lastHit > 6000) { heal(1); ui(); } }
+    heartbeat -= dt; if (heartbeat <= 0) { heartbeat = 30; sendPos(); saveMe(); }
+    if (dun) { updateDungeon(dt); if (!dun) return; } else updateWolves(dt);
+    const g = grid();
+    autoCd -= dt;
+    if (P.path.length) {
+      const [nx, ny] = P.path[0];
+      if (!g.walk(nx, ny)) { P.path = []; P.job = null; S.marker = null; }
+      else {
+        const sp = (room ? 4 : 5.5) * (buffed() ? 1.4 : 1) * dt, dx = nx - P.fx, dy = ny - P.fy, d = Math.hypot(dx, dy);
+        if (dx) P.dir = Math.sign(dx);
+        if (d <= sp) { P.fx = nx; P.fy = ny; P.x = nx; P.y = ny; P.path.shift(); if (!room && !dun || room && room.kind === "pub") sendPos(); }
+        else { P.fx += dx / d * sp; P.fy += dy / d * sp; }
+      }
+    } else if (P.job && !busy) {
+      runJob(P.job, dt);
+    } else if (autoCd <= 0) {
+      // defend yourself when something is next to you
+      if (dun) { const e = dun.enemies.find((e) => e.hp > 0 && Math.abs(e.x - P.x) + Math.abs(e.y - P.y) === 1); if (e) { autoCd = .55; P.dir = e.x >= P.x ? 1 : -1; strike(e, false); } }
+      else { const wv = wolves.find((wv) => Math.hypot(wv.fx - P.fx, wv.fy - P.fy) < 1.3); if (wv) { autoCd = .6; P.dir = wv.fx >= P.fx ? 1 : -1; strike(wv, true); } }
+    }
+    if (P.swing > 0) P.swing -= dt;
+  }
+  function runJob(j, dt) {
+    const fast = buffed();
+    if (j.kind === "exit") { if (room && P.x === room.door[0] && P.y === room.door[1]) exitHouse(); else P.job = null; return; }
+    if (j.kind === "ladder") { P.job = null; if (dun && P.x === dun.ladder[0] && P.y === dun.ladder[1]) leaveCave(); return; }
+    if (j.kind === "stairs") { P.job = null; if (dun && P.x === dun.stairs[0] && P.y === dun.stairs[1]) enterCave(dun.cx, dun.cy, dun.floor + 1); return; }
+    if (j.kind === "chest") { P.job = null; S.marker = null; openChest(j.ref); return; }
+    if (j.kind === "cave") { P.job = null; S.marker = null; enterCave(j.x, j.y, 1); return; }
+    if (j.kind === "enter") { const i = j.y * W + j.x; P.job = null; S.marker = null; if (isPub(eff(i))) enterPub(i); else if (myHome(i)) enterHouse(i); return; }
+    if (j.kind === "open") { P.job = null; S.marker = null; openSheet(j.what, { i: j.y * W + j.x }); return; }
+    P.cd -= dt;
+    if (j.kind === "fightE") {
+      const e = j.ref; if (!dun || e.hp <= 0) { P.job = null; return; }
+      if (Math.abs(e.x - P.x) + Math.abs(e.y - P.y) > 1) { const p = pathTo(e.x, e.y, true); if (p && p.length) { P.path = p.slice(0, 1); } else P.job = null; return; }
+      P.dir = e.x >= P.x ? 1 : -1;
+      if (P.cd <= 0) { P.cd = fast ? .38 : .5; if (strike(e, false)) P.job = null; }
+      return;
+    }
+    if (j.kind === "fight") {
+      const wv = j.ref; if (wv.hp <= 0 || !wolves.includes(wv)) { P.job = null; return; }
+      const d = Math.hypot(wv.fx - P.fx, wv.fy - P.fy);
+      if (d > 1.3) { const p = pathTo(Math.round(wv.fx), Math.round(wv.fy), true); if (p && p.length) P.path = p.slice(0, 1); else P.job = null; return; }
+      P.dir = wv.fx >= P.fx ? 1 : -1;
+      if (P.cd <= 0) { P.cd = fast ? .4 : .55; if (strike(wv, true)) P.job = null; }
+      return;
+    }
+    if (j.kind === "hunt") {
+      const a = animalsNear(P.x, P.y, 8).find((a) => a.id === j.id); if (!a) { P.job = null; return; }
+      if (Math.max(Math.abs(a.x - P.x), Math.abs(a.y - P.y)) > 5) {
+        j.tries = (j.tries || 0) + 1; if (j.tries > 6) { P.job = null; return banner("Zvíře ti uteklo"); }
+        const p = pathTo(a.x, a.y, true); if (!p) { P.job = null; return banner("Ke zvířeti se nedostaneš"); }
+        P.path = p.slice(0, Math.max(1, p.length - 3)); return;
+      }
+      P.dir = a.x >= P.x ? 1 : -1;
+      if (P.cd <= 0) {
+        P.cd = .6; P.swing = .2; S.arrows.push({ x: P.fx + .5, y: P.fy + .4, tx: a.fx + .5, ty: a.fy + .5, t: 0 });
+        S.hp[a.id] = (S.hp[a.id] || 0) + (gearOf("bow").dmg || 1);
+        if (S.hp[a.id] >= (a.kind === "deer" ? 2 : 1)) {
+          killed.add(a.id); P.job = null;
+          if (a.kind === "deer") { add("meat", 2); add("hide", 1); addXP(8); pop(a.x, a.y, "+2 maso +kůže", "#c2523f"); }
+          else { add("meat", 1); addXP(4); pop(a.x, a.y, "+1 maso", "#c2523f"); }
+          saveMe(); ui();
+        }
+      }
+      return;
+    }
+    if (j.x !== undefined && j.x !== P.x) P.dir = Math.sign(j.x - P.x);
+    if (j.kind === "furnish") {
+      const f = FURN[j.f], cell = j.y * room.w + j.x;
+      if (room.items[cell] || !canPay(f.cost)) { P.job = null; S.marker = null; return; }
+      if (P.cd <= 0) { P.cd = .25; P.swing = .18; j.prog += .34; }
+      if (j.prog >= 1) {
+        pay(f.cost); me.pts += f.pts; addXP(4);
+        placeFurniture(cell, f);
+        if (j.f === "bed") { me.bed = room.i; banner("Postel hotová. Příště se můžeš objevit tady."); }
+        saveScore(); pop(j.x, j.y, `+${f.pts} bodů`, "#8fd16a"); P.job = null; S.marker = null; selected = null; ui();
+      }
+      return;
+    }
+    if (j.kind === "harvest") {
+      const i = j.y * W + j.x, t = eff(i);
+      if (t !== T.TREE && t !== T.ROCK && t !== T.ORE) { P.job = null; S.marker = null; delete S.hp[i]; return; }
+      if (P.cd > 0) return;
+      P.cd = fast ? .18 : .32; P.swing = .2; S.hp[i] = (S.hp[i] || 0) + 1;
+      if (S.hp[i] === 1) sendPos({ a: TS() });
+      if (S.hp[i] < hitsFor(t)) return;
+      busy = true;
+      const isTree = t === T.TREE, isOre = t === T.ORE;
+      claim(i, (e) => e === t, { t: isTree ? T.STUMP : isOre ? T.DUG : T.RUBBLE, r: now() + (isTree ? 25000 : isOre ? 90000 : 35000) }, (ok, err) => {
+        busy = false; delete S.hp[i];
+        if (ok) {
+          if (isTree) { me.wood += 3; addXP(3); pop(j.x, j.y, "+3 dřevo", "#e0a45a"); }
+          else if (isOre) { add("ore", 2); addXP(6); pop(j.x, j.y, "+2 ruda", "#b5734a"); }
+          else { me.stone += 2; addXP(4); pop(j.x, j.y, "+2 kámen", "#a9b8c6"); }
+          saveMe(); ui();
+        } else if (err) { P.job = null; S.marker = null; return; } else pop(j.x, j.y, "Někdo byl rychlejší", "#ff8a6b");
+        const next = nearest(t, j.x, j.y, 4);
+        if (next) { P.job = { kind: "harvest", x: next[0], y: next[1] }; P.path = pathTo(next[0], next[1], true) || []; S.marker = { x: next[0], y: next[1] }; }
+        else { P.job = null; S.marker = null; }
+      });
+      return;
+    }
+    if (j.kind === "reap") {
+      const i = j.y * W + j.x, o = tiles[i], t = eff(i);
+      if (!CROPS[t] || !o || o.oid !== me.id || cropGrowth(i, o, t) < 1) { P.job = null; S.marker = null; return; }
+      if (P.cd <= 0) { P.cd = fast ? .14 : .25; P.swing = .18; j.prog += .34; }
+      if (j.prog < 1) return;
+      busy = true;
+      claim(i, (e, cur) => e === t && cur && cur.oid === me.id && cropGrowth(i, cur, t) >= 1, { t, o: me.name, oid: me.id, p: now() }, (ok) => {
+        busy = false; P.job = null; S.marker = null;
+        if (!ok) return;
+        const C = CROPS[t]; add(C.item, C.n); me.pts += 10; addXP(5); saveScore(); ui();
+        pop(j.x, j.y, `+${C.n} ${ITEMS[C.item].s}`, ITEMS[C.item].c);
+        let best = null, bd = 1e9;
+        for (let y = j.y - 4; y <= j.y + 4; y++) for (let x = j.x - 4; x <= j.x + 4; x++) {
+          const k = y * W + x; if (x < 0 || y < 0 || x >= W || y >= H) continue;
+          const tk = eff(k); if (!CROPS[tk] || !tiles[k] || tiles[k].oid !== me.id || cropGrowth(k, tiles[k], tk) < 1) continue;
+          const d = Math.abs(x - j.x) + Math.abs(y - j.y); if (d < bd) { bd = d; best = [x, y]; }
+        }
+        if (best) { P.job = { kind: "reap", x: best[0], y: best[1], prog: 0 }; P.path = pathTo(best[0], best[1], true) || []; S.marker = { x: best[0], y: best[1] }; }
+      });
+      return;
+    }
+    if (j.kind === "build") {
+      const b = BUILD[j.b], i = j.y * W + j.x, t = eff(i);
+      if (!walkable(t) || !canPay(b.cost)) { P.job = null; S.marker = null; return; }
+      if (P.cd <= 0) { P.cd = fast ? .14 : .25; P.swing = .18; j.prog += .25; }
+      if (j.prog < 1) return;
+      busy = true;
+      const val = { t: b.t, o: me.name, oid: me.id }; if (CROPS[b.t]) val.p = now(); if (b.lv) val.lv = b.lv; if (LIVE[b.t]) { val.c = now(); val.f = now() + FEED_MS; }
+      claim(i, (e) => walkable(e) && e !== T.BRIDGE && e !== T.GATE, val, (ok) => {
+        busy = false; P.job = null; S.marker = null;
+        if (!ok) return banner("Tohle místo už někdo zabral");
+        pay(b.cost); me.pts += b.pts; addXP(Math.max(2, Math.round(b.pts / 5))); saveScore();
+        pop(j.x, j.y, `+${b.pts} bodů`, "#8fd16a");
+        if (b.t === T.PUB) { pubWrite(i, { oid: me.id, o: me.name, beer: 0, till: 0, price: 5, sold: 0 }); banner("Hospoda stojí! Vejdi dovnitř a uvař pivo z chmele.", 4000); }
+        else if (CROPS[b.t]) banner(`Zasazeno. Sklizeň za ${CROPS[b.t].grow / 1000} s. Chraň pole hradbou nebo pochodní, v noci chodí vlci.`, 4000);
+        else if (LIVE[b.t]) banner(`${b.name} stojí. Zvířata jsou nakrmená na 2 hodiny, pak je krm obilím.`, 4000);
+        else if (isHome(b.t)) banner("Hotovo! Ťukni na svůj dům a vejdi dovnitř.", 3500);
+        if (!b.multi) selected = null;
+        ui();
+      });
+    }
+  }
+  function drawObjOld(x, y, t) {
+    const s = tile, X = x * s, Y = y * s, i = y * W + x, v = eff(i);
+    const shake = P.job && P.job.x === x && P.job.y === y && P.swing > 0 ? Math.sin(t * 60) * 2 : 0;
+    if (v === T.TREE) {
+      ctx.fillStyle = "rgba(0,0,0,.18)"; ctx.beginPath(); ctx.ellipse(X + s / 2, Y + s * .88, s * .34, s * .1, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = "#6b4a2b"; ctx.fillRect(X + s * .43, Y + s * .55, s * .14, s * .33);
+      const cx = X + s / 2 + shake;
+      ctx.fillStyle = "#2f6b2c"; ctx.beginPath(); ctx.arc(cx, Y + s * .38, s * .36, 0, 7); ctx.fill();
+      ctx.fillStyle = "#3d8a37"; ctx.beginPath(); ctx.arc(cx - s * .08, Y + s * .3, s * .24, 0, 7); ctx.fill();
+      ctx.fillStyle = "#57a94a"; ctx.beginPath(); ctx.arc(cx - s * .14, Y + s * .22, s * .09, 0, 7); ctx.fill();
+      dmg(i, v, X, Y);
+    } else if (v === T.ROCK) {
+      const ox = X + shake;
+      ctx.fillStyle = "rgba(0,0,0,.18)"; ctx.beginPath(); ctx.ellipse(X + s / 2, Y + s * .84, s * .36, s * .1, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = "#7d8893"; ctx.beginPath();
+      ctx.moveTo(ox + s * .14, Y + s * .82); ctx.lineTo(ox + s * .22, Y + s * .42); ctx.lineTo(ox + s * .5, Y + s * .22);
+      ctx.lineTo(ox + s * .8, Y + s * .4); ctx.lineTo(ox + s * .88, Y + s * .82); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#a9b8c6"; ctx.beginPath();
+      ctx.moveTo(ox + s * .26, Y + s * .44); ctx.lineTo(ox + s * .5, Y + s * .28); ctx.lineTo(ox + s * .56, Y + s * .5); ctx.lineTo(ox + s * .32, Y + s * .58); ctx.closePath(); ctx.fill();
+      dmg(i, v, X, Y);
+    } else if (v === T.STUMP) {
+      ctx.fillStyle = "#6b4a2b"; ctx.fillRect(X + s * .38, Y + s * .62, s * .24, s * .16);
+      ctx.fillStyle = "#c79a62"; ctx.beginPath(); ctx.ellipse(X + s / 2, Y + s * .62, s * .12, s * .05, 0, 0, 7); ctx.fill();
+    } else if (v === T.RUBBLE) {
+      ctx.fillStyle = "#8d98a3";
+      ctx.fillRect(X + s * .3, Y + s * .66, s * .12, s * .09); ctx.fillRect(X + s * .52, Y + s * .7, s * .16, s * .1); ctx.fillRect(X + s * .44, Y + s * .58, s * .08, s * .07);
+    } else if (v === T.HUT) {
+      ctx.fillStyle = "rgba(0,0,0,.2)"; ctx.fillRect(X + s * .12, Y + s * .84, s * .8, s * .08);
+      ctx.fillStyle = "#a8743f"; ctx.fillRect(X + s * .16, Y + s * .44, s * .68, s * .42);
+      ctx.fillStyle = "#8a5d31"; for (let k = 0; k < 3; k++) ctx.fillRect(X + s * .16, Y + s * (.52 + k * .12), s * .68, 2);
+      ctx.fillStyle = "#c2523f"; ctx.beginPath(); ctx.moveTo(X + s * .06, Y + s * .48); ctx.lineTo(X + s / 2, Y + s * .1); ctx.lineTo(X + s * .94, Y + s * .48); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#4a2f1a"; ctx.fillRect(X + s * .42, Y + s * .62, s * .16, s * .24);
+    } else if (v === T.HOUSE) {
+      ctx.fillStyle = "rgba(0,0,0,.2)"; ctx.fillRect(X + s * .08, Y + s * .86, s * .86, s * .08);
+      ctx.fillStyle = "#6d6d73"; ctx.fillRect(X + s * .66, Y + s * .08, s * .1, s * .24);
+      ctx.fillStyle = "#b5bcc4"; ctx.fillRect(X + s * .12, Y + s * .4, s * .76, s * .48);
+      ctx.fillStyle = "#97a0aa"; for (let k = 0; k < 4; k++) for (let m = 0; m < 3; m++) ctx.fillRect(X + s * (.14 + m * .25 + (k % 2) * .12), Y + s * (.44 + k * .11), s * .1, 2);
+      ctx.fillStyle = "#3e4a5c"; ctx.beginPath(); ctx.moveTo(X + s * .04, Y + s * .44); ctx.lineTo(X + s / 2, Y + s * .06); ctx.lineTo(X + s * .96, Y + s * .44); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#f4cf6a"; ctx.fillRect(X + s * .2, Y + s * .54, s * .14, s * .12); ctx.fillRect(X + s * .66, Y + s * .54, s * .14, s * .12);
+      ctx.fillStyle = "#3b2a1c"; ctx.fillRect(X + s * .43, Y + s * .64, s * .14, s * .24);
+      const sm = (t * .6) % 1; ctx.fillStyle = `rgba(230,230,230,${.5 - sm * .5})`; ctx.beginPath(); ctx.arc(X + s * .71, Y + s * (.05 - sm * .2), s * (.05 + sm * .06), 0, 7); ctx.fill();
+    }
+  }
+  function dmg(i, v, X, Y) {
+    if (!S.hp[i]) return;
+    const s = tile, frac = 1 - S.hp[i] / hitsFor(v);
+    ctx.fillStyle = "#0b120e"; ctx.fillRect(X + s * .15, Y + s * .02, s * .7, 5);
+    ctx.fillStyle = v === T.TREE ? "#e0a45a" : "#a9b8c6"; ctx.fillRect(X + s * .15 + 1, Y + s * .02 + 1, (s * .7 - 2) * frac, 3);
+  }
+  function nameTag(p, X, Y, s) {
+    ctx.font = `700 ${Math.round(s * .32)}px "Atkinson Hyperlegible", sans-serif`;
+    ctx.fillStyle = "rgba(11,18,14,.7)"; const tw = ctx.measureText(p.n).width + 8;
+    ctx.fillRect(X - tw / 2, Y - s * .3, tw, s * .36);
+    ctx.fillStyle = p.me ? "#8fd16a" : "#eef3e6"; ctx.fillText(p.n, X, Y);
+  }
+  function floaters(inRoom, s, ox, oy) {
+    ctx.font = `700 ${Math.round(s * .42)}px "Pixelify Sans", monospace`; ctx.textAlign = "center";
+    for (const f of S.fx) {
+      if (f.room !== inRoom) continue;
+      ctx.globalAlpha = Math.min(1, f.life * 1.5);
+      ctx.fillStyle = "#0b120e"; ctx.fillText(f.text, ox + f.x * s + 1, oy + f.y * s + 1);
+      ctx.fillStyle = f.color; ctx.fillText(f.text, ox + f.x * s, oy + f.y * s);
+    }
+    ctx.globalAlpha = 1;
+  }
+  function drawPub(X, Y, s, t) {
+    ctx.fillStyle = "rgba(0,0,0,.2)"; ctx.fillRect(X + s * .04, Y + s * .86, s * .92, s * .08);
+    ctx.fillStyle = "#8a5d31"; ctx.fillRect(X + s * .06, Y + s * .42, s * .88, s * .46);
+    ctx.fillStyle = "#5a3d24"; ctx.fillRect(X + s * .06, Y + s * .42, s * .88, 3); ctx.fillRect(X + s * .3, Y + s * .42, 3, s * .46); ctx.fillRect(X + s * .68, Y + s * .42, 3, s * .46);
+    ctx.fillStyle = "#4a2f1a"; ctx.beginPath(); ctx.moveTo(X, Y + s * .46); ctx.lineTo(X + s * .5, Y + s * .08); ctx.lineTo(X + s, Y + s * .46); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#f4cf6a"; ctx.fillRect(X + s * .12, Y + s * .54, s * .14, s * .12); ctx.fillRect(X + s * .74, Y + s * .54, s * .14, s * .12);
+    ctx.fillStyle = "#2a1b10"; ctx.fillRect(X + s * .42, Y + s * .6, s * .16, s * .28);
+    const sw = Math.sin(t * 2) * s * .02;
+    ctx.fillStyle = "#3e2a18"; ctx.fillRect(X + s * .78, Y + s * .2, 2, s * .1);
+    ctx.fillStyle = "#e9e2d0"; ctx.fillRect(X + s * .66 + sw, Y + s * .28, s * .26, s * .2);
+    drawMug(X + s * .72 + sw, Y + s * .29, s * .18);
+  }
+  function drawMug(X, Y, s) {
+    ctx.fillStyle = "#f4cf6a"; ctx.fillRect(X, Y + s * .25, s * .6, s * .7);
+    ctx.fillStyle = "#f8f4e8"; ctx.fillRect(X - s * .04, Y + s * .1, s * .68, s * .22);
+    ctx.strokeStyle = "#e8b64c"; ctx.lineWidth = Math.max(2, s * .1); ctx.strokeRect(X + s * .6, Y + s * .4, s * .2, s * .32);
+  }
+  function drawFurniture(id, X, Y, s, t) {
+    if (id === 4) { // bar counter
+      ctx.fillStyle = "#3e2a18"; ctx.fillRect(X, Y + s * .3, s, s * .66);
+      ctx.fillStyle = "#8a5d31"; ctx.fillRect(X, Y + s * .22, s, s * .18);
+      ctx.fillStyle = "#5a3d24"; ctx.fillRect(X, Y + s * .6, s, 2);
+      return;
+    }
+    if (id === 5) { // barrel
+      ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.fillRect(X + s * .16, Y + s * .82, s * .7, s * .1);
+      ctx.fillStyle = "#8a5d31"; ctx.fillRect(X + s * .16, Y + s * .14, s * .68, s * .72);
+      ctx.fillStyle = "#a8743f"; ctx.fillRect(X + s * .22, Y + s * .14, s * .56, s * .72);
+      ctx.fillStyle = "#4a4f55"; ctx.fillRect(X + s * .16, Y + s * .28, s * .68, 3); ctx.fillRect(X + s * .16, Y + s * .68, s * .68, 3);
+      ctx.fillStyle = "#c9d2da"; ctx.fillRect(X + s * .46, Y + s * .46, s * .08, s * .1);
+      return;
+    }
+    if (id === 1) { // bed
+      ctx.fillStyle = "rgba(0,0,0,.2)"; ctx.fillRect(X + s * .1, Y + s * .14, s * .84, s * .84);
+      ctx.fillStyle = "#6b4a2b"; ctx.fillRect(X + s * .08, Y + s * .06, s * .84, s * .88);
+      ctx.fillStyle = "#c2523f"; ctx.fillRect(X + s * .14, Y + s * .38, s * .72, s * .5);
+      ctx.fillStyle = "#a8402f"; ctx.fillRect(X + s * .14, Y + s * .38, s * .72, s * .06);
+      ctx.fillStyle = "#f2efe6"; ctx.fillRect(X + s * .2, Y + s * .12, s * .6, s * .2);
+    } else if (id === 2) { // table
+      ctx.fillStyle = "rgba(0,0,0,.2)"; ctx.fillRect(X + s * .16, Y + s * .3, s * .74, s * .62);
+      ctx.fillStyle = "#5a3d24"; ctx.fillRect(X + s * .16, Y + s * .5, s * .08, s * .38); ctx.fillRect(X + s * .76, Y + s * .5, s * .08, s * .38);
+      ctx.fillStyle = "#8a5d31"; ctx.fillRect(X + s * .1, Y + s * .26, s * .8, s * .3);
+      ctx.fillStyle = "#e9e2d0"; ctx.fillRect(X + s * .56, Y + s * .14, s * .14, s * .16);
+    } else if (id === 3) { // fireplace
+      ctx.fillStyle = "#6d747c"; ctx.fillRect(X + s * .06, Y + s * .1, s * .88, s * .84);
+      ctx.fillStyle = "#545a61"; ctx.fillRect(X + s * .06, Y + s * .1, s * .88, s * .12);
+      ctx.fillStyle = "#1c1410"; ctx.fillRect(X + s * .22, Y + s * .36, s * .56, s * .5);
+      const fl = Math.sin(t * 12) * s * .04;
+      ctx.fillStyle = "#e86f2c"; ctx.beginPath(); ctx.moveTo(X + s * .3, Y + s * .84); ctx.lineTo(X + s * .5, Y + s * .44 + fl); ctx.lineTo(X + s * .7, Y + s * .84); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#f4cf6a"; ctx.beginPath(); ctx.moveTo(X + s * .4, Y + s * .84); ctx.lineTo(X + s * .5, Y + s * .6 - fl); ctx.lineTo(X + s * .6, Y + s * .84); ctx.closePath(); ctx.fill();
+    }
+  }
+  function drawPerson(p, t, s, ox, oy) {
+    const X = ox + p.fx * s, Y = oy + p.fy * s;
+    const bob = p.moving ? Math.abs(Math.sin(t * 14)) * s * .05 : 0, by = Y - bob;
+    ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.beginPath(); ctx.ellipse(X + s / 2, Y + s * .88, s * .2, s * .07, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = "#2b3a6b"; ctx.fillRect(X + s * .38, by + s * .7, s * .09, s * .16); ctx.fillRect(X + s * .53, by + s * .7, s * .09, s * .16);
+    ctx.fillStyle = p.c; ctx.fillRect(X + s * .34, by + s * .45, s * .32, s * .28);
+    ctx.fillStyle = "#f1c49b"; ctx.fillRect(X + s * .37, by + s * .24, s * .26, s * .22);
+    ctx.fillStyle = "#1b1b1b"; ctx.fillRect(X + s * (p.dir > 0 ? .54 : .41), by + s * .32, 3, 3);
+    ctx.fillStyle = "#e8b64c"; ctx.fillRect(X + s * .3, by + s * .2, s * .4, s * .07); ctx.fillRect(X + s * .38, by + s * .12, s * .24, s * .1);
+    ctx.save();
+    ctx.translate(X + s * (p.dir > 0 ? .68 : .32), by + s * .55);
+    ctx.rotate((p.swing > 0 ? -1.4 + (.2 - p.swing) * 9 : -.5) * p.dir);
+    ctx.fillStyle = "#7a5230"; ctx.fillRect(-1.5, -s * .32, 3, s * .32);
+    ctx.fillStyle = "#c9d2da"; ctx.fillRect(p.dir > 0 ? 0 : -s * .12, -s * .34, s * .12, s * .09);
+    ctx.restore();
+  }
+  function drawRoom(w, h, t) {
+    ctx.fillStyle = "#120c07"; ctx.fillRect(0, 0, w, h);
+    const s = Math.floor(Math.min(64, (w - 16) / room.w, (h - 16) / room.h));
+    const ox = Math.floor((w - s * room.w) / 2), oy = Math.floor((h - s * room.h) / 2);
+    roomView = { s, ox, oy };
+    const stoneHome = eff(room.i) === T.HOUSE, pubRoom = room.kind === "pub";
+    for (let y = 0; y < room.h; y++) for (let x = 0; x < room.w; x++) {
+      const X = ox + x * s, Y = oy + y * s;
+      const wall = x === 0 || y === 0 || x === room.w - 1 || y === room.h - 1;
+      const door = x === room.door[0] && y === room.door[1];
+      if (door) {
+        ctx.fillStyle = "#b07d4a"; ctx.fillRect(X, Y, s, s);
+        ctx.fillStyle = "#2a1b10"; ctx.fillRect(X + s * .12, Y + s * .2, s * .76, s * .8);
+        ctx.fillStyle = "#6b9e45"; ctx.fillRect(X + s * .12, Y + s * .7, s * .76, s * .3);
+      } else if (wall) {
+        ctx.fillStyle = stoneHome ? "#7c848d" : "#6e4a2a"; ctx.fillRect(X, Y, s, s);
+        ctx.fillStyle = stoneHome ? "#646b73" : "#583a20";
+        if (stoneHome) { ctx.fillRect(X, Y + s * .5, s, 2); ctx.fillRect(X + ((x + y) % 2 ? s * .5 : 0), Y, 2, s * .5); ctx.fillRect(X + ((x + y) % 2 ? 0 : s * .5), Y + s * .5, 2, s * .5); }
+        else for (let k = 1; k < 4; k++) ctx.fillRect(X, Y + s * k / 4, s, 2);
+        if (y === 0 && x > 0 && x < room.w - 1 && x % 3 === 1) { // window
+          ctx.fillStyle = "#9fd3f0"; ctx.fillRect(X + s * .2, Y + s * .2, s * .6, s * .5);
+          ctx.fillStyle = "#3e2a18"; ctx.fillRect(X + s * .48, Y + s * .2, 3, s * .5); ctx.fillRect(X + s * .2, Y + s * .43, s * .6, 3);
+        }
+      } else {
+        ctx.fillStyle = pubRoom ? ((x + y) % 2 ? "#6e4a2a" : "#7a5230") : (y % 2) ? "#b07d4a" : "#a87445"; ctx.fillRect(X, Y, s, s);
+        ctx.fillStyle = "#946238"; ctx.fillRect(X, Y + s - 2, s, 2); ctx.fillRect(X + ((y % 2) ? s * .35 : s * .7), Y, 2, s);
+      }
+    }
+    for (const [cell, id] of Object.entries(room.items)) {
+      const x = cell % room.w, y = Math.floor(cell / room.w); drawFurniture(id, ox + x * s, oy + y * s, s, t);
+    }
+    if (S.marker) { const m = S.marker; ctx.strokeStyle = "rgba(255,240,180,.9)"; ctx.lineWidth = 2; ctx.strokeRect(ox + m.x * s + 3, oy + m.y * s + 3, s - 6, s - 6); }
+    const guests = pubRoom ? Object.values(others).filter((o) => o.inRoom === room.i) : [];
+    for (const o of guests) drawPerson({ fx: o.fx, fy: o.fy, dir: o.dir, swing: 0, moving: o.moving, c: o.c }, t, s, ox, oy);
+    drawPerson({ fx: P.fx, fy: P.fy, dir: P.dir, swing: P.swing, moving: P.path.length > 0, c: me.c }, t, s, ox, oy);
+    ctx.textAlign = "center";
+    for (const o of guests) nameTag({ n: o.n, me: false }, ox + o.fx * s + s / 2, oy + o.fy * s + s * .02, s);
+    if (pubRoom) { // beer stock on the counter
+      const n = Math.min(5, (room.pub && room.pub.beer) || 0);
+      for (let k = 0; k < n; k++) drawMug(ox + (2 + k) * s + s * .3, oy + 1 * s + s * .08, s * .4);
+    }
+    floaters(true, s, ox, oy);
+  }
+  function hash(x, y) { let h = x * 374761393 + y * 668265263; h = (h ^ (h >> 13)) * 1274126177; return ((h ^ (h >> 16)) >>> 0) / 4294967296; }
+  function drawGroundOld(x, y, t) {
+    const s = tile, X = x * s, Y = y * s, v = eff(y * W + x), r = hash(x, y);
+    if (v === T.WATER || v === T.BRIDGE) {
+      ctx.fillStyle = "#3b7fb0"; ctx.fillRect(X, Y, s, s);
+      ctx.strokeStyle = "rgba(200,235,255,.45)"; ctx.lineWidth = 2; ctx.beginPath();
+      const o = Math.sin(t * 2 + x + y) * s * 0.1;
+      ctx.moveTo(X + s * .2 + o, Y + s * .4); ctx.lineTo(X + s * .5 + o, Y + s * .4);
+      ctx.moveTo(X + s * .45 - o, Y + s * .72); ctx.lineTo(X + s * .78 - o, Y + s * .72);
+      ctx.stroke();
+      if (v === T.BRIDGE) {
+        ctx.fillStyle = "#8a5d31"; ctx.fillRect(X, Y + s * .12, s, s * .76);
+        ctx.fillStyle = "#a8743f"; for (let k = 0; k < 4; k++) ctx.fillRect(X + k * s / 4 + 1, Y + s * .14, s / 4 - 2, s * .72);
+        ctx.fillStyle = "#5a3d24"; ctx.fillRect(X, Y + s * .1, s, 3); ctx.fillRect(X, Y + s * .86, s, 3);
+      }
+      return;
+    }
+    ctx.fillStyle = r < .5 ? "#5d9e3f" : "#64a744"; ctx.fillRect(X, Y, s, s);
+    if (r > .7) { ctx.fillStyle = "#4f8a35"; ctx.fillRect(X + s * r * .6, Y + s * .3, 2, 5); ctx.fillRect(X + s * r * .6 + 4, Y + s * .3 + 2, 2, 4); }
+    if (r < .06) { ctx.fillStyle = "#f2e37a"; ctx.fillRect(X + s * .3, Y + s * .6, 3, 3); }
+  }
+  // =================== RENDERING ===================
+  const night = document.createElement("canvas"), nctx = night.getContext("2d");
+  function resize() {
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    const r = cv.getBoundingClientRect();
+    cv.width = Math.max(1, Math.round(r.width * dpr)); cv.height = Math.max(1, Math.round(r.height * dpr));
+    night.width = cv.width; night.height = cv.height;
+    tile = Math.max(28, Math.min(52, Math.floor(r.width / 11)));
+  }
+  function camTarget() {
+    if (mode === "play") return [P.fx, P.fy];
+    const list = Object.values(others).filter((o) => !o.inside);
+    if (!list.length) return [PLAZA[0], PLAZA[1]];
+    const o = list[followIdx % list.length]; return [o.fx, o.fy];
+  }
+  function camera(w, h, gw, gh) {
+    const [fx, fy] = camTarget();
+    const tx = fx * tile + tile / 2 - w / 2, ty = fy * tile + tile / 2 - h / 2;
+    const maxX = gw * tile - w, maxY = gh * tile - h;
+    const cx = maxX < 0 ? maxX / 2 : Math.max(0, Math.min(maxX, tx));
+    const cy = maxY < 0 ? maxY / 2 : Math.max(0, Math.min(maxY, ty));
+    if (Math.abs(cx - camX) > w * 2 || Math.abs(cy - camY) > h * 2) { camX = cx; camY = cy; }
+    camX += (cx - camX) * .15; camY += (cy - camY) * .15;
+  }
+  function draw(nowMs) {
+    const w = cv.width / dpr, h = cv.height / dpr, t = nowMs / 1000;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (dun && mode === "play") return drawDungeon(w, h, t);
+    if (room && mode === "play") return drawRoom(w, h, t);
+    ctx.fillStyle = "#2c5a2a"; ctx.fillRect(0, 0, w, h);
+    camera(w, h, W, H);
+    ctx.save(); ctx.translate(-Math.round(camX), -Math.round(camY));
+    const x0 = Math.max(0, Math.floor(camX / tile)), y0 = Math.max(0, Math.floor(camY / tile));
+    const x1 = Math.min(W - 1, Math.ceil((camX + w) / tile)), y1 = Math.min(H - 1, Math.ceil((camY + h) / tile));
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) drawGround(x, y, t);
+    const people = Object.values(others).filter((o) => !o.inside).map((o) => ({ fx: o.fx, fy: o.fy, dir: o.dir, swing: o.swing, moving: o.moving, c: o.c, n: o.n, me: false }));
+    if (mode === "play") people.push({ fx: P.fx, fy: P.fy, dir: P.dir, swing: P.swing, moving: P.path.length > 0, c: me.c, n: me.name, me: true, hurt: P.hurt > 0 });
+    const beasts = animalsNear((x0 + x1) / 2, (y0 + y1) / 2, Math.max(x1 - x0, y1 - y0) / 2 + 2);
+    for (let y = y0; y <= y1; y++) {
+      for (let x = x0; x <= x1; x++) drawObj(x, y, t);
+      for (const a of beasts) if (Math.round(a.fy) === y) drawAnimal(a, t);
+      for (const wv of wolves) if (Math.round(wv.fy) === y) drawWolf(wv, t);
+      for (const p of people) if (Math.round(p.fy) === y) { drawPerson(p, t, tile, 0, 0); if (p.hurt) { ctx.fillStyle = "rgba(255,60,40,.35)"; ctx.fillRect(p.fx * tile + tile * .3, p.fy * tile + tile * .1, tile * .4, tile * .8); } }
+    }
+    if (S.marker && mode === "play") {
+      const m = S.marker, s = tile, pulse = 2 + Math.sin(t * 6) * 1.5;
+      ctx.strokeStyle = "rgba(255,240,180,.9)"; ctx.lineWidth = 2; ctx.strokeRect(m.x * s + pulse, m.y * s + pulse, s - pulse * 2, s - pulse * 2);
+    }
+    drawArrows();
+    ctx.textAlign = "center";
+    for (const p of people) nameTag(p, p.fx * tile + tile / 2, p.fy * tile + tile * .02, tile);
+    floatersW(false, tile, 0, 0);
+    ctx.restore();
+    drawNight(w, h, x0, y0, x1, y1, t);
+  }
+  function floatersW(inRoom, s, ox, oy) {
+    ctx.font = `700 ${Math.round(s * .42)}px "Pixelify Sans", monospace`; ctx.textAlign = "center";
+    for (const f of S.fx) {
+      if (f.room !== inRoom || !!f.dun !== !!dun) continue;
+      ctx.globalAlpha = Math.min(1, f.life * 1.5);
+      ctx.fillStyle = "#0b120e"; ctx.fillText(f.text, ox + f.x * s + 1, oy + f.y * s + 1);
+      ctx.fillStyle = f.color; ctx.fillText(f.text, ox + f.x * s, oy + f.y * s);
+    }
+    ctx.globalAlpha = 1;
+  }
+  function drawArrows() {
+    S.arrows = S.arrows.filter((a) => a.t < 1);
+    ctx.strokeStyle = "#e9e2d0"; ctx.lineWidth = 2;
+    for (const a of S.arrows) {
+      a.t += .08; const x = (a.x + (a.tx - a.x) * a.t) * tile, y = (a.y + (a.ty - a.y) * a.t) * tile, ang = Math.atan2(a.ty - a.y, a.tx - a.x);
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - Math.cos(ang) * tile * .35, y - Math.sin(ang) * tile * .35); ctx.stroke();
+    }
+  }
+  function drawGround(x, y, t) {
+    const v = eff(y * W + x), s = tile, X = x * s, Y = y * s;
+    if (v === T.CLIFF) {
+      const r = hash(x, y);
+      ctx.fillStyle = "#6f6a63"; ctx.fillRect(X, Y, s, s);
+      ctx.fillStyle = "#837d74"; ctx.fillRect(X + s * .1, Y + s * .12, s * .5, s * .32); ctx.fillRect(X + s * .45, Y + s * .5, s * .45, s * .3);
+      ctx.fillStyle = "#57534d"; ctx.fillRect(X, Y + s * .46, s, 2); if (r > .5) ctx.fillRect(X + s * .6, Y, 2, s * .46);
+      if (at(x, y - 1) !== T.CLIFF) { ctx.fillStyle = "#9a948a"; ctx.fillRect(X, Y, s, 3); }
+      return;
+    }
+    if (v === T.CAVE) {
+      ctx.fillStyle = "#6f6a63"; ctx.fillRect(X, Y, s, s);
+      ctx.fillStyle = "#121010"; ctx.beginPath(); ctx.ellipse(X + s / 2, Y + s * .7, s * .4, s * .5, 0, Math.PI, 0); ctx.lineTo(X + s * .9, Y + s); ctx.lineTo(X + s * .1, Y + s); ctx.fill();
+      ctx.fillStyle = "#4a443d"; ctx.fillRect(X + s * .06, Y + s * .2, s * .1, s * .8); ctx.fillRect(X + s * .84, Y + s * .2, s * .1, s * .8);
+      return;
+    }
+    drawGroundOld(x, y, t);
+    if (v === T.DUG) { ctx.fillStyle = "#7a6a5a"; ctx.fillRect(X + s * .3, Y + s * .66, s * .14, s * .1); ctx.fillRect(X + s * .54, Y + s * .7, s * .12, s * .1); }
+    if (v === T.MAYOR || v === T.MARKET || Math.abs(x - PLAZA[0] - 1.5) <= 3.5 && Math.abs(y - PLAZA[1]) <= 2 && walkable(v)) {
+      ctx.fillStyle = (x + y) % 2 ? "#b9ad95" : "#c4b89f"; ctx.fillRect(X, Y, s, s); ctx.fillStyle = "#a4987f"; ctx.fillRect(X, Y + s - 2, s, 2);
+    }
+  }
+  function drawObj(x, y, t) {
+    const s = tile, X = x * s, Y = y * s, i = y * W + x, v = eff(i), o = tiles[i];
+    if (CROPS[v]) return drawCrop(X, Y, s, i, o, v, t);
+    if (v === T.PUB) return drawPub(X, Y, s, t);
+    if (v === T.ORE) {
+      const shake = P.job && P.job.x === x && P.job.y === y && P.swing > 0 ? Math.sin(t * 60) * 2 : 0, ox = X + shake;
+      ctx.fillStyle = "rgba(0,0,0,.18)"; ctx.beginPath(); ctx.ellipse(X + s / 2, Y + s * .84, s * .36, s * .1, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = "#5d5a57"; ctx.beginPath(); ctx.moveTo(ox + s * .14, Y + s * .82); ctx.lineTo(ox + s * .24, Y + s * .38); ctx.lineTo(ox + s * .52, Y + s * .2); ctx.lineTo(ox + s * .82, Y + s * .4); ctx.lineTo(ox + s * .88, Y + s * .82); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#c97a3e"; for (const [a, b] of [[.32, .5], [.55, .36], [.62, .62], [.4, .7]]) ctx.fillRect(ox + s * a, Y + s * b, s * .1, s * .08);
+      dmg(i, v, X, Y); return;
+    }
+    if (v === T.MAYOR) { drawStall(X, Y, s, "#3f7fd9"); drawPerson({ fx: x, fy: y - .15, dir: 1, swing: 0, moving: false, c: "#7a3fd9" }, t, s, 0, 0); return; }
+    if (v === T.MARKET) { drawStall(X, Y, s, "#d9533f"); for (const [a, c] of [[.22, "#e0a45a"], [.45, "#e8c860"], [.66, "#c2523f"]]) { ctx.fillStyle = c; ctx.fillRect(X + s * a, Y + s * .5, s * .14, s * .12); } return; }
+    if (v === T.WALL_WOOD || v === T.WALL_STONE) return drawWall(x, y, X, Y, s, v);
+    if (v === T.GATE) {
+      const st = (tx, ty) => { const a = at(tx, ty); return a === T.WALL_WOOD || a === T.WALL_STONE; }, vert = st(x, y - 1) || st(x, y + 1);
+      ctx.fillStyle = "#5a3d24";
+      if (vert) { ctx.fillRect(X + s * .38, Y, s * .08, s); ctx.fillRect(X + s * .54, Y, s * .08, s); }
+      else { ctx.fillRect(X, Y + s * .5, s * .14, s * .44); ctx.fillRect(X + s * .86, Y + s * .5, s * .14, s * .44); ctx.fillStyle = "#8a5d31"; ctx.fillRect(X, Y + s * .44, s, s * .08); }
+      return;
+    }
+    if (v === T.TORCH) {
+      ctx.fillStyle = "#5a3d24"; ctx.fillRect(X + s * .46, Y + s * .38, s * .08, s * .5);
+      const fl = Math.sin(t * 14 + x) * s * .03;
+      ctx.fillStyle = "#e86f2c"; ctx.beginPath(); ctx.arc(X + s / 2, Y + s * .32 + fl, s * .1, 0, 7); ctx.fill();
+      ctx.fillStyle = "#f4cf6a"; ctx.beginPath(); ctx.arc(X + s / 2, Y + s * .34, s * .05, 0, 7); ctx.fill();
+      return;
+    }
+    if (v === T.TOWER) {
+      ctx.fillStyle = "rgba(0,0,0,.2)"; ctx.fillRect(X + s * .16, Y + s * .88, s * .7, s * .08);
+      ctx.fillStyle = "#8d98a3"; ctx.fillRect(X + s * .24, Y - s * .4, s * .52, s * 1.3);
+      ctx.fillStyle = "#6d747c"; for (let k = 0; k < 3; k++) ctx.fillRect(X + s * (.2 + k * .22), Y - s * .55, s * .14, s * .18); ctx.fillRect(X + s * .2, Y - s * .42, s * .6, s * .06);
+      ctx.fillStyle = "#1c1410"; ctx.fillRect(X + s * .44, Y + s * .0, s * .12, s * .2);
+      ctx.fillStyle = "#3b2a1c"; ctx.fillRect(X + s * .4, Y + s * .62, s * .2, s * .28);
+      return;
+    }
+    if (v === T.FURNACE) {
+      ctx.fillStyle = "rgba(0,0,0,.2)"; ctx.fillRect(X + s * .1, Y + s * .86, s * .8, s * .08);
+      ctx.fillStyle = "#7c848d"; ctx.beginPath(); ctx.moveTo(X + s * .14, Y + s * .9); ctx.lineTo(X + s * .26, Y + s * .3); ctx.lineTo(X + s * .74, Y + s * .3); ctx.lineTo(X + s * .86, Y + s * .9); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#545a61"; ctx.fillRect(X + s * .4, Y + s * .1, s * .2, s * .22);
+      const fl = .6 + Math.sin(t * 9) * .2; ctx.fillStyle = `rgba(232,111,44,${fl})`; ctx.fillRect(X + s * .36, Y + s * .6, s * .28, s * .24);
+      return;
+    }
+    if (v === T.SMITHY) {
+      ctx.fillStyle = "rgba(0,0,0,.2)"; ctx.fillRect(X + s * .06, Y + s * .86, s * .9, s * .08);
+      ctx.fillStyle = "#6e4a2a"; ctx.fillRect(X + s * .08, Y + s * .4, s * .84, s * .48);
+      ctx.fillStyle = "#3e4a5c"; ctx.beginPath(); ctx.moveTo(X, Y + s * .44); ctx.lineTo(X + s / 2, Y + s * .1); ctx.lineTo(X + s, Y + s * .44); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#2b2f33"; ctx.fillRect(X + s * .2, Y + s * .66, s * .3, s * .1); ctx.fillRect(X + s * .28, Y + s * .76, s * .12, s * .12);
+      ctx.fillStyle = "#e86f2c"; ctx.fillRect(X + s * .62, Y + s * .58, s * .18, s * .2);
+      return;
+    }
+    if (LIVE[v]) return drawPen(X, Y, s, v, o, t);
+    if (isHome(v)) { const lv = homeLv(o, v); if (lv >= 3) return drawBigHome(X, Y, s, lv, t); }
+    drawObjOld(x, y, t);
+  }
+  function drawStall(X, Y, s, roof) {
+    ctx.fillStyle = "rgba(0,0,0,.2)"; ctx.fillRect(X + s * .08, Y + s * .86, s * .84, s * .08);
+    ctx.fillStyle = "#8a5d31"; ctx.fillRect(X + s * .1, Y + s * .3, s * .06, s * .6); ctx.fillRect(X + s * .84, Y + s * .3, s * .06, s * .6);
+    ctx.fillStyle = "#a8743f"; ctx.fillRect(X + s * .06, Y + s * .62, s * .88, s * .2);
+    for (let k = 0; k < 5; k++) { ctx.fillStyle = k % 2 ? "#f2efe6" : roof; ctx.fillRect(X + s * (.04 + k * .184), Y + s * .16, s * .184, s * .16); }
+  }
+  function drawWall(x, y, X, Y, s, v) {
+    const wood = v === T.WALL_WOOD, same = (tx, ty) => { const a = at(tx, ty); return a === T.WALL_WOOD || a === T.WALL_STONE || a === T.GATE || a === T.TOWER; };
+    const col = wood ? "#8a5d31" : "#9aa3ad", dark = wood ? "#5a3d24" : "#6d747c";
+    ctx.fillStyle = "rgba(0,0,0,.18)"; ctx.fillRect(X + s * .2, Y + s * .86, s * .6, s * .08);
+    ctx.fillStyle = col; ctx.fillRect(X + s * .3, Y + s * .2, s * .4, s * .7);
+    if (same(x - 1, y)) ctx.fillRect(X, Y + s * .3, s * .4, s * .56);
+    if (same(x + 1, y)) ctx.fillRect(X + s * .6, Y + s * .3, s * .4, s * .56);
+    if (same(x, y - 1)) ctx.fillRect(X + s * .3, Y - s * .1, s * .4, s * .4);
+    if (same(x, y + 1)) ctx.fillRect(X + s * .3, Y + s * .7, s * .4, s * .3);
+    ctx.fillStyle = dark;
+    if (wood) { ctx.beginPath(); ctx.moveTo(X + s * .3, Y + s * .2); ctx.lineTo(X + s * .5, Y + s * .06); ctx.lineTo(X + s * .7, Y + s * .2); ctx.fill(); ctx.fillRect(X + s * .49, Y + s * .2, 2, s * .7); }
+    else { ctx.fillRect(X + s * .3, Y + s * .5, s * .4, 2); ctx.fillRect(X + s * .3, Y + s * .1, s * .12, s * .12); ctx.fillRect(X + s * .58, Y + s * .1, s * .12, s * .12); }
+  }
+  function drawCrop(X, Y, s, i, o, v, t) {
+    const g = cropGrowth(i, o, v), ripe = g >= 1, hops = v === T.FIELD;
+    ctx.fillStyle = "#6b4a2b"; ctx.fillRect(X + 1, Y + 1, s - 2, s - 2);
+    ctx.fillStyle = "#5a3d24"; for (let k = 0; k < 3; k++) ctx.fillRect(X + 2, Y + s * (.22 + k * .3), s - 4, s * .08);
+    if (hops) for (let k = 0; k < 3; k++) {
+      const px = X + s * (.2 + k * .3), top = Y + s * (.9 - .78 * Math.max(.12, g));
+      ctx.fillStyle = "#8a6a40"; ctx.fillRect(px - 1, Y + s * .1, 2, s * .82);
+      ctx.fillStyle = ripe ? "#4f9a3a" : "#5fae46"; ctx.fillRect(px - s * .06, top, s * .12, Y + s * .9 - top);
+      if (ripe) { ctx.fillStyle = "#cfe39a"; for (let m = 0; m < 3; m++) ctx.fillRect(px - s * .09 + (m % 2) * s * .1, Y + s * (.2 + m * .2), s * .08, s * .1); }
+    } else for (let r = 0; r < 3; r++) for (let k = 0; k < 4; k++) {
+      const px = X + s * (.14 + k * .22), base = Y + s * (.3 + r * .3), hgt = s * .26 * Math.max(.15, g);
+      ctx.fillStyle = ripe ? "#d9b84a" : "#7fbf4a"; ctx.fillRect(px, base - hgt, 2, hgt);
+      if (ripe) { ctx.fillStyle = "#e8c860"; ctx.fillRect(px - 1, base - hgt - 3, 4, 4); }
+    }
+    if (ripe && o && o.oid === me.id) { const b = Math.sin(t * 5) * s * .03; ctx.fillStyle = "#f4cf6a"; ctx.fillRect(X + s * .44, Y - s * .12 + b, s * .12, s * .12); }
+    if (!isProtected(i) && isNight() && o && o.oid === me.id) { ctx.fillStyle = "rgba(255,90,70,.8)"; ctx.fillRect(X + s * .04, Y + s * .04, s * .1, s * .1); }
+  }
+  function drawPen(X, Y, s, v, o, t) {
+    ctx.fillStyle = "#7a9a46"; ctx.fillRect(X + 1, Y + 1, s - 2, s - 2);
+    ctx.fillStyle = "#8a5d31"; ctx.fillRect(X + 1, Y + s * .2, s - 2, 2); ctx.fillRect(X + 1, Y + s * .9, s - 2, 2);
+    for (let k = 0; k < 4; k++) ctx.fillRect(X + 1 + k * (s - 4) / 3, Y + s * .14, 3, s * .8);
+    const bob = Math.sin(t * 3 + X) * s * .02;
+    if (v === T.COOP) {
+      ctx.fillStyle = "#a8743f"; ctx.fillRect(X + s * .58, Y + s * .3, s * .32, s * .3); ctx.fillStyle = "#c2523f"; ctx.fillRect(X + s * .54, Y + s * .26, s * .4, s * .08);
+      for (const [a, b] of [[.18, .62], [.36, .7]]) { ctx.fillStyle = "#f2efe6"; ctx.fillRect(X + s * a, Y + s * b + bob, s * .14, s * .12); ctx.fillStyle = "#e05040"; ctx.fillRect(X + s * (a + .1), Y + s * (b - .03) + bob, s * .04, s * .04); }
+    } else {
+      const sheep = v === T.SHEEP, body = sheep ? "#ece6da" : "#f2efe6";
+      ctx.fillStyle = body; ctx.fillRect(X + s * .2, Y + s * .42 + bob, s * .5, s * .28);
+      ctx.fillStyle = sheep ? "#3b3330" : "#2b2622"; ctx.fillRect(X + s * .68, Y + s * .4 + bob, s * .14, s * .16);
+      if (!sheep) { ctx.fillRect(X + s * .3, Y + s * .46 + bob, s * .12, s * .1); ctx.fillRect(X + s * .5, Y + s * .56 + bob, s * .1, s * .1); }
+      ctx.fillStyle = "#3b3330"; ctx.fillRect(X + s * .24, Y + s * .7, s * .05, s * .12); ctx.fillRect(X + s * .6, Y + s * .7, s * .05, s * .12);
+    }
+    if (o && o.oid === me.id) {
+      const n = livePending(o);
+      if (n > 0) { ctx.fillStyle = "#f4cf6a"; ctx.fillRect(X + s * .44, Y - s * .12 + Math.sin(t * 5) * s * .03, s * .12, s * .12); }
+      else if (fedLeft(o) <= 0) { ctx.fillStyle = "#ff8a6b"; ctx.font = `700 ${Math.round(s * .3)}px "Pixelify Sans", monospace`; ctx.textAlign = "center"; ctx.fillText("hlad", X + s / 2, Y + s * .1); }
+    }
+  }
+  function drawBigHome(X, Y, s, lv, t) {
+    ctx.fillStyle = "rgba(0,0,0,.22)"; ctx.fillRect(X + s * .02, Y + s * .86, s * .96, s * .1);
+    if (lv === 3) { // statek: wide farmhouse with barn roof
+      ctx.fillStyle = "#e8dcc4"; ctx.fillRect(X + s * .04, Y + s * .4, s * .92, s * .48);
+      ctx.fillStyle = "#8a5d31"; ctx.fillRect(X + s * .04, Y + s * .4, s * .92, 3); ctx.fillRect(X + s * .04, Y + s * .62, s * .92, 2);
+      ctx.fillStyle = "#a8402f"; ctx.beginPath(); ctx.moveTo(X - s * .04, Y + s * .44); ctx.lineTo(X + s * .24, Y + s * .04); ctx.lineTo(X + s * .76, Y + s * .04); ctx.lineTo(X + s * 1.04, Y + s * .44); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#f4cf6a"; ctx.fillRect(X + s * .12, Y + s * .5, s * .14, s * .1); ctx.fillRect(X + s * .74, Y + s * .5, s * .14, s * .1);
+      ctx.fillStyle = "#4a2f1a"; ctx.fillRect(X + s * .4, Y + s * .56, s * .2, s * .32);
+      return;
+    }
+    const stone = "#a9b2bb", dark = "#7c848d";
+    const towers = lv === 5 ? [.0, .76] : [.72];
+    ctx.fillStyle = stone; ctx.fillRect(X + s * .08, Y + s * .24, s * .84, s * .64);
+    ctx.fillStyle = dark; for (let k = 0; k < 5; k++) ctx.fillRect(X + s * (.08 + k * .18), Y + s * .16, s * .1, s * .1);
+    for (const a of towers) {
+      ctx.fillStyle = stone; ctx.fillRect(X + s * a, Y - s * (lv === 5 ? .3 : .12), s * .24, s * (lv === 5 ? 1.18 : 1.0));
+      ctx.fillStyle = lv === 5 ? "#3e4a5c" : dark;
+      if (lv === 5) { ctx.beginPath(); ctx.moveTo(X + s * (a - .02), Y - s * .3); ctx.lineTo(X + s * (a + .12), Y - s * .62); ctx.lineTo(X + s * (a + .26), Y - s * .3); ctx.closePath(); ctx.fill(); }
+      else for (let k = 0; k < 2; k++) ctx.fillRect(X + s * (a + k * .14), Y - s * .2, s * .08, s * .08);
+      ctx.fillStyle = "#f4cf6a"; ctx.fillRect(X + s * (a + .08), Y + s * .1, s * .08, s * .1);
+    }
+    if (lv === 5) { const wv = Math.sin(t * 4) * s * .03; ctx.fillStyle = "#5a3d24"; ctx.fillRect(X + s * .12, Y - s * .9, 2, s * .3); ctx.fillStyle = "#d9533f"; ctx.fillRect(X + s * .12 + 2, Y - s * .9 + wv, s * .2, s * .12); }
+    ctx.fillStyle = "#3b2a1c"; ctx.beginPath(); ctx.moveTo(X + s * .38, Y + s * .88); ctx.lineTo(X + s * .38, Y + s * .62); ctx.arc(X + s * .5, Y + s * .62, s * .12, Math.PI, 0); ctx.lineTo(X + s * .62, Y + s * .88); ctx.fill();
+    ctx.fillStyle = dark; ctx.fillRect(X + s * .08, Y + s * .5, s * .84, 2);
+  }
+  function drawAnimal(a, t) {
+    const s = tile, X = a.fx * s, Y = a.fy * s, hop = Math.abs(Math.sin(t * 6 + a.fx)) * s * .05, f = a.dir;
+    ctx.fillStyle = "rgba(0,0,0,.2)"; ctx.beginPath(); ctx.ellipse(X + s / 2, Y + s * .86, s * .2, s * .06, 0, 0, 7); ctx.fill();
+    if (a.kind === "rabbit") {
+      const by = Y + s * .6 - hop;
+      ctx.fillStyle = "#9a8a76"; ctx.fillRect(X + s * .34, by, s * .3, s * .2);
+      const hx = f > 0 ? X + s * .58 : X + s * .26; ctx.fillRect(hx, by - s * .1, s * .16, s * .16);
+      ctx.fillStyle = "#b8a892"; ctx.fillRect(hx + s * .02, by - s * .28, s * .04, s * .18); ctx.fillRect(hx + s * .09, by - s * .26, s * .04, s * .16);
+      ctx.fillStyle = "#f2efe6"; ctx.fillRect(f > 0 ? X + s * .3 : X + s * .62, by + s * .04, s * .06, s * .06);
+    } else {
+      const by = Y + s * .36;
+      ctx.fillStyle = "#8a5a32"; ctx.fillRect(X + s * .22, by, s * .5, s * .26);
+      ctx.fillStyle = "#6b4426"; for (const lx of [.26, .36, .58, .66]) ctx.fillRect(X + s * lx, by + s * .26, s * .05, s * .26);
+      const hx = f > 0 ? X + s * .66 : X + s * .14; ctx.fillStyle = "#8a5a32"; ctx.fillRect(hx, by - s * .16, s * .18, s * .2);
+      ctx.fillStyle = "#d9c7a0"; ctx.fillRect(hx + s * .02, by - s * .32, s * .03, s * .16); ctx.fillRect(hx + s * .13, by - s * .32, s * .03, s * .16); ctx.fillRect(hx - s * .02, by - s * .3, s * .22, s * .03);
+      ctx.fillStyle = "#f2efe6"; ctx.fillRect(f > 0 ? X + s * .2 : X + s * .7, by + s * .02, s * .06, s * .08);
+    }
+    const hit = S.hp[a.id] || 0; if (hit && a.kind === "deer") { ctx.fillStyle = "#0b120e"; ctx.fillRect(X + s * .2, Y + s * .14, s * .6, 4); ctx.fillStyle = "#e0574a"; ctx.fillRect(X + s * .2 + 1, Y + s * .14 + 1, (s * .6 - 2) * (1 - hit / 2), 2); }
+  }
+  function drawWolf(wv, t) {
+    const s = tile, X = wv.fx * s, Y = wv.fy * s, f = wv.dir, run = Math.sin(t * 16) * s * .03;
+    ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.beginPath(); ctx.ellipse(X + s / 2, Y + s * .86, s * .26, s * .07, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = "#5b6066"; ctx.fillRect(X + s * .2, Y + s * .44 + run, s * .5, s * .22);
+    ctx.fillStyle = "#43474c"; for (const lx of [.24, .34, .56, .64]) ctx.fillRect(X + s * lx, Y + s * .64, s * .05, s * .2);
+    const hx = f > 0 ? X + s * .64 : X + s * .1; ctx.fillStyle = "#5b6066"; ctx.fillRect(hx, Y + s * .34 + run, s * .24, s * .2);
+    ctx.fillRect(hx + (f > 0 ? s * .16 : -s * .04), Y + s * .42 + run, s * .12, s * .08);
+    ctx.fillStyle = "#43474c"; ctx.fillRect(hx + s * .03, Y + s * .26 + run, s * .05, s * .1); ctx.fillRect(hx + s * .15, Y + s * .26 + run, s * .05, s * .1);
+    ctx.fillStyle = "#ffd84a"; ctx.fillRect(hx + (f > 0 ? s * .14 : s * .06), Y + s * .4 + run, s * .04, s * .04);
+    ctx.fillStyle = "#43474c"; ctx.fillRect(f > 0 ? X + s * .08 : X + s * .7, Y + s * .4, s * .14, s * .06);
+    ctx.fillStyle = "#0b120e"; ctx.fillRect(X + s * .2, Y + s * .2, s * .6, 4); ctx.fillStyle = "#e0574a"; ctx.fillRect(X + s * .2 + 1, Y + s * .2 + 1, (s * .6 - 2) * Math.max(0, wv.hp / 14), 2);
+  }
+  function drawNight(w, h, x0, y0, x1, y1, t) {
+    const a = darkness() * .68; if (a <= .01) return;
+    nctx.setTransform(1, 0, 0, 1, 0, 0); nctx.globalCompositeOperation = "source-over";
+    nctx.clearRect(0, 0, night.width, night.height);
+    nctx.fillStyle = `rgba(8,12,34,${a})`; nctx.fillRect(0, 0, night.width, night.height);
+    nctx.globalCompositeOperation = "destination-out";
+    const light = (tx, ty, r, k) => {
+      const X = (tx * tile + tile / 2 - camX) * dpr, Y = (ty * tile + tile / 2 - camY) * dpr, R = r * tile * dpr;
+      const g = nctx.createRadialGradient(X, Y, 0, X, Y, R); g.addColorStop(0, `rgba(0,0,0,${k})`); g.addColorStop(1, "rgba(0,0,0,0)");
+      nctx.fillStyle = g; nctx.fillRect(X - R, Y - R, R * 2, R * 2);
+    };
+    if (mode === "play") light(P.fx, P.fy, 3.6, .9);
+    for (let y = y0 - 3; y <= y1 + 3; y++) for (let x = x0 - 3; x <= x1 + 3; x++) {
+      if (x < 0 || y < 0 || x >= W || y >= H) continue; const v = eff(y * W + x);
+      if (v === T.TORCH) light(x, y, 3.2 + Math.sin(t * 9 + x) * .15, 1);
+      else if (v === T.TOWER) light(x, y, 4.5, .9);
+      else if (isHome(v) || v === T.PUB || v === T.FURNACE || v === T.SMITHY || v === T.MAYOR || v === T.MARKET) light(x, y, 1.8, .7);
+    }
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(night, 0, 0); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  function drawDungeon(w, h, t) {
+    const d = dun;
+    ctx.fillStyle = "#07060a"; ctx.fillRect(0, 0, w, h);
+    camera(w, h, d.w, d.h);
+    ctx.save(); ctx.translate(-Math.round(camX), -Math.round(camY));
+    const s = tile, x0 = Math.max(0, Math.floor(camX / s)), y0 = Math.max(0, Math.floor(camY / s));
+    const x1 = Math.min(d.w - 1, Math.ceil((camX + w) / s)), y1 = Math.min(d.h - 1, Math.ceil((camY + h) / s));
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+      const i = y * d.w + x; if (!d.seen[i]) continue;
+      const X = x * s, Y = y * s, near = Math.hypot(x - P.x, y - P.y) <= 6;
+      if (d.g[i] === 1) {
+        ctx.fillStyle = (x + y) % 2 ? "#4d453c" : "#474037"; ctx.fillRect(X, Y, s, s);
+        if (hash(x, y) > .8) { ctx.fillStyle = "#2a2622"; ctx.fillRect(X + s * .3, Y + s * .5, s * .2, s * .1); }
+      } else {
+        const below = y + 1 < d.h && d.g[(y + 1) * d.w + x] === 1;
+        ctx.fillStyle = "#1c1a1e"; ctx.fillRect(X, Y, s, s);
+        if (below) { ctx.fillStyle = "#5e564c"; ctx.fillRect(X, Y + s * .5, s, s * .5); ctx.fillStyle = "#3a352f"; ctx.fillRect(X, Y + s * .74, s, 2); ctx.fillRect(X + s * ((x % 2) ? .3 : .7), Y + s * .5, 2, s * .24); }
+      }
+      if (!near) { ctx.fillStyle = "rgba(7,6,10,.6)"; ctx.fillRect(X, Y, s, s); }
+    }
+    const vis = (x, y) => d.seen[y * d.w + x] && Math.hypot(x - P.x, y - P.y) <= 6.5;
+    { const [lx, ly] = d.ladder; if (d.seen[ly * d.w + lx]) { const X = lx * s, Y = ly * s; ctx.fillStyle = "#8a5d31"; ctx.fillRect(X + s * .28, Y, s * .07, s); ctx.fillRect(X + s * .65, Y, s * .07, s); for (let k = 0; k < 4; k++) ctx.fillRect(X + s * .28, Y + s * (.12 + k * .24), s * .44, s * .06); ctx.fillStyle = "rgba(160,200,255,.25)"; ctx.fillRect(X, Y, s, s); } }
+    { const [sx, sy] = d.stairs; if (d.seen[sy * d.w + sx]) { const X = sx * s, Y = sy * s; for (let k = 0; k < 4; k++) { ctx.fillStyle = `rgb(${90 - k * 20},${82 - k * 18},${74 - k * 16})`; ctx.fillRect(X + s * .1, Y + s * (.1 + k * .2), s * .8, s * .2); } } }
+    for (const c of d.chests) if (vis(c.x, c.y) || d.seen[c.y * d.w + c.x]) {
+      const X = c.x * s, Y = c.y * s;
+      ctx.fillStyle = c.open ? "#5a3d24" : "#8a5d31"; ctx.fillRect(X + s * .16, Y + s * .4, s * .68, s * .44);
+      ctx.fillStyle = "#c9a23a"; ctx.fillRect(X + s * .16, Y + s * .52, s * .68, s * .06); ctx.fillRect(X + s * .46, Y + s * .5, s * .08, s * .14);
+      if (!c.open) { ctx.fillStyle = "#6e4a2a"; ctx.fillRect(X + s * .16, Y + s * .3, s * .68, s * .14); }
+    }
+    for (const e of d.enemies) if (e.hp > 0 && vis(e.x, e.y)) drawEnemy(e, t);
+    drawPerson({ fx: P.fx, fy: P.fy, dir: P.dir, swing: P.swing, moving: P.path.length > 0, c: me.c }, t, s, 0, 0);
+    if (P.hurt > 0) { ctx.fillStyle = "rgba(255,60,40,.35)"; ctx.fillRect(P.fx * s + s * .3, P.fy * s + s * .1, s * .4, s * .8); }
+    if (S.marker) { const m = S.marker; ctx.strokeStyle = "rgba(255,240,180,.8)"; ctx.lineWidth = 2; ctx.strokeRect(m.x * s + 3, m.y * s + 3, s - 6, s - 6); }
+    floatersW(false, s, 0, 0);
+    ctx.restore();
+    const g = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * .25, w / 2, h / 2, Math.max(w, h) * .7);
+    g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,.65)"); ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+  }
+  function drawEnemy(e, t) {
+    const s = tile, X = e.fx * s, Y = e.fy * s, f = e.dir, bob = Math.sin(t * 8 + e.x) * s * .02;
+    ctx.fillStyle = "rgba(0,0,0,.3)"; ctx.beginPath(); ctx.ellipse(X + s / 2, Y + s * .86, s * .22, s * .07, 0, 0, 7); ctx.fill();
+    if (e.type === "skeleton") {
+      ctx.fillStyle = "#e8e2d4"; ctx.fillRect(X + s * .38, Y + s * .18 + bob, s * .24, s * .22); ctx.fillRect(X + s * .44, Y + s * .4, s * .12, s * .3);
+      ctx.fillRect(X + s * .34, Y + s * .44, s * .32, s * .04); ctx.fillRect(X + s * .34, Y + s * .54, s * .32, s * .04); ctx.fillRect(X + s * .38, Y + s * .7, s * .06, s * .16); ctx.fillRect(X + s * .56, Y + s * .7, s * .06, s * .16);
+      ctx.fillStyle = "#1b1b1b"; ctx.fillRect(X + s * .42, Y + s * .25 + bob, s * .05, s * .05); ctx.fillRect(X + s * .53, Y + s * .25 + bob, s * .05, s * .05);
+      ctx.fillStyle = "#9aa3ad"; ctx.fillRect(f > 0 ? X + s * .7 : X + s * .26, Y + s * .3, s * .04, s * .34);
+    } else if (e.type === "spider") {
+      ctx.fillStyle = "#2b2230"; ctx.beginPath(); ctx.ellipse(X + s / 2, Y + s * .6 + bob, s * .2, s * .14, 0, 0, 7); ctx.fill();
+      ctx.strokeStyle = "#2b2230"; ctx.lineWidth = 2; for (let k = 0; k < 4; k++) { const yy = Y + s * (.5 + k * .06); ctx.beginPath(); ctx.moveTo(X + s * .32, yy); ctx.lineTo(X + s * .14, yy + s * .14); ctx.moveTo(X + s * .68, yy); ctx.lineTo(X + s * .86, yy + s * .14); ctx.stroke(); }
+      ctx.fillStyle = "#e0574a"; ctx.fillRect(X + s * .44, Y + s * .52 + bob, s * .04, s * .04); ctx.fillRect(X + s * .52, Y + s * .52 + bob, s * .04, s * .04);
+    } else if (e.type === "goblin") {
+      ctx.fillStyle = "#6b8f23"; ctx.fillRect(X + s * .36, Y + s * .22 + bob, s * .28, s * .24); ctx.fillRect(X + s * .28, Y + s * .26 + bob, s * .08, s * .08); ctx.fillRect(X + s * .64, Y + s * .26 + bob, s * .08, s * .08);
+      ctx.fillStyle = "#6e4a2a"; ctx.fillRect(X + s * .36, Y + s * .46, s * .28, s * .28);
+      ctx.fillStyle = "#6b8f23"; ctx.fillRect(X + s * .38, Y + s * .74, s * .08, s * .12); ctx.fillRect(X + s * .54, Y + s * .74, s * .08, s * .12);
+      ctx.fillStyle = "#ffd84a"; ctx.fillRect(X + s * .42, Y + s * .3 + bob, s * .05, s * .05); ctx.fillRect(X + s * .53, Y + s * .3 + bob, s * .05, s * .05);
+      ctx.fillStyle = "#8a5d31"; ctx.fillRect(f > 0 ? X + s * .66 : X + s * .26, Y + s * .4, s * .06, s * .3);
+    } else {
+      ctx.fillStyle = "#5f6b52"; ctx.fillRect(X + s * .16, Y + s * .1 + bob, s * .68, s * .62); ctx.fillStyle = "#4b5540"; ctx.fillRect(X + s * .22, Y + s * .72, s * .18, s * .16); ctx.fillRect(X + s * .6, Y + s * .72, s * .18, s * .16);
+      ctx.fillStyle = "#e0574a"; ctx.fillRect(X + s * .32, Y + s * .24 + bob, s * .08, s * .06); ctx.fillRect(X + s * .6, Y + s * .24 + bob, s * .08, s * .06);
+      ctx.fillStyle = "#f2efe6"; ctx.fillRect(X + s * .38, Y + s * .44 + bob, s * .06, s * .08); ctx.fillRect(X + s * .56, Y + s * .44 + bob, s * .06, s * .08);
+    }
+    ctx.fillStyle = "#0b120e"; ctx.fillRect(X + s * .2, Y + s * .04, s * .6, 4); ctx.fillStyle = "#e0574a"; ctx.fillRect(X + s * .2 + 1, Y + s * .04 + 1, (s * .6 - 2) * Math.max(0, e.hp / e.max), 2);
+  }
+
+  // ---------- world map ----------
+  const MINI = { [T.GRASS]: "#5d9e3f", [T.TREE]: "#2f6b2c", [T.ROCK]: "#8d98a3", [T.WATER]: "#3b7fb0", [T.BRIDGE]: "#a8743f", [T.HUT]: "#e8574a", [T.HOUSE]: "#e8574a",
+    [T.STUMP]: "#6a9a45", [T.RUBBLE]: "#7aa252", [T.FIELD]: "#b58b3a", [T.WHEAT]: "#d9b84a", [T.PUB]: "#f0a030", [T.ORE]: "#b5734a", [T.CLIFF]: "#6f6a63", [T.CAVE]: "#1b1b1b",
+    [T.MAYOR]: "#ffffff", [T.MARKET]: "#ffffff", [T.WALL_WOOD]: "#5a3d24", [T.WALL_STONE]: "#d0d6dc", [T.GATE]: "#8a5d31", [T.TORCH]: "#f4cf6a", [T.TOWER]: "#d0d6dc",
+    [T.FURNACE]: "#e86f2c", [T.SMITHY]: "#e86f2c", [T.COOP]: "#c9b26a", [T.SHEEP]: "#c9b26a", [T.COWS]: "#c9b26a", [T.DUG]: "#7aa252" };
+  function drawMini() {
+    const mm = $("mm"), m = mm.getContext("2d"), k = mm.width / W;
+    const img = m.createImageData(W, H);
+    for (let i = 0; i < W * H; i++) { const c = MINI[eff(i)] || "#5d9e3f", n = parseInt(c.slice(1), 16); img.data[i * 4] = n >> 16; img.data[i * 4 + 1] = (n >> 8) & 255; img.data[i * 4 + 2] = n & 255; img.data[i * 4 + 3] = 255; }
+    const tmp = document.createElement("canvas"); tmp.width = W; tmp.height = H; tmp.getContext("2d").putImageData(img, 0, 0);
+    m.imageSmoothingEnabled = false; m.drawImage(tmp, 0, 0, mm.width, mm.height);
+    for (const [ks, o] of Object.entries(tiles)) { const i = +ks, v = effFrom(o, i); if (isHome(v) || v === T.PUB) { const x = i % W, y = (i / W) | 0; m.fillStyle = myHome(i) ? "#8fd16a" : "#e8574a"; m.fillRect(x * k - 2, y * k - 2, k + 4, k + 4); } }
+    m.strokeStyle = "#000"; m.lineWidth = 2; m.strokeRect(PLAZA[0] * k - 4, PLAZA[1] * k - 4, k * 5 + 8, k + 8); m.fillStyle = "#fff"; m.fillRect(PLAZA[0] * k - 3, PLAZA[1] * k - 3, k * 5 + 6, k + 6);
+    for (const [cx, cy] of CAVES) { m.fillStyle = "#000"; m.fillRect(cx * k - 4, cy * k - 4, 9, 9); m.strokeStyle = "#ddd"; m.lineWidth = 1; m.strokeRect(cx * k - 4, cy * k - 4, 9, 9); }
+    for (const o of Object.values(others)) { if (o.inside) continue; m.fillStyle = "#ffffff"; m.fillRect(o.x * k - 2, o.y * k - 2, 5, 5); }
+    if (mode === "play" && !dun && !room) { m.fillStyle = "#0b120e"; m.fillRect(P.x * k - 5, P.y * k - 5, 11, 11); m.fillStyle = "#8fd16a"; m.fillRect(P.x * k - 4, P.y * k - 4, 9, 9); }
+  }
+  // =================== UI ===================
+  function banner(msg, ms = 2600) {
+    const b = $("banner"); b.textContent = msg; b.hidden = false; clearTimeout(bannerT);
+    if (ms) bannerT = setTimeout(() => { b.hidden = true; }, ms);
+  }
+  function renderTop(rows) {
+    const ol = $("top"); ol.innerHTML = "";
+    for (const r of rows) {
+      const li = document.createElement("li"); if (r.id === me.id) li.className = "me";
+      li.textContent = r.n; const sp = document.createElement("span"); sp.textContent = r.p; li.append(sp); ol.append(li);
+    }
+    $("topEmpty").hidden = rows.length > 0;
+  }
+  function el(tag, attrs, ...kids) {
+    const e = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs || {})) { if (k === "on") e.addEventListener("click", v); else if (k === "class") e.className = v; else if (k === "disabled") e.disabled = !!v; else e.setAttribute(k, v); }
+    for (const k of kids) if (k !== null && k !== undefined && k !== false) e.append(k.nodeType ? k : document.createTextNode(String(k)));
+    return e;
+  }
+  const row = (title, desc, ...right) => el("div", { class: "row" }, el("div", { class: "grow" }, el("div", { class: "t" }, title), desc ? el("div", { class: "d" }, desc) : null), ...right);
+  const btn = (text, on, opts = {}) => el("button", { class: "btn small" + (opts.ghost ? " ghost" : ""), on, disabled: opts.disabled }, text);
+
+  function renderTray() {
+    const tabs = $("tabs"); tabs.innerHTML = "";
+    for (const [k, n] of CATS) tabs.append(el("button", { class: "tab", "aria-pressed": String(tab === k), on: () => { tab = k; selected = null; renderTray(); } }, n));
+    const items = $("buildItems"); items.innerHTML = "";
+    const lv = level(), play = mode === "play";
+    for (const [k, b] of Object.entries(BUILD)) {
+      if (b.cat !== tab) continue;
+      const locked = lv < b.req;
+      const bt = el("button", { class: "tool" + (locked ? " lock" : ""), "aria-pressed": String(selected === k), disabled: !play,
+        on: () => { if (locked) return banner(`${b.name} se odemkne na úrovni ${b.req}`); pick(k); } },
+        el("b", {}, b.name), el("span", {}, locked ? `úroveň ${b.req}` : costText(b.cost)));
+      items.append(bt);
+    }
+    if (tab === "remesla") {
+      const next = TOOLS[me.toolLvl + 1];
+      items.append(el("button", { class: "tool" + (next && lv < next.req ? " lock" : ""), disabled: !play || !next, on: buyTool },
+        el("b", {}, next ? next.name : "Nástroje"), el("span", {}, !next ? "maximum" : lv < next.req ? `úroveň ${next.req}` : costText(next.cost))));
+    }
+  }
+  function ui() {
+    $("sWood").textContent = me.wood; $("sStone").textContent = me.stone; $("sCoins").textContent = me.coins; $("sGold").textContent = have("gold");
+    const l = level(); $("sLvl").textContent = l;
+    $("xpBar").style.width = `${Math.min(100, (me.xp - xpAt(l)) / Math.max(1, xpAt(l + 1) - xpAt(l)) * 100)}%`;
+    $("hpBar").style.width = `${Math.max(0, me.hp / maxHp() * 100)}%`;
+    const play = mode === "play", inPub = !!room && room.kind === "pub";
+    $("trayOut").hidden = !!room || !!dun; $("trayIn").hidden = !room || inPub; $("trayPub").hidden = !inPub; $("trayDun").hidden = !dun;
+    $("board").hidden = !!room || !!dun;
+    $("mapBtn").hidden = !(play || mode === "watch") || !!room || !!dun;
+    $("bagBtn").hidden = !play;
+    if (!room && !dun) renderTray();
+    if (inPub) {
+      const pb = room.pub || {}, owner = pb.oid === me.id, price = pb.price || 5;
+      $("pStock").querySelector("b").textContent = `Na čepu: ${pb.beer || 0}`;
+      $("pOwner").textContent = owner ? "tvoje hospoda" : `hostinský ${pb.o || (tiles[room.i] && tiles[room.i].o) || "?"}`;
+      for (const id of ["pBrew", "pDown", "pUp", "pTill"]) $(id).hidden = !owner;
+      $("pBuy").querySelector("b").textContent = owner ? "Vypít pivo" : "Koupit pivo";
+      $("pBuyCost").textContent = owner ? "zdarma" : `${price} grošů`;
+      $("pPrice1").textContent = $("pPrice2").textContent = `${price} grošů`;
+      $("pTillV").textContent = `${pb.till || 0} grošů`;
+    }
+    if (dun) {
+      $("dFloor").textContent = `Jeskyně · patro ${dun.floor}`; $("dGold").textContent = `nalezeno zlata: ${dun.runGold}`;
+      const f = bestFood(); $("dEatT").textContent = f ? `${ITEMS[f].s} +${FOOD[f]} HP (${have(f)})` : "nemáš jídlo";
+    }
+    for (const [id, k] of [["fBed", "bed"], ["fTable", "table"], ["fFire", "fire"]]) $(id).setAttribute("aria-pressed", selected === k);
+  }
+  function pick(k) {
+    selected = selected === k ? null : k; ui();
+    if (!selected) return;
+    const item = BUILD[k] || FURN[k];
+    banner(BUILD[k] ? `Ťukni na trávu, kde má stát ${item.name.toLowerCase()}${BUILD[k].multi ? ". Můžeš stavět víc za sebou." : ""}` : `Ťukni na podlahu, kam dáš ${item.name.toLowerCase()}`);
+  }
+  function clockTick() {
+    const p = now() % CYCLE, c = $("clock");
+    if (isNight()) { c.textContent = `Noc · ${Math.ceil((CYCLE - p) / 60000)} min`; c.title = "Do svítání"; c.className = "clock night"; }
+    else { c.textContent = `Den · ${Math.ceil((CYCLE - NIGHT - p) / 60000)} min`; c.title = "Do setmění"; c.className = "clock"; }
+  }
+
+  // ---------- sheets ----------
+  let sheetKind = null, sheetData = null;
+  function openSheet(kind, data) { sheetKind = kind; sheetData = data || {}; $("sheet").hidden = false; refreshSheet(); }
+  function closeSheet() { sheetKind = null; $("sheet").hidden = true; }
+  function refreshSheet() {
+    if (!sheetKind) return;
+    const body = $("shBody"); body.innerHTML = ""; const d = sheetData, add2 = (...n) => body.append(...n);
+    const i = d.i, o = i !== undefined ? tiles[i] : null, t = i !== undefined ? eff(i) : null;
+    if (sheetKind === "bag") {
+      $("shTitle").textContent = "Batoh";
+      const l = level();
+      add2(el("div", { class: "note" }, `Úroveň ${l} · zkušenosti ${me.xp}/${xpAt(l + 1)} · zdraví ${me.hp}/${maxHp()} · nejhlubší jeskyně: patro ${me.deep || 0}`));
+      add2(el("div", { class: "sec" }, "Suroviny"));
+      const g = el("div", { class: "grid" });
+      for (const k of Object.keys(ITEMS)) g.append(el("div", { class: "cell" }, el("span", { class: "dot", style: `background:${ITEMS[k].c}` }), ITEMS[k].n, el("b", {}, have(k))));
+      add2(g);
+      add2(el("div", { class: "sec" }, "Jídlo"));
+      for (const k of ["meat", "milk", "egg"]) add2(row(ITEMS[k].n, `+${FOOD[k]} zdraví · máš ${have(k)}`, btn("Sníst", () => eat(k), { disabled: have(k) < 1 })));
+      add2(el("div", { class: "sec" }, "Výbava"));
+      const slots = [["weapon", "Zbraň", "sekera (3)"], ["shield", "Štít", "nic"], ["armor", "Brnění", "nic"], ["bow", "Luk", "nic"]];
+      for (const [s, n, none] of slots) { const gg = gearOf(s); add2(row(n, gg ? `${gg.name}${gg.dmg ? ` · útok ${gg.dmg}` : ""}${gg.def ? ` · obrana ${Math.round(gg.def * 100)} %` : ""}` : none)); }
+      if (!gearOf("bow")) add2(row("Vyrobit luk", "Na lov zajíců a jelenů · dřevo 6", btn("Vyrobit", () => craft("bow1"), { disabled: !canPay(GEAR.bow1.cost) })));
+      add2(el("div", { class: "note" }, `Nástroje: ${me.toolLvl ? TOOLS[me.toolLvl].name : "základní"}. Útok ${weaponDmg()}, obrana ${Math.round(defense() * 100)} %.`));
+    } else if (sheetKind === "home") {
+      const lv = homeLv(o, t), up = HOME_UP[lv + 1];
+      $("shTitle").textContent = HOME_NAMES[lv];
+      add2(row("Vstoupit dovnitř", "Postel tě vyléčí a je místem startu", btn("Vstoupit", () => { closeSheet(); enterHouse(i); })));
+      if (up) add2(row(`Vylepšit na: ${up.name}`, level() < up.req ? `odemkne se na úrovni ${up.req}` : `${costText(up.cost)} · +${up.pts} bodů`,
+        btn("Vylepšit", () => upgradeHome(i), { disabled: level() < up.req || !canPay(up.cost) })));
+      else add2(el("div", { class: "note ok" }, "Tvůj hrad je na nejvyšší úrovni."));
+      add2(el("div", { class: "note" }, `${isProtected(i) ? "Dům je chráněný hradbou nebo světlem." : "Okolí není chráněné. Postav kolem palisádu s branou nebo pochodně."}`));
+    } else if (sheetKind === "furnace") {
+      $("shTitle").textContent = "Pec";
+      add2(el("div", { class: "note" }, `Z 2 rud a 1 dřeva vytavíš 1 železo. Máš rudu ${have("ore")}, dřevo ${me.wood}.`));
+      add2(row("Tavit 1 železo", "ruda 2 · dřevo 1", btn("Tavit", () => smelt(1), { disabled: have("ore") < 2 || me.wood < 1 })));
+      add2(row("Tavit vše", `vyrobíš ${Math.min(Math.floor(have("ore") / 2), me.wood)} železa`, btn("Tavit vše", () => smelt(999), { disabled: have("ore") < 2 || me.wood < 1 })));
+    } else if (sheetKind === "smithy") {
+      $("shTitle").textContent = "Kovárna";
+      add2(el("div", { class: "note" }, "Lepší výbava ti pomůže v jeskyních a proti vlkům. Vyrobená věc se hned nasadí, pokud je lepší než ta, co máš."));
+      for (const [id, g] of Object.entries(GEAR)) {
+        if (id === "bow1") continue; const cur = gearOf(g.slot), owned = me.gear[g.slot] === id;
+        add2(row(g.name, `${g.dmg ? `útok ${g.dmg}` : `obrana ${Math.round(g.def * 100)} %`} · ${costText(g.cost)}${owned ? " · máš" : ""}`,
+          btn(owned ? "Máš" : "Vyrobit", () => craft(id), { disabled: owned || !canPay(g.cost) })));
+      }
+    } else if (sheetKind === "live") {
+      const L = LIVE[t]; $("shTitle").textContent = L.name;
+      const n = livePending(o), fed = fedLeft(o);
+      add2(el("div", { class: "note" }, `${fed > 0 ? `Zvířata jsou nakrmená ještě ${Math.ceil(fed / 60000)} min.` : "Zvířata mají hlad a nic nedávají."} Nakrmená dávají ${ITEMS[L.item].s} každých 10 minut, nejvýš ${LIVE_CAP} najednou.`));
+      add2(row(`Sebrat ${ITEMS[L.item].s}`, `připraveno: ${n}`, btn("Sebrat", () => liveCollect(i, false), { disabled: n < 1 })));
+      add2(row("Nakrmit obilím", `obilí 1 = 2 hodiny · máš ${have("grain")}`, btn("Nakrmit", () => liveCollect(i, true), { disabled: have("grain") < 1 || fed > FEED_MAX - FEED_MS })));
+      add2(row("Zbourat", "Vrátí se polovina materiálu", btn("Zbourat", () => demolish(i), { ghost: true })));
+    } else if (sheetKind === "demolish") {
+      $("shTitle").textContent = nameOfTile(t);
+      add2(el("div", { class: "note" }, t === T.TORCH ? "Pochodeň svítí v noci a chrání okolí 3 políček před vlky." : t === T.TOWER ? "Věž chrání okolí 7 políček před vlky." : "Hradby a brány uzavírají pozemek. Uvnitř jsou pole i zvířata v bezpečí a cizí tam nemůžou stavět."));
+      add2(row("Zbourat", "Vrátí se polovina materiálu", btn("Zbourat", () => demolish(i), { ghost: true })));
+    } else if (sheetKind === "quests") {
+      $("shTitle").textContent = "Starosta";
+      add2(el("div", { class: "note" }, "Dnešní zakázky pro vesnici. Každý den jsou nové."));
+      quests().forEach((q, k) => {
+        const done = !!me.q.done[k], r = row(`${ITEMS[q.item].n} ${q.qty}`, done ? "Splněno" : `odměna ${q.coins} grošů a ${q.xp} zkušeností · máš ${have(q.item)}`,
+          btn(done ? "Hotovo" : "Odevzdat", () => turnIn(k), { disabled: done || have(q.item) < q.qty }));
+        if (done) r.classList.add("done"); add2(r);
+      });
+    } else if (sheetKind === "market") {
+      $("shTitle").textContent = "Trh";
+      add2(el("div", { class: "note" }, "Kup si, co ti chybí, nebo prodej, co máš navíc. Groše za prodej dostaneš, i když zrovna nehraješ."));
+      const offers = Object.entries(market).sort((a, b) => (b[1].ts || 0) - (a[1].ts || 0));
+      add2(el("div", { class: "sec" }, "Nabídky"));
+      if (!offers.length) add2(el("div", { class: "note" }, "Zatím nikdo nic neprodává."));
+      for (const [id, of] of offers) {
+        if (!of || !ITEMS[of.item]) continue; const mine = of.sid === me.id;
+        add2(row(`${of.qty}× ${ITEMS[of.item].n}`, `${of.price} grošů · prodává ${mine ? "ty" : of.s || "?"}`,
+          mine ? btn("Stáhnout", () => marketCancel(id), { ghost: true }) : btn("Koupit", () => marketBuy(id), { disabled: me.coins < of.price })));
+      }
+      add2(el("div", { class: "sec" }, "Prodat"));
+      const sel = el("select", { id: "mItem", "aria-label": "Zboží" }); for (const k of TRADE) sel.append(el("option", { value: k }, `${ITEMS[k].n} (${have(k)})`));
+      const q = el("input", { id: "mQty", type: "number", min: "1", value: "5", "aria-label": "Množství" });
+      const p = el("input", { id: "mPrice", type: "number", min: "0", value: "10", "aria-label": "Cena v groších" });
+      add2(el("div", { class: "form" }, sel, q, el("span", { class: "note" }, "ks za"), p, el("span", { class: "note" }, "grošů"), btn("Vystavit", () => marketList(sel.value, +q.value, +p.value))));
+    }
+  }
+
+  // ---------- map & login ----------
+  function openMap(kind) {
+    const spawn = kind === "spawn";
+    $("mapEyebrow").textContent = spawn ? "Krok 2 ze 2" : "Svět Manazinie";
+    $("mapTitle").textContent = spawn ? "Ťukni na mapu, kde začneš" : (mode === "play" ? "Tady jsi ty, zelený čtvereček" : "Bílé tečky jsou hráči");
+    $("bedSpawn").hidden = !(spawn && myHome(me.bed));
+    $("randSpawn").hidden = !spawn; $("plazaSpawn").hidden = !spawn; $("mapClose").hidden = spawn;
+    $("mapView").hidden = false; $("mapView").dataset.kind = kind; drawMini();
+  }
+  const igClean = (v) => String(v || "").trim().replace(/^@+/, "").replace(/^https?:\/\/(www\.)?instagram\.com\/(_u\/)?/i, "").replace(/[/?#].*$/, "").toLowerCase();
+  const igKey = (name) => name.replace(/\./g, ",");
+  const err = (t) => { $("err").textContent = t; };
+  let entering = false;
+  async function enter() {
+    if (entering) return;
+    const name = igClean($("nick").value);
+    if (!/^[a-z0-9._]{1,30}$/.test(name)) return err("Napiš své jméno z Instagramu, třeba jmeno.prijmeni");
+    if (online) {
+      entering = true; $("go").disabled = true; err("Ověřuju…");
+      try {
+        const key = igKey(name);
+        const allowed = (await db.ref("allowed/" + key).get()).exists();
+        if (!allowed) throw new Error("Účet @" + name + " zatím mezi sledujícími nemáme. Sleduj nás na Instagramu a zkus to znovu za den nebo dva.");
+        const res = await db.ref("claims/" + key).transaction((cur) => (cur === null ? me.id : undefined), undefined, false);
+        if (res.snapshot.val() !== me.id) throw new Error("Účet @" + name + " už hraje na jiném zařízení. Pokud je tvůj, napiš nám zprávu na Instagramu.");
+      } catch (e) {
+        entering = false; $("go").disabled = false;
+        return err(e && e.message && !/permission|PERMISSION/.test(e.message) ? e.message : "Nepodařilo se ověřit účet. Zkus to za chvíli znovu.");
+      }
+      entering = false; $("go").disabled = false;
+    }
+    me.name = name; me.ig = name; saveMe(); err("");
+    $("gate").hidden = true; mode = "spawn"; openMap("spawn");
+  }
+  function spawnAt(x, y, homeIndex) {
+    $("mapView").hidden = true; mode = "play";
+    const [sx, sy] = freeNear(x, y);
+    P.x = sx; P.y = sy; P.fx = sx; P.fy = sy; P.path = []; P.job = null;
+    camX = sx * tile; camY = sy * tile;
+    if (online) {
+      myRef = db.ref("players/" + me.id);
+      myRef.onDisconnect().remove();
+      myRef.set({ n: me.name, c: me.c, x: P.x, y: P.y, ts: TS(), mv: 2 });
+      if (me.pts > 0) saveScore();
+      watchPayouts();
+    }
+    if (homeIndex !== undefined) enterHouse(homeIndex);
+    else banner(online ? "Vítej! Na návsi najdeš starostu se zakázkami a trh. V noci chodí vlci, chraň se hradbou a pochodněmi." : "Offline zkouška: hra ještě není propojená s Firebase, ostatní hráče neuvidíš.", 6000);
+    ui();
+  }
+  function watch() {
+    mode = "watch"; $("gate").hidden = true; ui();
+    const n = Object.values(others).filter((o) => !o.inside).length;
+    banner(n ? "Díváš se. Ťuknutím přepneš na jiného hráče." : "Teď nikdo venku nehraje. Na mapě uvidíš celý svět.", 0);
+  }
+
+  // ---------- input ----------
+  cv.addEventListener("pointerdown", (e) => {
+    if (mode === "watch") { followIdx++; return; }
+    if (mode !== "play") return;
+    const r = cv.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
+    if (room && !dun) {
+      const { s, ox, oy } = roomView, x = Math.floor((px - ox) / s), y = Math.floor((py - oy) / s);
+      if (x >= 0 && y >= 0 && x < room.w && y < room.h) order(x, y);
+      return;
+    }
+    const x = Math.floor((px + camX) / tile), y = Math.floor((py + camY) / tile);
+    if (dun) { if (x >= 0 && y >= 0 && x < dun.w && y < dun.h) order(x, y); return; }
+    if (x >= 0 && y >= 0 && x < W && y < H) order(x, y);
+  });
+  $("mm").addEventListener("pointerdown", (e) => {
+    if ($("mapView").dataset.kind !== "spawn") return;
+    const r = $("mm").getBoundingClientRect();
+    spawnAt(Math.floor((e.clientX - r.left) / r.width * W), Math.floor((e.clientY - r.top) / r.height * H));
+  });
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") { if (sheetKind) closeSheet(); selected = null; ui(); return; }
+    if (mode !== "play" || /INPUT|SELECT/.test(e.target.tagName) || sheetKind) return;
+    const dd = { ArrowUp: [0,-1], ArrowDown: [0,1], ArrowLeft: [-1,0], ArrowRight: [1,0], w: [0,-1], s: [0,1], a: [-1,0], d: [1,0] }[e.key];
+    if (dd) { e.preventDefault(); order(P.x + dd[0], P.y + dd[1]); }
+    if (e.key === "b") openSheet("bag");
+  });
+  $("go").addEventListener("click", enter);
+  $("nick").addEventListener("keydown", (e) => { if (e.key === "Enter") enter(); });
+  $("watch").addEventListener("click", watch);
+  $("fBed").addEventListener("click", () => pick("bed"));
+  $("fTable").addEventListener("click", () => pick("table"));
+  $("fFire").addEventListener("click", () => pick("fire"));
+  $("fExit").addEventListener("click", () => { if (room) { selected = null; const p = pathTo(room.door[0], room.door[1], false); if (p) { P.path = p; P.job = { kind: "exit" }; } ui(); } });
+  $("pBrew").addEventListener("click", brew);
+  $("pBuy").addEventListener("click", buyBeer);
+  $("pDown").addEventListener("click", () => setPrice(-1));
+  $("pUp").addEventListener("click", () => setPrice(1));
+  $("pTill").addEventListener("click", collect);
+  $("pExit").addEventListener("click", () => { if (room) { const p = pathTo(room.door[0], room.door[1], false); if (p) { P.path = p; P.job = { kind: "exit" }; } } });
+  $("dEat").addEventListener("click", () => { const f = bestFood(); if (f) eat(f); else banner("Nemáš jídlo. Maso získáš lovem, vejce a mléko z hospodářství."); });
+  $("dBack").addEventListener("click", () => { if (dun) { const p = pathTo(dun.ladder[0], dun.ladder[1], false); if (p) { P.path = p; P.job = { kind: "ladder" }; S.marker = { x: dun.ladder[0], y: dun.ladder[1] }; } } });
+  $("bagBtn").addEventListener("click", () => openSheet("bag"));
+  $("mapBtn").addEventListener("click", () => openMap("view"));
+  $("mapClose").addEventListener("click", () => { $("mapView").hidden = true; });
+  $("shClose").addEventListener("click", closeSheet);
+  $("sheet").addEventListener("pointerdown", (e) => { if (e.target === $("sheet")) closeSheet(); });
+  $("randSpawn").addEventListener("click", () => { for (let k = 0; k < 50; k++) { const x = 10 + Math.floor(Math.random() * (W - 20)), y = 10 + Math.floor(Math.random() * (H - 20)); if (walkable(at(x, y))) return spawnAt(x, y); } spawnAt(PLAZA[0], PLAZA[1] + 2); });
+  $("plazaSpawn").addEventListener("click", () => spawnAt(PLAZA[0], PLAZA[1] + 2));
+  $("bedSpawn").addEventListener("click", () => { const i = me.bed; spawnAt(i % W, Math.floor(i / W), i); });
+  $("board").addEventListener("click", () => $("board").classList.toggle("min"));
+  window.addEventListener("resize", resize);
+
+  // ---------- boot ----------
+  if (me.ig) $("nick").value = me.ig;
+  resize(); ui(); clockTick(); setInterval(clockTick, 5000);
+  let last = performance.now();
+  function loop(t) { const dt = Math.min(.05, (t - last) / 1000); last = t; update(dt); draw(t); requestAnimationFrame(loop); }
+  requestAnimationFrame(loop);
+  // =================== TEST MODE (only in test.html) ===================
+  const TST = { inf: true, god: true, speed: 1 };
+  try { Object.assign(TST, JSON.parse(store.get("tst-opts") || "{}")); } catch (e) {}
+  const saveTst = () => store.set("tst-opts", JSON.stringify(TST));
+  function tstRefill() {
+    if (TST.inf) for (const k of Object.keys(ITEMS)) if (have(k) < 5000) add(k, 9999 - have(k));
+    if (TST.god) me.hp = maxHp();
+  }
+  const _hurt = hurt;
+  hurt = function (n) { if (TST.god) { P.hurt = .3; pop(P.fx, P.fy - .3, "0", "#9fb3a3"); return; } _hurt(n); };
+  const _update = update;
+  update = function (dt) { _update(dt * TST.speed); };
+  setInterval(() => { if (mode === "play") { tstRefill(); ui(); } }, 600);
+
+  function tstTeleport(x, y) {
+    if (dun) dun = null; if (room) exitHouse();
+    const [sx, sy] = freeNear(x, y);
+    P.x = sx; P.y = sy; P.fx = sx; P.fy = sy; P.path = []; P.job = null; S.marker = null; camX = sx * tile; camY = sy * tile;
+    closeSheet(); ui();
+  }
+  function tstSetNight(on) {
+    const p = now() % CYCLE, target = on ? CYCLE - NIGHT + 70000 : 70000;
+    offset += target - p; if (!on) wolves = []; clockTick(); closeSheet();
+  }
+  function tstRipen() {
+    let n = 0;
+    for (const [k, o] of Object.entries(tiles)) {
+      const i = +k, t = effFrom(o, i); if (!o || o.oid !== me.id) continue;
+      if (CROPS[t]) { tiles[i] = Object.assign({}, o, { p: now() - 3600000 }); n++; }
+      if (LIVE[t]) { tiles[i] = Object.assign({}, o, { c: now() - LIVE_RATE * LIVE_CAP, f: now() + FEED_MAX }); n++; }
+      rawLocal[keyFor(i)] = tiles[i];
+    }
+    store.set("osada-raw", JSON.stringify(rawLocal)); banner(n ? `Hotovo: ${n} polí a stájí je připraveno ke sklizni` : "Nemáš žádná pole ani zvířata"); closeSheet();
+  }
+  function tstSection(body) {
+    const add2 = (...n) => body.append(...n);
+    add2(el("div", { class: "note" }, "Testovací režim. Všechno se ukládá jen v tomhle prohlížeči a nikdo jiný to nevidí. Ostrá hra je na hlavní adrese."));
+    const tog = (label, key, desc) => add2(row(label, desc, btn(TST[key] ? "Zapnuto" : "Vypnuto", () => { TST[key] = !TST[key]; saveTst(); if (key === "inf" || key === "god") tstRefill(); ui(); refreshSheet(); }, { ghost: !TST[key] })));
+    add2(el("div", { class: "sec" }, "Postava"));
+    tog("Neomezené suroviny", "inf", "Všech surovin máš pořád 9999");
+    tog("Nesmrtelnost", "god", "Nic ti neubere zdraví");
+    add2(row(`Rychlost hry ×${TST.speed}`, "Zrychlí chůzi, těžbu, stavění i nepřátele",
+      el("div", { class: "form" }, ...[1, 2, 4].map((s) => btn(`×${s}`, () => { TST.speed = s; saveTst(); refreshSheet(); }, { ghost: TST.speed !== s })))));
+    const lvRow = el("div", { class: "form" });
+    for (const l of [1, 3, 5, 7, 10, 15]) lvRow.append(btn(String(l), () => { me.xp = xpAt(l); me.hp = maxHp(); saveMe(); ui(); refreshSheet(); }, { ghost: level() !== l }));
+    add2(row(`Úroveň: ${level()}`, "Odemyká stavby a vylepšení", lvRow));
+    add2(row("Nejlepší výbava", "Zlatý meč, zlaté brnění, štít, lovecký luk a ocelové nástroje",
+      btn("Dát", () => { me.gear = { weapon: "sword_gold", armor: "armor_gold", shield: "shield", bow: "bow2" }; me.toolLvl = 4; saveMe(); ui(); refreshSheet(); })));
+    add2(el("div", { class: "sec" }, "Svět"));
+    add2(row(isNight() ? "Teď je noc" : "Teď je den", "Přepne denní dobu", btn(isNight() ? "Den" : "Noc", () => tstSetNight(!isNight()))));
+    add2(row("Přivolat vlky", "Tři vlci se objeví kousek od tebe (jen v noci a mimo hradby)",
+      btn("Vlci", () => { if (!isNight()) tstSetNight(true); for (let k = 0; k < 3; k++) wolves.push({ fx: P.x + 4 - k * 3, fy: P.y + 4, hp: 14, cd: 0, dir: 1 }); closeSheet(); })));
+    add2(row("Dozrát pole a zvířata", "Všechna tvoje pole a stáje budou hned připravené", btn("Dozrát", tstRipen)));
+    add2(el("div", { class: "sec" }, "Teleport"));
+    const tp = el("div", { class: "form" });
+    tp.append(btn("Náves", () => tstTeleport(PLAZA[0], PLAZA[1] + 2)), btn("Hory", () => tstTeleport(150, 75)), btn("Mapa…", () => { closeSheet(); openMap("teleport"); }));
+    add2(tp);
+    const cv2 = el("div", { class: "form" });
+    CAVES.forEach(([x, y], k) => cv2.append(btn(`Jeskyně ${k + 1}`, () => tstTeleport(x, y + 1))));
+    add2(cv2);
+    const fl = el("div", { class: "form" });
+    for (const f of [1, 3, 5, 9]) fl.append(btn(`Patro ${f}`, () => { if (room) exitHouse(); if (!dun) caveReturn = [CAVES[0][0], CAVES[0][1] + 1]; dun = null; enterCave(CAVES[0][0], CAVES[0][1], f); closeSheet(); }));
+    add2(row("Rovnou do jeskyně", "Na patře 3, 6, 9 čeká troll", fl));
+    add2(el("div", { class: "sec" }, "Začít znovu"));
+    add2(row("Smazat testovací svět", "Smaže stavby i postavu v testovací verzi", btn("Smazat", () => {
+      try { Object.keys(localStorage).filter((k) => k.startsWith("tst-")).forEach((k) => localStorage.removeItem(k)); } catch (e) {}
+      location.reload();
+    }, { ghost: true })));
+  }
+  const _refresh = refreshSheet;
+  refreshSheet = function () {
+    if (sheetKind !== "admin") return _refresh();
+    $("shTitle").textContent = "Admin"; const body = $("shBody"); body.innerHTML = ""; tstSection(body);
+  };
+  $("mm").addEventListener("pointerdown", (e) => {
+    if ($("mapView").dataset.kind !== "teleport") return;
+    const r = $("mm").getBoundingClientRect();
+    $("mapView").hidden = true; tstTeleport(Math.floor((e.clientX - r.left) / r.width * W), Math.floor((e.clientY - r.top) / r.height * H));
+  });
+  $("adminBtn").hidden = false;
+  $("adminBtn").addEventListener("click", () => openSheet("admin"));
+  // skip the Instagram check and drop straight into the world
+  me.name = "admin"; me.ig = "admin"; tstRefill(); saveMe();
+  $("gate").hidden = true; setTimeout(() => { spawnAt(PLAZA[0], PLAZA[1] + 2); banner("Testovací režim. Ťukni na Admin pro nástroje. Nic se neukládá do ostré hry.", 6000); }, 0);
+})();
+</script>
+</body>
+</html>

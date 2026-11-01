@@ -159,6 +159,7 @@ label.eyebrow { color: var(--muted); margin-bottom: -6px; }
     <div class="hudrow">
       <div class="brand">Manazinie</div>
       <div class="clock" id="clock">Den</div>
+      <button class="hbtn" id="adminBtn" hidden style="border-color:#ff8a6b;color:#ff8a6b">Admin</button>
       <button class="hbtn" id="bagBtn" hidden>Batoh</button>
       <button class="hbtn" id="mapBtn" hidden>Mapa</button>
     </div>
@@ -343,9 +344,11 @@ const FIREBASE_CONFIG = {
   const $ = (id) => document.getElementById(id);
   let bannerT;
   const cv = $("cv"), ctx = cv.getContext("2d");
+  const TEST_MODE = typeof window.MZ_TEST !== "undefined" && window.MZ_TEST === true;
+  const PFX = TEST_MODE ? "tst-" : "";
   const store = {
-    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
-    set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+    get(k) { try { return localStorage.getItem(k.startsWith("tst-") ? k : PFX + k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k.startsWith("tst-") ? k : PFX + k, v); } catch (e) {} },
   };
   function rng(seed) { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
   function hstr(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
@@ -498,7 +501,7 @@ const FIREBASE_CONFIG = {
   let protDirty = true;
 
   // ---------- network ----------
-  const online = typeof firebase !== "undefined" && !String(FIREBASE_CONFIG.apiKey).startsWith("DOPLN");
+  const online = !TEST_MODE && typeof firebase !== "undefined" && !String(FIREBASE_CONFIG.apiKey).startsWith("DOPLN");
   let db = null, myRef = null;
   function loadRaw(v) {
     const nt = {}, nk = {};
