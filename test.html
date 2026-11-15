@@ -1867,21 +1867,43 @@ const FIREBASE_CONFIG = {
     const wood = v === T.WALL_WOOD, same = (tx, ty) => { const a = at(tx, ty); return a === T.WALL_WOOD || a === T.WALL_STONE || a === T.GATE || a === T.TOWER; };
     const L = same(x - 1, y), R = same(x + 1, y), U = same(x, y - 1), D = same(x, y + 1);
     if (wood) {
-      const stakes = [];
-      if (L || R || !(U || D)) for (let k = 0; k < 4; k++) stakes.push([X + k * s / 4 + s * .02, Y + s * .3]);
-      else for (let k = 0; k < 3; k++) stakes.push([X + s * .4, Y + k * s / 3 - s * .12]);
-      shadow(X + s / 2, Y + s * .92, s * .44, .16);
-      if (L || R || !(U || D)) { ctx.fillStyle = "#8a5a34"; ctx.fillRect(X, Y + s * .54, s, s * .06); }
-      for (const [px, py] of stakes) shp(s, () => { ctx.moveTo(px, py + s * .62); ctx.lineTo(px, py + s * .12); ctx.lineTo(px + s * .1, py); ctx.lineTo(px + s * .2, py + s * .12); ctx.lineTo(px + s * .2, py + s * .62); ctx.closePath(); }, "#c08a52");
+      const stake = (px, base) => shp(s, () => { ctx.moveTo(px, base); ctx.lineTo(px, base - s * .5); ctx.lineTo(px + s * .1, base - s * .62); ctx.lineTo(px + s * .2, base - s * .5); ctx.lineTo(px + s * .2, base); ctx.closePath(); }, "#c08a52");
+      const base = Y + s * .92, cx = X + s * .4;
+      shadow(X + s / 2, Y + s * .92, s * (L || R ? .5 : .2), .16);
+      // vertical run: stakes behind the centre one, towards the tile above
+      if (U) { ctx.fillStyle = "#8a5a34"; ctx.fillRect(X + s * .46, Y - s * .38, s * .08, s * .9); for (const k of [2, 1]) stake(cx, base - k * s / 3); }
+      // horizontal rail, drawn by the left tile of each pair so it is not doubled
+      if (R) { ctx.fillStyle = "#8a5a34"; ctx.fillRect(X + s * .5, Y + s * .54, s, s * .06); }
+      stake(cx, base);
+      if (R) for (const k of [1, 2, 3]) stake(cx + k * s / 4, base);
+      if (!L && !R && !U && !D) { stake(cx - s * .25, base); stake(cx + s * .25, base); }
       return;
     }
-    shadow(X + s / 2, Y + s * .92, s * .42, .18);
-    const x0 = L ? X - 1 : X + s * .2, x1 = R ? X + s + 1 : X + s * .8, y0 = U ? Y - 1 : Y + s * .24, y1 = D ? Y + s + 1 : Y + s * .9;
-    shp(s, () => rr(x0, Math.min(y0, Y + s * .24), x1 - x0, Math.max(y1, Y + s * .9) - Math.min(y0, Y + s * .24), s * .08), "#c9d0d8", "#5f6770");
-    if (U || D) shp(s, () => rr(X + s * .2, y0, s * .6, y1 - y0, s * .08), "#c9d0d8", "#5f6770");
-    ctx.fillStyle = "#e6eaee"; for (let k = 0; k < 3; k++) { rr(X + s * (.06 + k * .34), Y + s * .12, s * .2, s * .16, s * .04); ctx.fill(); }
-    ctx.strokeStyle = "#aab3bd"; ctx.lineWidth = Math.max(1, s * .025); ctx.beginPath(); ctx.moveTo(x0 + s * .06, Y + s * .58); ctx.lineTo(x1 - s * .06, Y + s * .58); ctx.stroke();
+    const a = .2, b = .8, t0 = .24, t1 = .9;
+    shadow(X + s / 2, Y + s * .92, s * (L || R ? .52 : .32), .18);
+    const fill = "#c9d0d8", top = "#e6eaee", edge = "#5f6770";
+    const hx0 = L ? X : X + s * a, hx1 = R ? X + s : X + s * b, vy0 = U ? Y : Y + s * t0, vy1 = D ? Y + s : Y + s * t1;
+    ctx.fillStyle = fill;
+    ctx.fillRect(hx0, Y + s * t0, hx1 - hx0, s * (t1 - t0));
+    ctx.fillRect(X + s * a, vy0, s * (b - a), vy1 - vy0);
+    // top surface of the wall so corners read clearly from above
+    ctx.fillStyle = top;
+    ctx.fillRect(L ? X : X + s * .3, Y + s * .3, (R ? X + s : X + s * .7) - (L ? X : X + s * .3), s * .14);
+    ctx.fillRect(X + s * .3, U ? Y : Y + s * .3, s * .4, (D ? Y + s : Y + s * .44) - (U ? Y : Y + s * .3));
+    // outline of the whole shape, broken where the wall continues
+    ctx.strokeStyle = edge; ctx.lineWidth = lw(s); ctx.lineCap = "butt"; ctx.beginPath();
+    const seg = (x0, y0, x1, y1) => { if (Math.abs(x1 - x0) > .5 || Math.abs(y1 - y0) > .5) { ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); } };
+    const hLine = (yy, gap) => { if (gap) { seg(hx0, yy, X + s * a, yy); seg(X + s * b, yy, hx1, yy); } else seg(hx0, yy, hx1, yy); };
+    const vLine = (xx, gap) => { if (gap) { seg(xx, vy0, xx, Y + s * t0); seg(xx, Y + s * t1, xx, vy1); } else seg(xx, vy0, xx, vy1); };
+    hLine(Y + s * t0, U); hLine(Y + s * t1, D); vLine(X + s * a, L); vLine(X + s * b, R);
+    ctx.stroke(); ctx.lineCap = "round";
+    // mortar lines
+    ctx.strokeStyle = "#aab3bd"; ctx.lineWidth = Math.max(1, s * .025); ctx.beginPath();
+    if (L || R) { ctx.moveTo(hx0 + (L ? 0 : s * .05), Y + s * .66); ctx.lineTo(hx1 - (R ? 0 : s * .05), Y + s * .66); }
+    if (U || D) { ctx.moveTo(X + s * .5, vy0 + (U ? 0 : s * .5)); ctx.lineTo(X + s * .5, vy1 - (D ? 0 : s * .05)); }
+    ctx.stroke();
   }
+
   function drawCrop(X, Y, s, i, o, v, t) {
     const g = cropGrowth(i, o, v), ripe = g >= 1, hops = v === T.FIELD;
     shp(s, () => rr(X + s * .05, Y + s * .07, s * .9, s * .86, s * .12), "#9a6a42", "#6b4428");
