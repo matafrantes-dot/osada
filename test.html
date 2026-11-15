@@ -291,9 +291,9 @@ const FIREBASE_CONFIG = {
     ore: { n: "Železná ruda", s: "ruda", c: "#b5734a" }, iron: { n: "Železo", s: "železo", c: "#c9d2da" },
     hops: { n: "Chmel", s: "chmel", c: "#7fbf4a" }, grain: { n: "Obilí", s: "obilí", c: "#e8c860" },
     meat: { n: "Maso", s: "maso", c: "#c2523f" }, hide: { n: "Kůže", s: "kůže", c: "#a8743f" },
-    egg: { n: "Vejce", s: "vejce", c: "#f2efe6" }, milk: { n: "Mléko", s: "mléko", c: "#e9eef5" }, wool: { n: "Vlna", s: "vlna", c: "#ddd6c8" },
+    egg: { n: "Vejce", s: "vejce", c: "#f2efe6" }, fish: { n: "Ryba", s: "ryba", c: "#7ac8ff" }, bigfish: { n: "Velká ryba", s: "velká ryba", c: "#4a9ad8" }, goldfish: { n: "Zlatá rybka", s: "zlatá rybka", c: "#ffb52a" }, milk: { n: "Mléko", s: "mléko", c: "#e9eef5" }, wool: { n: "Vlna", s: "vlna", c: "#ddd6c8" },
   };
-  const FOOD = { meat: 30, milk: 15, egg: 10 };
+  const FOOD = { meat: 30, milk: 15, egg: 10, fish: 20, bigfish: 45 };
 
   const BUILD = {
     hut:      { t: T.HUT,   lv: 1, req: 1, cat: "domy",   cost: { wood: 10, stone: 4 }, pts: 100, name: "Chatka" },
@@ -521,8 +521,9 @@ const FIREBASE_CONFIG = {
         if (id === me.id || !p || typeof p.x !== "number" || now() - (p.ts || 0) > 120000) continue;
         const old = others[id];
         let x = p.x, y = p.y; if (p.mv !== 2 && typeof p.in !== "number") { /* old clients use 120-wide coordinates, which match ours */ }
-        next[id] = { n: String(p.n || "Hráč").slice(0, 30), x, y, c: SHIRTS.includes(p.c) ? p.c : SHIRTS[0], act: p.a || 0,
-          inside: typeof p.in === "number", inRoom: typeof p.in === "number" ? p.in : null, fx: old ? old.fx : x, fy: old ? old.fy : y, dir: old ? old.dir : 1, swing: 0 };
+        next[id] = { em: typeof p.em === "string" ? p.em.slice(0, 8) : null, emt: typeof p.emt === "number" ? p.emt : 0, n: String(p.n || "Hráč").slice(0, 30), x, y, c: SHIRTS.includes(p.c) ? p.c : SHIRTS[0], act: p.a || 0,
+          inside: typeof p.in === "number", inRoom: typeof p.in === "number" ? p.in : null, fx: old ? old.fx : x, fy: old ? old.fy : y, dir: old ? old.dir : 1, swing: 0,
+          pet: PET_KINDS.includes(p.pet) ? p.pet : null, px: old ? old.px : undefined, py: old ? old.py : undefined, pdir: old ? old.pdir : 1 };
       }
       others = next; $("sOnline").textContent = Object.keys(others).length + (mode === "play" ? 1 : 0);
     });
@@ -539,7 +540,8 @@ const FIREBASE_CONFIG = {
   const TS = () => online ? firebase.database.ServerValue.TIMESTAMP : Date.now();
   function sendPos(extra) {
     if (!online || mode !== "play" || !myRef) return;
-    myRef.update(Object.assign({ x: P.x, y: P.y, ts: TS() }, extra || {}));
+    const ap = !room && !dun ? activePet() : null;
+    myRef.update(Object.assign({ x: P.x, y: P.y, ts: TS(), pet: ap ? ap.k : null }, extra || {}));
   }
   // claim a tile change atomically so only one player gets each tree, rock or building spot
   function claim(i, test, value, done) {
@@ -620,7 +622,7 @@ const FIREBASE_CONFIG = {
     }
     return p;
   }
-  const cropGrowth = (i, o, t) => Math.max(0, Math.min(1, (now() - cropStart(i, o)) / CROPS[t].grow));
+  let cropGrowth = (i, o, t) => Math.max(0, Math.min(1, (now() - cropStart(i, o)) / CROPS[t].grow));
   const trampled = (i, o) => o && cropStart(i, o) !== (o.p || 0);
 
   // ---------- livestock ----------
@@ -715,7 +717,7 @@ const FIREBASE_CONFIG = {
     const next = TOOLS[me.toolLvl + 1]; if (!next) return;
     if (level() < next.req) return banner(`${next.name} se odemknou na úrovni ${next.req}`);
     if (!canPay(next.cost)) return banner(`Chybí ti: ${missingText(next.cost)}`);
-    pay(next.cost); me.toolLvl++; saveMe(); addXP(10);
+    pay(next.cost); me.toolLvl++; saveMe(); addXP(10); checkAch();
     pop(P.x, P.y, next.name, "#8fd16a"); ui();
   }
   function nearest(type, ox, oy, maxD) {
@@ -756,7 +758,7 @@ const FIREBASE_CONFIG = {
       const path = pathTo(tx, ty, true); if (!path) return banner("Tam se nedostaneš");
       P.path = path; P.job = { kind: "furnish", x: tx, y: ty, f: selected, prog: 0 }; S.marker = { x: tx, y: ty }; return;
     }
-    if (item === 1) { me.bed = room.i; saveMe(); heal(maxHp()); ui(); return banner("Vyspal ses a máš plné zdraví. Tady se budeš objevovat."); }
+    if (item === 1) { stat("sleep"); me.bed = room.i; saveMe(); heal(maxHp()); ui(); return banner("Vyspal ses a máš plné zdraví. Tady se budeš objevovat."); }
     if (item) return;
     if (g.walk(tx, ty)) { const path = pathTo(tx, ty, false); if (path) { P.path = path; P.job = isDoor ? { kind: "exit" } : null; S.marker = { x: tx, y: ty }; } }
   }
@@ -797,7 +799,7 @@ const FIREBASE_CONFIG = {
     if (!canPay(up.cost)) return banner(`Chybí ti: ${missingText(up.cost)}`);
     claim(i, (e, cur) => isHome(e) && cur && mine(cur) && homeLv(cur, e) === lv, Object.assign({}, o, { t: T.HOUSE, lv: lv + 1 }), (ok) => {
       if (!ok) return banner("Vylepšení se nepovedlo, zkus to znovu");
-      pay(up.cost); me.pts += up.pts; addXP(Math.round(up.pts / 5)); saveScore();
+      pay(up.cost); me.pts += up.pts; addXP(Math.round(up.pts / 5)); saveScore(); statMax("home", lv + 1);
       pop(i % W, (i / W) | 0, `${up.name}!`, "#8fd16a"); banner(`Tvůj domov je teď ${up.name.toLowerCase()}.`, 3500); closeSheet(); ui();
     });
   }
@@ -848,7 +850,7 @@ const FIREBASE_CONFIG = {
     if (me.hops < HOPS_PER_BEER) return banner(`Na pivo potřebuješ ${HOPS_PER_BEER} chmele. Postav si chmelnici.`);
     pubTx(room.i, (cur) => { if (!cur || !mine(cur) || (cur.beer || 0) >= 99) return; cur.beer = (cur.beer || 0) + 1; return cur; }, (ok) => {
       if (!ok) return banner(room && room.pub && (room.pub.beer || 0) >= 99 ? "Sud je plný, nejdřív něco prodej" : "Pivo se nepodařilo uložit. Zkus to znovu.");
-      me.hops -= HOPS_PER_BEER; me.pts += 5; addXP(2); saveScore(); ui(); pop(P.x, P.y, "+1 pivo", "#f4cf6a");
+      me.hops -= HOPS_PER_BEER; me.pts += 5; addXP(2); saveScore(); ui(); pop(P.x, P.y, "+1 pivo", "#f4cf6a"); stat("brew");
     });
   }
   function setPrice(d) {
@@ -875,7 +877,7 @@ const FIREBASE_CONFIG = {
       return cur;
     }, (ok, cur) => {
       if (!ok) return banner(!cur || (cur.beer || 0) < 1 ? "Pivo došlo. Hostinský musí uvařit další." : "Nemáš dost grošů");
-      me.coins -= paid; me.buffUntil = Date.now() + BUFF_MS; heal(10); saveMe(); ui();
+      me.coins -= paid; me.buffUntil = Date.now() + BUFF_MS; heal(10); saveMe(); ui(); stat("drink");
       pop(P.x, P.y, isMine ? "Na zdraví!" : `−${paid} grošů`, "#f4cf6a");
       banner("Posilněn pivem na 60 s: chodíš, pracuješ i bojuješ líp.", 3500);
     });
@@ -902,7 +904,7 @@ const FIREBASE_CONFIG = {
   }
   function craft(id) {
     const g = GEAR[id]; if (!canPay(g.cost)) return banner(`Chybí ti: ${missingText(g.cost)}`);
-    pay(g.cost); const cur = gearOf(g.slot);
+    pay(g.cost); const cur = gearOf(g.slot); if (g.slot === "weapon") stat("sword"); if (g.slot === "bow") stat("bow");
     if (!cur || (g.dmg || g.def || 0) >= (cur.dmg || cur.def || 0)) me.gear[g.slot] = id;
     addXP(15); saveMe(); ui(); refreshSheet(); banner(`Vyrobeno: ${g.name}`);
   }
@@ -910,7 +912,7 @@ const FIREBASE_CONFIG = {
     if (have(k) < 1) return; if (me.hp >= maxHp()) return banner("Máš plné zdraví");
     add(k, -1); heal(FOOD[k]); saveMe(); ui(); refreshSheet(); pop(P.x, P.y, `+${FOOD[k]} HP`, "#e0574a");
   }
-  function bestFood() { return ["meat", "milk", "egg"].find((k) => have(k) > 0); }
+  function bestFood() { return ["bigfish", "meat", "fish", "milk", "egg"].find((k) => have(k) > 0); }
 
   // ---------- daily quests from the mayor ----------
   const QT = [
@@ -992,11 +994,11 @@ const FIREBASE_CONFIG = {
       if (cx < 0 || cy < 0 || cx * CH >= W || cy * CH >= H) continue;
       const r = rng(cx * 7349 + cy * 1931 + e * 97 + 5), n = r() < .4 ? 0 : r() < .75 ? 1 : 2;
       for (let k = 0; k < n; k++) {
-        const id = `${cx},${cy},${e},${k}`, deer = r() < .4, sx = cx * CH + Math.floor(r() * CH), sy = cy * CH + Math.floor(r() * CH), ph = r() * 6.28;
+        const id = `${cx},${cy},${e},${k}`, kr = r(), kind = kr < .26 ? "deer" : kr < .5 ? "rabbit" : kr < .62 ? "sheep" : kr < .73 ? "cow" : kr < .83 ? "horse" : kr < .92 ? "dog" : "cat", deer = kind === "deer", sx = cx * CH + Math.floor(r() * CH), sy = cy * CH + Math.floor(r() * CH), ph = r() * 6.28;
         if (killed.has(id) || sx >= W || sy >= H || !walkable(at(sx, sy))) continue;
         let fx = sx + Math.sin(tm / 6 + ph) * 2.2, fy = sy + Math.cos(tm / 8 + ph * 1.7) * 2.2;
         if (!walkable(at(Math.round(fx), Math.round(fy)))) { fx = sx; fy = sy; }
-        out.push({ id, kind: deer ? "deer" : "rabbit", fx, fy, x: Math.round(fx), y: Math.round(fy), hp: (deer ? 2 : 1) - (S.hp[id] || 0), dir: Math.cos(tm / 6 + ph) > 0 ? 1 : -1 });
+        out.push({ id, kind, fx, fy, x: Math.round(fx), y: Math.round(fy), hp: (deer ? 2 : 1) - (S.hp[id] || 0), dir: Math.cos(tm / 6 + ph) > 0 ? 1 : -1 });
       }
     }
     return out;
@@ -1048,11 +1050,376 @@ const FIREBASE_CONFIG = {
   }
   function attackEntity(ent) {
     if (ent.kind === "wolf") { P.job = { kind: "fight", ref: ent.ref }; P.path = []; return; }
+    if (PETS[ent.kind]) return startTame(ent.ref);
     if (!gearOf("bow")) return banner("Na lov potřebuješ luk. Vyrobíš ho v batohu ze 6 dřeva.");
     const a = ent.ref, d = Math.max(Math.abs(a.x - P.x), Math.abs(a.y - P.y));
     if (d > 5) { const p = pathTo(a.x, a.y, true); if (p) { P.path = p.slice(0, Math.max(0, p.length - 3)); P.job = { kind: "hunt", id: a.id }; } else banner("Ke zvířeti se nedostaneš"); return; }
     P.job = { kind: "hunt", id: a.id }; P.path = [];
   }
+  // ---------- tameable animals and pets ----------
+  const PETS = {
+    cat:   { n: "Kočka", food: "milk",  need: 2, names: ["Micka", "Mourek", "Líza", "Čenda", "Tlapka"], perk: "Chodí s tebou na pole: sklizeň dá +1 navíc" },
+    dog:   { n: "Pes",   food: "meat",  need: 3, names: ["Rex", "Alík", "Bety", "Ťapka", "Brok"], perk: "Chodí s tebou a kouše vlky" },
+    sheep: { n: "Ovce",  food: "grain", need: 3, names: ["Bělka", "Kudrna", "Beruška", "Vlnka"], perk: "Každé 3 minuty dá vlnu", gives: "wool" },
+    cow:   { n: "Kráva", food: "grain", need: 4, names: ["Stračena", "Málinka", "Rozárka", "Mína"], perk: "Každé 3 minuty dá mléko", gives: "milk" },
+    horse: { n: "Kůň",   food: "grain", need: 5, names: ["Hnědák", "Blesk", "Vranka", "Šemík"], perk: "Jezdíš na něm o 60 % rychleji", ride: true },
+  };
+  const PET_KINDS = Object.keys(PETS), PET_MAX = 6, PET_GIFT = 180000;
+  if (!Array.isArray(me.pets)) me.pets = [];
+  me.pets = me.pets.filter((p) => p && PETS[p.k]);
+  const activePet = () => me.pets.find((p) => p.id === me.petOn) || null;
+  const riding = () => !room && !dun && activePet() && PETS[activePet().k].ride;
+  const pet = { fx: 0, fy: 0, dir: 1, moving: false, placed: false, cd: 0 };
+  const tameProg = {};
+  function petPending(p) { return PETS[p.k].gives ? Math.min(5, Math.floor((Date.now() - p.t) / PET_GIFT)) : 0; }
+  function petCollect(p) {
+    const n = petPending(p); if (!n) return;
+    const it = PETS[p.k].gives; add(it, n); p.t = Date.now(); addXP(2 * n); saveMe(); ui(); refreshSheet();
+    banner(`${p.n}: +${n} ${ITEMS[it].s}`);
+  }
+  function petToggle(p) { me.petOn = me.petOn === p.id ? null : p.id; pet.placed = false; saveMe(); sendPos(); refreshSheet(); }
+  function petRelease(p) {
+    if (sheetData.release !== p.id) { sheetData.release = p.id; refreshSheet(); return; }
+    me.pets = me.pets.filter((q) => q !== p); if (me.petOn === p.id) me.petOn = null; sheetData.release = null;
+    saveMe(); sendPos(); refreshSheet(); banner(`${PETS[p.k].n} ${p.n} se ${p.k === "dog" || p.k === "horse" ? "vrátil" : "vrátila"} do přírody`);
+  }
+  function startTame(a) {
+    const D = PETS[a.kind];
+    if (me.pets.length >= PET_MAX) return banner(`Víc než ${PET_MAX} zvířat neuživíš. Nějaké pusť v batohu.`);
+    if (have(D.food) < 1) return banner(`${D.n} se dá ochočit krmením: potřebuješ ${ITEMS[D.food].s} (${D.need}×).`, 3500);
+    P.job = { kind: "tame", id: a.id, k: a.kind, tries: 0 }; P.path = [];
+  }
+  function tameJob(j) {
+    const a = animalsNear(P.x, P.y, 16).find((a) => a.id === j.id); if (!a) { P.job = null; return banner("Zvíře odběhlo"); }
+    if (Math.abs(a.x - P.x) + Math.abs(a.y - P.y) > 1 && Math.hypot(a.fx - P.fx, a.fy - P.fy) > 1.6) {
+      j.tries++; if (j.tries > 25) { P.job = null; return banner("Zvíře ti uteklo"); }
+      const p = pathTo(a.x, a.y, true);
+      if (!p) { j.miss = (j.miss || 0) + 1; if (j.miss > 4) { P.job = null; return banner("Ke zvířeti se nedostaneš"); } return; }
+      P.path = p.slice(0, 3); return;
+    }
+    P.dir = a.fx >= P.fx ? 1 : -1;
+    if (P.cd > 0) return;
+    const D = PETS[j.k];
+    if (have(D.food) < 1) { P.job = null; return banner(`Došlo ti ${ITEMS[D.food].s}. Zvíře chce ještě ${D.need - (tameProg[j.id] || 0)}×.`, 3500); }
+    P.cd = .8; P.swing = .15; add(D.food, -1);
+    const n = tameProg[j.id] = (tameProg[j.id] || 0) + 1;
+    pop(a.fx, a.fy - .3, n >= D.need ? "♥♥♥" : `♥ ${n}/${D.need}`, "#ff7a9a");
+    if (n < D.need) { ui(); return; }
+    P.job = null; killed.add(a.id);
+    const name = D.names[Math.floor(Math.random() * D.names.length)];
+    const p = { id: "z" + Math.random().toString(36).slice(2, 9), k: j.k, n: name, t: Date.now() };
+    me.pets.push(p); stat("tame");
+    if (!activePet() && !D.gives) me.petOn = p.id;
+    pet.placed = false; addXP(15); me.pts += 20; saveMe(); saveScore(); sendPos(); ui();
+    banner(`Ochočil jsi zvíře: ${D.n} ${name}! Najdeš ${j.k === "dog" || j.k === "horse" ? "ho" : "ji"} v batohu.`, 4000);
+  }
+  function updatePet(dt) {
+    const p = activePet();
+    if (!p || room || dun) { pet.placed = false; return; }
+    if (PETS[p.k].ride) { pet.fx = P.fx; pet.fy = P.fy; pet.dir = P.dir; pet.moving = P.path.length > 0; pet.placed = true; return; }
+    let tx = P.fx - P.dir * .85, ty = P.fy + .12;
+    if (p.k === "dog") {
+      pet.cd -= dt;
+      const wv = wolves.find((w) => Math.hypot(w.fx - P.fx, w.fy - P.fy) < 4);
+      if (wv) {
+        tx = wv.fx - Math.sign(wv.fx - P.fx || 1) * .7; ty = wv.fy;
+        if (Math.hypot(wv.fx - pet.fx, wv.fy - pet.fy) < 1.2 && pet.cd <= 0) {
+          pet.cd = .9; wv.hp -= 3; pop(wv.fx, wv.fy - .3, "−3", "#f4cf6a");
+          if (wv.hp <= 0) { stat("wolf"); add("meat", 1); add("hide", 1); addXP(10); pop(wv.fx, wv.fy, "+maso +kůže", "#c2523f"); saveMe(); ui(); }
+        }
+      }
+    }
+    if (!pet.placed || Math.hypot(P.fx - pet.fx, P.fy - pet.fy) > 8) { pet.fx = tx; pet.fy = ty; pet.placed = true; }
+    const dx = tx - pet.fx, dy = ty - pet.fy, d = Math.hypot(dx, dy);
+    pet.moving = d > .12;
+    if (pet.moving) { const sp = Math.min(d, (d > 2 ? 9 : 5.5) * dt); pet.fx += dx / d * sp; pet.fy += dy / d * sp; if (Math.abs(dx) > .04) pet.dir = Math.sign(dx); }
+  }
+  // =================== ACHIEVEMENTS ===================
+  if (!me.st || typeof me.st !== "object") me.st = {};
+  if (!me.ach || typeof me.ach !== "object") me.ach = {};
+  const st = (k) => me.st[k] || 0;
+  const ACH = [
+    // the player's own list
+    { id: "home",     ic: "🏠", n: "Vlastní střecha",  d: "Postav si barák",                 goal: 1,   v: () => st("home"),  gold: 10 },
+    { id: "castle",   ic: "🏰", n: "Hradní pán",       d: "Vylepši dům až na hrad",          goal: 5,   v: () => st("home"),  gold: 100 },
+    { id: "bow",      ic: "🏹", n: "Lukostřelec",      d: "Získej luk",                      goal: 1,   v: () => st("bow") + (me.gear && me.gear.bow ? 1 : 0), gold: 10 },
+    { id: "tools",    ic: "🔨", n: "Lepší nářadí",     d: "Vylepši si nástroje",             goal: 1,   v: () => me.toolLvl || 0, gold: 10 },
+    { id: "toolsmax", ic: "⚒️", n: "Mistr řemesla",    d: "Vylepši nástroje na maximum",     goal: TOOLS.length - 1, v: () => me.toolLvl || 0, gold: 80 },
+    { id: "witch",    ic: "🧙", n: "Bažinná legenda",  d: "Poraz bažinnou čarodějnici",      goal: 1,   v: () => st("witch"), gold: 150 },
+    { id: "iron",     ic: "🔩", n: "Železo!",          d: "Vytěž železnou rudu",             goal: 1,   v: () => st("ore"),   gold: 15 },
+    { id: "kill",     ic: "⚔️", n: "První souboj",     d: "Zabij vlka nebo kostlivce",       goal: 1,   v: () => st("wolf") + st("kill_skeleton"), gold: 10 },
+    { id: "cave",     ic: "🕯️", n: "Do tmy",           d: "Vstup do jeskyně",                goal: 1,   v: () => st("cave"),  gold: 10 },
+    { id: "swamp",    ic: "🐸", n: "Bažinou",          d: "Vstup do bažiny",                 goal: 1,   v: () => st("swamp"), gold: 20 },
+    { id: "reap1",    ic: "🌱", n: "První úroda",      d: "Sklid své první pole",            goal: 1,   v: () => st("reap"),  gold: 10 },
+    { id: "beer1",    ic: "🍺", n: "První pivo",       d: "Uvař své první pivo",             goal: 1,   v: () => st("brew"),  gold: 10 },
+    // extra ones
+    { id: "tree",     ic: "🪓", n: "Dřevorubec",       d: "Pokácej 100 stromů",              goal: 100, v: () => st("tree"),  gold: 20 },
+    { id: "rock",     ic: "🪨", n: "Horník",           d: "Rozbij 100 kamenů",               goal: 100, v: () => st("rock") + st("ore"), gold: 20 },
+    { id: "reap",     ic: "🌾", n: "Farmář",           d: "Sklid 50 polí",                   goal: 50,  v: () => st("reap"),  gold: 25 },
+    { id: "sword",    ic: "🗡️", n: "Kovář",            d: "Vyrob si meč",                    goal: 1,   v: () => st("sword"), gold: 15 },
+    { id: "brew",     ic: "🛢️", n: "Hospodský",        d: "Uvař 30 piv",                     goal: 30,  v: () => st("brew"),  gold: 40 },
+    { id: "drink",    ic: "🍻", n: "Na zdraví!",       d: "Vypij 10 piv",                    goal: 10,  v: () => st("drink"), gold: 10 },
+    { id: "wall",     ic: "🧱", n: "Pevnost",          d: "Postav 30 dílů hradeb",           goal: 30,  v: () => st("wall"),  gold: 30 },
+    { id: "hunt",     ic: "🦌", n: "Lovec",            d: "Ulov 10 zvířat",                  goal: 10,  v: () => st("hunt"),  gold: 15 },
+    { id: "wolf",     ic: "🐺", n: "Vlčí postrach",    d: "Zabij 25 vlků",                   goal: 25,  v: () => st("wolf"),  gold: 50 },
+    { id: "deep",     ic: "🪜", n: "Hloubkař",         d: "Dostaň se do 9. patra jeskyně",   goal: 9,   v: () => me.deep || 0, gold: 80 },
+    { id: "troll",    ic: "👹", n: "Trolobijce",       d: "Poraz jeskynního trola",          goal: 1,   v: () => st("troll"), gold: 40 },
+    { id: "tame",     ic: "🐾", n: "Kamarád",          d: "Ochoč první zvíře",               goal: 1,   v: () => st("tame"),  gold: 10 },
+    { id: "barn",     ic: "🐄", n: "Plná stáj",        d: "Měj 6 zvířat najednou",           goal: 6,   v: () => (me.pets || []).length, gold: 50 },
+    { id: "ride",     ic: "🐎", n: "Jezdec",           d: "Ujeď na koni 500 políček",        goal: 500, v: () => st("ride"),  gold: 30 },
+    { id: "sleep",    ic: "🛏️", n: "Ponocný",          d: "Vyspi se ve své posteli 10×",     goal: 10,  v: () => st("sleep"), gold: 10 },
+  ];
+  // rewards: mostly groše, gold only for the bigger ones
+  const achCoins = (a) => a.gold * 5, achGold = (a) => a.gold >= 40 ? Math.round(a.gold / 5) : 0;
+  const achRw = (a) => `+${achCoins(a)} grošů${achGold(a) ? ` · +${achGold(a)} zlata` : ""}`;
+  const achQueue = [];
+  let achShowing = false;
+  function stat(k, n = 1) { me.st[k] = (me.st[k] || 0) + n; checkAch(); }
+  function statMax(k, v) { if (v > (me.st[k] || 0)) { me.st[k] = v; checkAch(); } }
+  function checkAch() {
+    let got = false;
+    for (const a of ACH) if (!me.ach[a.id] && a.v() >= a.goal) {
+      me.ach[a.id] = Date.now(); add("coins", achCoins(a)); if (achGold(a)) add("gold", achGold(a)); me.pts += a.gold * 5; got = true;
+      achQueue.push(a);
+    }
+    if (got) { saveScore(); ui(); if (sheetKind === "bag") refreshSheet(); showNextAch(); }
+  }
+  // ---------- the pop-up at the bottom centre ----------
+  {
+    const css = document.createElement("style");
+    css.textContent = `
+.ach { position: absolute; left: 50%; bottom: 92px; z-index: 7; pointer-events: none; width: min(330px, calc(100% - 28px));
+  transform: translateX(-50%); animation: achIn .6s cubic-bezier(.2,1.5,.45,1) both, achOut .45s ease-in 3.8s forwards; }
+.ach .achCard { position: relative; display: flex; align-items: center; gap: 12px; padding: 10px 14px 10px 10px; border-radius: 16px; overflow: hidden;
+  background: linear-gradient(135deg, #3a2a10, #22180a 60%, #2e2210); border: 3px solid #f4cf6a; box-shadow: 0 0 0 3px #2f3b2a, 0 10px 30px rgba(0,0,0,.5), 0 0 26px rgba(244,207,106,.45); }
+.ach .achCard::after { content: ""; position: absolute; inset: -20% auto -20% -40%; width: 30%; transform: skewX(-20deg);
+  background: linear-gradient(90deg, transparent, rgba(255,245,200,.55), transparent); animation: achShine 1s ease-in-out .55s both; }
+.ach .achMedal { position: relative; flex: none; width: 56px; height: 56px; }
+.ach .achRays { position: absolute; inset: -14px; border-radius: 50%; animation: achSpin 6s linear infinite, achFade .5s ease .3s both;
+  background: repeating-conic-gradient(from 0deg, rgba(255,226,122,.55) 0 10deg, transparent 10deg 30deg);
+  -webkit-mask: radial-gradient(circle, #000 35%, transparent 70%); mask: radial-gradient(circle, #000 35%, transparent 70%); }
+.ach .achCoin { position: absolute; inset: 0; border-radius: 50%; display: grid; place-items: center; font-size: 28px;
+  background: radial-gradient(circle at 35% 30%, #fff3b0, #f4cf6a 45%, #c8932a 100%); border: 3px solid #2f3b2a; box-shadow: inset 0 -4px 0 rgba(120,70,10,.35);
+  animation: achCoin .9s cubic-bezier(.3,1.4,.5,1) .15s both; }
+.ach .achTxt { min-width: 0; }
+.ach .achLbl { font-family: var(--display); font-size: 11px; letter-spacing: .14em; color: #f4cf6a; animation: achFade .3s ease .25s both; }
+.ach .achTtl { font-family: var(--display); font-size: 20px; color: #fff8e0; line-height: 1.1; margin-top: 2px; animation: achUp .35s ease .35s both; }
+.ach .achRw { font-size: 12px; color: #e8d9a8; margin-top: 3px; animation: achUp .35s ease .5s both; }
+.ach .achBit { position: absolute; left: 38px; top: 38px; width: 7px; height: 11px; border-radius: 2px; opacity: 0;
+  animation: achBit .95s cubic-bezier(.15,.7,.4,1) .2s forwards; }
+@keyframes achIn { from { transform: translate(-50%, 160%) scale(.7); opacity: 0; } 70% { transform: translate(-50%, -6%) scale(1.04); opacity: 1; } to { transform: translate(-50%, 0) scale(1); } }
+@keyframes achOut { to { transform: translate(-50%, 160%) scale(.85); opacity: 0; } }
+@keyframes achShine { from { left: -40%; } to { left: 130%; } }
+@keyframes achSpin { to { transform: rotate(360deg); } }
+@keyframes achFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes achUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes achCoin { from { transform: scale(0) rotateY(540deg); } 60% { transform: scale(1.25) rotateY(0); } to { transform: scale(1); } }
+@keyframes achBit { 0% { opacity: 1; transform: translate(0,0) rotate(0); } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--r)); } }
+.achGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.achCell { display: flex; gap: 8px; align-items: center; padding: 8px; border-radius: 10px; background: var(--frame-2); border: 2px solid var(--line); min-width: 0; }
+.achCell.done { border-color: #f4cf6a; background: linear-gradient(135deg, #3a2a10, #22180a); }
+.achCell .i { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 18px; background: #2a3a30; filter: grayscale(1); opacity: .6; }
+.achCell.done .i { background: radial-gradient(circle at 35% 30%, #fff3b0, #f4cf6a 45%, #c8932a); filter: none; opacity: 1; }
+.achCell .n { font-family: var(--display); font-size: 13px; color: var(--ink); }
+.achCell .d { font-size: 11px; color: var(--muted); line-height: 1.25; }
+.achCell .achBar { height: 5px; border-radius: 3px; background: #2a3a30; margin-top: 4px; overflow: hidden; }
+.achCell .achBar i { display: block; height: 100%; background: var(--moss); }`;
+    document.head.append(css);
+  }
+  function showNextAch() {
+    if (achShowing || !achQueue.length) return;
+    const a = achQueue.shift(); achShowing = true;
+    const bits = [];
+    const cols = ["#f4cf6a", "#8fd16a", "#ff7a9a", "#7ac8ff", "#e6b8ff", "#fff3b0"];
+    for (let k = 0; k < 22; k++) {
+      const an = (k / 22) * Math.PI * 2 + Math.random() * .3, dist = 60 + Math.random() * 70;
+      bits.push(el("i", { class: "achBit", style: `background:${cols[k % cols.length]};--dx:${Math.cos(an) * dist}px;--dy:${Math.sin(an) * dist * .8 - 20}px;--r:${Math.random() * 720 - 360}deg;animation-delay:${.18 + Math.random() * .12}s` }));
+    }
+    const box = el("div", { class: "ach", role: "status" },
+      el("div", { class: "achCard" },
+        el("div", { class: "achMedal" }, el("div", { class: "achRays" }), el("div", { class: "achCoin" }, a.ic)),
+        el("div", { class: "achTxt" }, el("div", { class: "achLbl" }, "🏆 ÚSPĚCH ODEMČEN"), el("div", { class: "achTtl" }, a.n), el("div", { class: "achRw" }, `${a.d} · ${achRw(a)}`))),
+      ...bits);
+    $("cv").parentElement.append(box);
+    setTimeout(() => { box.remove(); achShowing = false; showNextAch(); }, 4300);
+  }
+  function achSection(add2) {
+    const done = ACH.filter((a) => me.ach[a.id]).length;
+    add2(el("div", { class: "sec" }, `Úspěchy ${done}/${ACH.length}`));
+    const g = el("div", { class: "achGrid" });
+    for (const a of ACH) {
+      const ok = !!me.ach[a.id], hide = a.secret && !ok, v = Math.min(a.goal, a.v());
+      g.append(el("div", { class: "achCell" + (ok ? " done" : "") }, el("div", { class: "i" }, hide ? "?" : a.ic),
+        el("div", { style: "min-width:0;flex:1" }, el("div", { class: "n" }, hide ? "Tajný úspěch" : a.n), el("div", { class: "d" }, hide ? "Objevíš ho sám" : ok ? `Splněno · ${achRw(a)}` : a.d),
+          !ok && !hide && a.goal > 1 ? el("div", { class: "achBar" }, el("i", { style: `width:${v / a.goal * 100}%` })) : null)));
+    }
+    add2(g);
+  }
+  setTimeout(checkAch, 1500);
+  // =================== ACHIEVEMENT PATCHES (embroidered badge look, drawn on canvas) ===================
+  const PATCH_COL = {
+    tree: ["#3f6b3a", "#e0a45a"], rock: ["#4a5560", "#c9d2da"], reap: ["#6b5a2a", "#f2cf5c"], sword: ["#3a3f52", "#d6dde4"],
+    home: ["#7a3a2c", "#f3c98a"], castle: ["#2c3f6b", "#f4cf6a"], brew: ["#5a3a1c", "#f2b93a"], drink: ["#6b3a1c", "#ffe08a"], wall: ["#5a4a3a", "#c9c1b3"],
+    hunt: ["#3a4a2c", "#e0a45a"], wolf: ["#2a3040", "#c9d2da"], deep: ["#2a2433", "#ffd36a"], troll: ["#3a4a2a", "#a8d070"],
+    bow: ["#4a3a24", "#e0a45a"], tools: ["#4a4a52", "#e0a45a"], toolsmax: ["#2c2c3a", "#f4cf6a"], iron: ["#4a3a30", "#e9893a"], kill: ["#5a2424", "#f2cf5c"],
+    cave: ["#1e1a24", "#ffd36a"], swamp: ["#2c4a3c", "#b8f59a"], reap1: ["#3a5a2a", "#d9f0a0"], beer1: ["#6b4a1c", "#ffe08a"],
+    tame: ["#6b3a4a", "#ffb0c4"], barn: ["#3a5a3a", "#fbf8f0"], ride: ["#5a3a24", "#e0a45a"], sleep: ["#2c3a6b", "#bfe6ff"], witch: ["#3a2450", "#d58cff"],
+  };
+  const iconCache = {};
+  function threadIcon(ic, size, thread) {
+    const key = ic + size + thread; if (iconCache[key]) return iconCache[key];
+    const pad = Math.ceil(size * .12), S = size + pad * 2;
+    const src = document.createElement("canvas"); src.width = src.height = S;
+    const g = src.getContext("2d"); g.textAlign = "center"; g.textBaseline = "middle"; g.font = `${size * .82}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
+    g.fillText(ic, S / 2, S / 2 + size * .04);
+    // satin-stitch texture on the icon
+    g.globalCompositeOperation = "source-atop";
+    for (let k = -S; k < S * 2; k += 2.2) { g.strokeStyle = k % 4.4 < 2.2 ? "rgba(255,255,255,.16)" : "rgba(0,0,0,.14)"; g.lineWidth = 1.1; g.beginPath(); g.moveTo(k, 0); g.lineTo(k - S * .6, S); g.stroke(); }
+    // silhouette for the thread outline
+    const sil = document.createElement("canvas"); sil.width = sil.height = S;
+    const h = sil.getContext("2d"); h.drawImage(src, 0, 0); h.globalCompositeOperation = "source-in"; h.fillStyle = thread; h.fillRect(0, 0, S, S);
+    const out = document.createElement("canvas"); out.width = out.height = S;
+    const o = out.getContext("2d"), w = Math.max(1.5, size * .045);
+    for (let k = 0; k < 12; k++) { const an = k / 12 * Math.PI * 2; o.drawImage(sil, Math.cos(an) * w, Math.sin(an) * w); }
+    o.drawImage(src, 0, 0);
+    return (iconCache[key] = { c: out, pad });
+  }
+  // r = outer radius, stitch = 0..1 progress of the running stitch, gray = not unlocked
+  function drawPatch(g, cx, cy, r, a, stitch = 1, gray = false) {
+    const [bg, th] = gray ? ["#3a443d", "#7d8a80"] : (PATCH_COL[a.id] || ["#3a4a3a", "#f4cf6a"]);
+    g.save();
+    g.fillStyle = "rgba(0,0,0,.35)"; g.beginPath(); g.ellipse(cx + r * .05, cy + r * .1, r, r * .98, 0, 0, 7); g.fill();
+    // merrow edge: dense slanted threads around the rim
+    g.fillStyle = th; g.beginPath(); g.arc(cx, cy, r, 0, 7); g.fill();
+    const n = Math.max(40, Math.round(r * 2.4));
+    g.lineWidth = Math.max(.8, r * .022);
+    for (let k = 0; k < n; k++) {
+      const an = k / n * Math.PI * 2;
+      g.strokeStyle = k % 2 ? "rgba(0,0,0,.28)" : "rgba(255,255,255,.28)";
+      g.beginPath(); g.moveTo(cx + Math.cos(an) * r * .83, cy + Math.sin(an) * r * .83); g.lineTo(cx + Math.cos(an + .06) * r * .995, cy + Math.sin(an + .06) * r * .995); g.stroke();
+    }
+    // twill fabric
+    g.beginPath(); g.arc(cx, cy, r * .83, 0, 7); g.fillStyle = bg; g.fill();
+    g.save(); g.clip();
+    g.strokeStyle = "rgba(255,255,255,.07)"; g.lineWidth = 1;
+    for (let k = -r; k < r * 3; k += 3) { g.beginPath(); g.moveTo(cx - r + k, cy - r); g.lineTo(cx - r + k - r * 2, cy + r); g.stroke(); }
+    const sh = g.createRadialGradient(cx - r * .35, cy - r * .4, r * .1, cx, cy, r);
+    sh.addColorStop(0, "rgba(255,255,255,.16)"); sh.addColorStop(1, "rgba(0,0,0,.22)"); g.fillStyle = sh; g.fillRect(cx - r, cy - r, r * 2, r * 2);
+    g.restore();
+    // running stitch, sewn in as `stitch` goes from 0 to 1
+    if (stitch > 0) {
+      g.setLineDash([r * .09, r * .06]); g.lineCap = "round"; g.lineWidth = Math.max(1, r * .035);
+      g.strokeStyle = "rgba(0,0,0,.35)"; g.beginPath(); g.arc(cx + .8, cy + .8, r * .72, -Math.PI / 2, -Math.PI / 2 + stitch * Math.PI * 2); g.stroke();
+      g.strokeStyle = th; g.beginPath(); g.arc(cx, cy, r * .72, -Math.PI / 2, -Math.PI / 2 + stitch * Math.PI * 2); g.stroke();
+      g.setLineDash([]);
+    }
+    // embroidered icon
+    const I = threadIcon(gray && a.secret ? "?" : a.ic, Math.round(r * 1.05), gray ? "#2a322d" : "#1e1a14");
+    g.globalAlpha = gray ? .45 : 1; if (gray) g.filter = "grayscale(1)";
+    const sz = r * 1.05 + I.pad * 2; g.drawImage(I.c, cx - sz / 2, cy - sz / 2 + r * .02, sz, sz);
+    g.filter = "none"; g.globalAlpha = 1;
+    g.restore();
+  }
+  function patchCanvas(a, px, gray) {
+    const c = document.createElement("canvas"), d = 2; c.width = c.height = px * d; c.style.width = c.style.height = px + "px";
+    const g = c.getContext("2d"); g.scale(d, d); drawPatch(g, px / 2, px / 2, px / 2 - 3, a, 1, gray); return c;
+  }
+  // ---------- the animated pop-up: a fabric label that gets a patch slapped on and sewn ----------
+  {
+    const css = document.createElement("style");
+    css.textContent = `.achP { position: absolute; left: 50%; bottom: 92px; z-index: 7; pointer-events: none; transform: translateX(-50%);
+  opacity: 0; }
+.achCell .ip { flex: none; }`;
+    document.head.append(css);
+  }
+  function rrP(g, x, y, w, h, r) { g.beginPath(); g.roundRect(x, y, w, h, r); }
+  showNextAch = function () {
+    if (achShowing || !achQueue.length) return;
+    const a = achQueue.shift(); achShowing = true;
+    const W0 = Math.min(340, $("cv").parentElement.clientWidth - 24), H0 = 120, d = Math.min(3, window.devicePixelRatio || 1);
+    const c = document.createElement("canvas"); c.width = W0 * d; c.height = H0 * d; c.style.width = W0 + "px"; c.style.height = H0 + "px";
+    const box = el("div", { class: "achP", role: "status", "aria-label": `Úspěch odemčen: ${a.n}` }); box.append(c);
+    $("cv").parentElement.append(box);
+    const g = c.getContext("2d"); g.scale(d, d);
+    const [bg, th] = PATCH_COL[a.id] || ["#3a4a3a", "#f4cf6a"];
+    const bits = Array.from({ length: 16 }, (_, k) => ({ an: k / 16 * Math.PI * 2 + Math.random() * .3, sp: 40 + Math.random() * 50, col: [th, "#fff3b0", "#ffffff", "#f4cf6a"][k % 4], len: 6 + Math.random() * 8, rot: Math.random() * 6 }));
+    const t0 = performance.now(), PX = 58, PY = 61, PR = 47;
+    const lbl = { x: 40, y: 18, w: W0 - 46, h: 86 };
+    const frame = (now) => {
+      const t = (now - t0) / 1000; if (!box.isConnected) return;
+      g.clearRect(0, 0, W0, H0);
+      // fabric label
+      rrP(g, lbl.x + 2, lbl.y + 4, lbl.w, lbl.h, 14); g.fillStyle = "rgba(0,0,0,.35)"; g.fill();
+      rrP(g, lbl.x, lbl.y, lbl.w, lbl.h, 14); g.fillStyle = th; g.fill();
+      g.save(); rrP(g, lbl.x, lbl.y, lbl.w, lbl.h, 14); g.clip();
+      g.lineWidth = 1; for (let k = 0; k < lbl.w + lbl.h; k += 2.2) { g.strokeStyle = (k / 2.2) % 2 < 1 ? "rgba(0,0,0,.22)" : "rgba(255,255,255,.22)"; g.beginPath(); g.moveTo(lbl.x + k, lbl.y); g.lineTo(lbl.x + k - 8, lbl.y + lbl.h); g.stroke(); }
+      g.restore();
+      rrP(g, lbl.x + 5, lbl.y + 5, lbl.w - 10, lbl.h - 10, 10); g.fillStyle = bg; g.fill();
+      g.save(); rrP(g, lbl.x + 5, lbl.y + 5, lbl.w - 10, lbl.h - 10, 10); g.clip();
+      g.strokeStyle = "rgba(255,255,255,.06)"; for (let k = 0; k < lbl.w + lbl.h; k += 3) { g.beginPath(); g.moveTo(lbl.x + k, lbl.y); g.lineTo(lbl.x + k - lbl.h, lbl.y + lbl.h); g.stroke(); }
+      g.restore();
+      // running stitch around the label, sewn from left to right
+      const sp = Math.min(1, Math.max(0, (t - .55) / 1.1));
+      if (sp > 0) {
+        g.save(); g.setLineDash([6, 4]); g.lineWidth = 1.6; g.lineCap = "round"; g.strokeStyle = th;
+        // reveal by clipping a growing wedge from the patch
+        g.save(); g.beginPath(); g.moveTo(PX, PY); g.arc(PX, PY, 400, Math.PI, Math.PI + sp * Math.PI * 2.02); g.closePath(); g.clip();
+        rrP(g, lbl.x + 10, lbl.y + 10, lbl.w - 20, lbl.h - 20, 7); g.stroke(); g.restore();
+        g.restore();
+      }
+      // embroidered text
+      const ta = Math.min(1, Math.max(0, (t - .45) / .35)), tx = PX + PR + 10;
+      g.save(); g.globalAlpha = ta; g.textAlign = "left";
+      g.font = `700 11px "Pixelify Sans", monospace`; g.fillStyle = th; g.fillText("ÚSPĚCH ODEMČEN", tx, lbl.y + 28);
+      g.font = `700 20px "Pixelify Sans", monospace`; g.lineJoin = "round"; g.lineWidth = 4; g.strokeStyle = "rgba(0,0,0,.45)";
+      g.strokeText(a.n, tx, lbl.y + 51); g.fillStyle = "#fff8e0"; g.fillText(a.n, tx, lbl.y + 51);
+      g.font = `12px "Atkinson Hyperlegible", sans-serif`; g.fillStyle = "rgba(255,248,224,.85)"; g.fillText(`${achRw(a)} · ${a.d}`.slice(0, 42), tx, lbl.y + 68);
+      g.restore();
+      // thread bits fly out when the patch lands
+      const bt = t - .45;
+      if (bt > 0 && bt < 1) for (const b of bits) {
+        const dd = b.sp * (1 - Math.pow(1 - bt, 3)), x = PX + Math.cos(b.an) * (PR + dd * .6), y = PY + Math.sin(b.an) * (PR * .9 + dd * .5) + bt * bt * 30;
+        g.save(); g.globalAlpha = 1 - bt; g.translate(x, y); g.rotate(b.rot + bt * 6); g.strokeStyle = b.col; g.lineWidth = 2; g.lineCap = "round";
+        g.beginPath(); g.moveTo(-b.len / 2, 0); g.quadraticCurveTo(0, -4, b.len / 2, 0); g.stroke(); g.restore();
+      }
+      // the patch is slapped on: drops in big, lands with a squash, settles slightly tilted
+      const pt = Math.min(1, Math.max(0, (t - .15) / .32));
+      if (pt > 0) {
+        const land = pt < 1 ? 1.9 - .9 * (1 - Math.pow(1 - pt, 3)) : 1, squash = pt >= 1 ? 1 + Math.max(0, .12 - (t - .47) * .6) * Math.sin((t - .47) * 30) : 1;
+        const rot = (-.35 + .25 * Math.min(1, pt)) + (pt >= 1 ? Math.sin(t * 2) * .02 : 0);
+        g.save(); g.globalAlpha = Math.min(1, pt * 3); g.translate(PX, PY); g.rotate(rot); g.scale(land * squash, land / squash);
+        drawPatch(g, 0, 0, PR, a, Math.min(1, Math.max(0, (t - .55) / .9)));
+        // sewing needle travelling with the stitch
+        const ns = Math.min(1, Math.max(0, (t - .55) / .9));
+        if (ns > 0 && ns < 1) {
+          const an = -Math.PI / 2 + ns * Math.PI * 2, nx = Math.cos(an) * PR * .72, ny = Math.sin(an) * PR * .72;
+          g.translate(nx, ny); g.rotate(an + Math.PI / 2 + .6);
+          g.fillStyle = "#e9ecf0"; g.strokeStyle = "#2f3b2a"; g.lineWidth = 1; g.beginPath(); g.moveTo(0, -14); g.lineTo(2, 4); g.lineTo(0, 7); g.lineTo(-2, 4); g.closePath(); g.fill(); g.stroke();
+          g.fillStyle = "#2f3b2a"; g.beginPath(); g.ellipse(0, -10, .8, 2, 0, 0, 7); g.fill();
+        }
+        g.restore();
+        // shine sweeping over the patch once it is sewn
+        const sh = t - 1.5;
+        if (sh > 0 && sh < .6) { g.save(); g.beginPath(); g.arc(PX, PY, PR, 0, 7); g.clip(); const x = PX - PR + sh / .6 * PR * 2.6; const lg = g.createLinearGradient(x - 18, 0, x + 18, 0); lg.addColorStop(0, "rgba(255,255,255,0)"); lg.addColorStop(.5, "rgba(255,255,255,.45)"); lg.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = lg; g.fillRect(PX - PR, PY - PR, PR * 2, PR * 2); g.restore(); }
+      }
+      const ein = Math.min(1, t / .6), back = 1 + 2.2 * Math.pow(ein - 1, 3) + 1.2 * Math.pow(ein - 1, 2), out = t > 3.9 ? Math.min(1, (t - 3.9) / .45) : 0;
+      box.style.transform = `translate(-50%, ${(1 - back) * 160 + out * out * 160}%) scale(${.7 + .3 * Math.min(1, back) - out * .15})`; box.style.opacity = String(Math.min(1, ein * 3) * (1 - out));
+      if (t < 4.4) requestAnimationFrame(frame); else { box.remove(); achShowing = false; showNextAch(); }
+    };
+    requestAnimationFrame(frame);
+  };
+  achSection = function (add2) {
+    const done = ACH.filter((a) => me.ach[a.id]).length;
+    add2(el("div", { class: "sec" }, `Nášivky za úspěchy ${done}/${ACH.length}`));
+    const g = el("div", { class: "achGrid" });
+    for (const a of ACH) {
+      const ok = !!me.ach[a.id], hide = a.secret && !ok, v = Math.min(a.goal, a.v()), pc = patchCanvas(a, 46, !ok); pc.className = "ip";
+      g.append(el("div", { class: "achCell" + (ok ? " done" : "") }, pc,
+        el("div", { style: "min-width:0;flex:1" }, el("div", { class: "n" }, hide ? "Tajný úspěch" : a.n), el("div", { class: "d" }, hide ? "Objevíš ho sám" : ok ? `Splněno · ${achRw(a)}` : a.d),
+          !ok && !hide && a.goal > 1 ? el("div", { class: "achBar" }, el("i", { style: `width:${v / a.goal * 100}%` })) : null)));
+    }
+    add2(g);
+  };
   // =================== DUNGEONS ===================
   const ENEMY = {
     skeleton: { name: "Kostlivec", hp: 10, hpF: 4, dmg: 5, dmgF: 2, step: .55 },
@@ -1097,6 +1464,7 @@ const FIREBASE_CONFIG = {
   const enemyAt = (x, y) => dun && dun.enemies.find((e) => e.hp > 0 && e.x === x && e.y === y);
   let caveReturn = null;
   function enterCave(cx, cy, floor = 1) {
+    stat("cave");
     const cave = CAVES.findIndex(([x, y]) => x === cx && y === cy);
     if (floor === 1) { caveReturn = [cx, cy + 1]; }
     const keep = dun ? dun.runGold : 0;
@@ -1158,11 +1526,12 @@ const FIREBASE_CONFIG = {
     const dmgDone = weaponDmg();
     target.hp -= dmgDone; P.swing = .2; pop(isWolf ? target.fx : target.x, (isWolf ? target.fy : target.y) - .3, `−${dmgDone}`, "#f4cf6a");
     if (target.hp > 0) return false;
-    if (isWolf) { add("meat", 1); add("hide", 1); addXP(10); pop(target.fx, target.fy, "+maso +kůže", "#c2523f"); }
+    if (isWolf) { stat("wolf"); add("meat", 1); add("hide", 1); addXP(10); pop(target.fx, target.fy, "+maso +kůže", "#c2523f"); }
     else {
+      stat("kill_" + target.type);
       const E = ENEMY[target.type], f = dun.floor, gold = (1 + Math.floor(Math.random() * 3)) * f * (target.type === "troll" ? 6 : 1);
       add("gold", gold); dun.runGold += gold; addXP((target.type === "troll" ? 40 : 6) * f); pop(target.x, target.y, `+${gold} zlata`, "#ffd84a");
-      if (target.type === "troll") banner(`${E.name} poražen!`, 3000);
+      if (target.type === "troll") { stat("troll"); banner(`${E.name} poražen!`, 3000); }
     }
     saveMe(); ui(); return true;
   }
@@ -1178,6 +1547,12 @@ const FIREBASE_CONFIG = {
       if (Math.abs(dx) > .05) o.dir = Math.sign(dx);
       o.moving = Math.hypot(dx, dy) > .05;
       o.swing = o.act && now() - o.act < 800 ? (Math.sin(now() / 50) > 0 ? .15 : 0) : 0;
+      if (o.pet && o.pet !== "horse") {
+        const tx = o.fx - o.dir * .85, ty = o.fy + .12;
+        if (o.px === undefined || Math.hypot(tx - o.px, ty - o.py) > 6) { o.px = tx; o.py = ty; o.pdir = o.dir; }
+        const ex = tx - o.px, ey = ty - o.py; o.pmov = Math.hypot(ex, ey) > .12;
+        o.px += ex * Math.min(1, dt * 4); o.py += ey * Math.min(1, dt * 4); if (Math.abs(ex) > .04) o.pdir = Math.sign(ex);
+      }
     }
     for (const f of S.fx) { f.life -= dt; f.y -= dt * .8; }
     S.fx = S.fx.filter((f) => f.life > 0);
@@ -1194,9 +1569,9 @@ const FIREBASE_CONFIG = {
       const [nx, ny] = P.path[0];
       if (!g.walk(nx, ny)) { P.path = []; P.job = null; S.marker = null; }
       else {
-        const sp = (room ? 4 : 5.5) * (buffed() ? 1.4 : 1) * dt, dx = nx - P.fx, dy = ny - P.fy, d = Math.hypot(dx, dy);
+        const sp = (room ? 4 : 5.5) * (buffed() ? 1.4 : 1) * (riding() ? 1.6 : 1) * dt, dx = nx - P.fx, dy = ny - P.fy, d = Math.hypot(dx, dy);
         if (dx) P.dir = Math.sign(dx);
-        if (d <= sp) { P.fx = nx; P.fy = ny; P.x = nx; P.y = ny; P.path.shift(); if (!room && !dun || room && room.kind === "pub") sendPos(); }
+        if (d <= sp) { P.fx = nx; P.fy = ny; P.x = nx; P.y = ny; P.path.shift(); if (riding()) stat("ride"); if (!room && !dun || room && room.kind === "pub") sendPos(); }
         else { P.fx += dx / d * sp; P.fy += dy / d * sp; }
       }
     } else if (P.job && !busy) {
@@ -1206,6 +1581,7 @@ const FIREBASE_CONFIG = {
       if (dun) { const e = dun.enemies.find((e) => e.hp > 0 && Math.abs(e.x - P.x) + Math.abs(e.y - P.y) === 1); if (e) { autoCd = .55; P.dir = e.x >= P.x ? 1 : -1; strike(e, false); } }
       else { const wv = wolves.find((wv) => Math.hypot(wv.fx - P.fx, wv.fy - P.fy) < 1.3); if (wv) { autoCd = .6; P.dir = wv.fx >= P.fx ? 1 : -1; strike(wv, true); } }
     }
+    updatePet(dt);
     if (P.swing > 0) P.swing -= dt;
   }
   function runJob(j, dt) {
@@ -1233,6 +1609,7 @@ const FIREBASE_CONFIG = {
       if (P.cd <= 0) { P.cd = fast ? .4 : .55; if (strike(wv, true)) P.job = null; }
       return;
     }
+    if (j.kind === "tame") return tameJob(j);
     if (j.kind === "hunt") {
       const a = animalsNear(P.x, P.y, 8).find((a) => a.id === j.id); if (!a) { P.job = null; return; }
       if (Math.max(Math.abs(a.x - P.x), Math.abs(a.y - P.y)) > 5) {
@@ -1245,7 +1622,7 @@ const FIREBASE_CONFIG = {
         P.cd = .6; P.swing = .2; S.arrows.push({ x: P.fx + .5, y: P.fy + .4, tx: a.fx + .5, ty: a.fy + .5, t: 0 });
         S.hp[a.id] = (S.hp[a.id] || 0) + (gearOf("bow").dmg || 1);
         if (S.hp[a.id] >= (a.kind === "deer" ? 2 : 1)) {
-          killed.add(a.id); P.job = null;
+          killed.add(a.id); P.job = null; stat("hunt");
           if (a.kind === "deer") { add("meat", 2); add("hide", 1); addXP(8); pop(a.x, a.y, "+2 maso +kůže", "#c2523f"); }
           else { add("meat", 1); addXP(4); pop(a.x, a.y, "+1 maso", "#c2523f"); }
           saveMe(); ui();
@@ -1276,7 +1653,7 @@ const FIREBASE_CONFIG = {
       busy = true;
       const isTree = t === T.TREE, isOre = t === T.ORE;
       claim(i, (e) => e === t, { t: isTree ? T.STUMP : isOre ? T.DUG : T.RUBBLE, r: now() + (isTree ? 25000 : isOre ? 90000 : 35000) }, (ok, err) => {
-        busy = false; delete S.hp[i];
+        busy = false; delete S.hp[i]; if (ok) stat(isTree ? "tree" : isOre ? "ore" : "rock");
         if (ok) {
           if (isTree) { me.wood += 3; addXP(3); pop(j.x, j.y, "+3 dřevo", "#e0a45a"); }
           else if (isOre) { add("ore", 2); addXP(6); pop(j.x, j.y, "+2 ruda", "#b5734a"); }
@@ -1298,8 +1675,9 @@ const FIREBASE_CONFIG = {
       claim(i, (e, cur) => e === t && cur && mine(cur) && cropGrowth(i, cur, t) >= 1, { t, o: me.name, oid: me.id, p: now() }, (ok) => {
         busy = false; P.job = null; S.marker = null;
         if (!ok) return;
-        const C = CROPS[t]; add(C.item, C.n); me.pts += 10; addXP(5); saveScore(); ui();
-        pop(j.x, j.y, `+${C.n} ${ITEMS[C.item].s}`, ITEMS[C.item].c);
+        stat("reap");
+        const C = CROPS[t], cat = activePet() && activePet().k === "cat" ? 1 : 0; add(C.item, C.n + cat); me.pts += 10; addXP(5); saveScore(); ui();
+        pop(j.x, j.y, `+${C.n + cat} ${ITEMS[C.item].s}${cat ? " 🐈" : ""}`, ITEMS[C.item].c);
         let best = null, bd = 1e9;
         for (let y = j.y - 4; y <= j.y + 4; y++) for (let x = j.x - 4; x <= j.x + 4; x++) {
           const k = y * W + x; if (x < 0 || y < 0 || x >= W || y >= H) continue;
@@ -1321,6 +1699,7 @@ const FIREBASE_CONFIG = {
         busy = false; P.job = null; S.marker = null;
         if (!ok) return banner("Tohle místo už někdo zabral");
         pay(b.cost); me.pts += b.pts; addXP(Math.max(2, Math.round(b.pts / 5))); saveScore();
+        stat("build"); if (b.t === T.WALL_WOOD || b.t === T.WALL_STONE || b.t === T.GATE || b.t === T.TOWER) stat("wall"); if (isHome(b.t)) statMax("home", b.lv || 1);
         pop(j.x, j.y, `+${b.pts} bodů`, "#8fd16a");
         if (b.t === T.PUB) { pubWrite(i, { oid: me.id, o: me.name, beer: 0, till: 0, price: 5, sold: 0 }); banner("Hospoda stojí! Vejdi dovnitř a uvař pivo z chmele.", 4000); }
         else if (CROPS[b.t]) banner(`Zasazeno. Sklizeň za ${CROPS[b.t].grow / 1000} s. Chraň pole hradbou nebo pochodní, v noci chodí vlci.`, 4000);
@@ -1339,6 +1718,10 @@ const FIREBASE_CONFIG = {
   function lw(s) { return Math.max(1.5, s * .045); }
   // fill + outline whatever path `fn` builds
   function shp(s, fn, fill, stroke = OL) { ctx.beginPath(); fn(); ctx.fillStyle = fill; ctx.fill(); ctx.lineWidth = lw(s); ctx.strokeStyle = stroke; ctx.lineJoin = "round"; ctx.lineCap = "round"; ctx.stroke(); }
+  function cloud(s, cs, fill) {
+    ctx.strokeStyle = OL; ctx.lineWidth = lw(s) * 2; for (const [x, y, r] of cs) { ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.stroke(); }
+    ctx.fillStyle = fill; for (const [x, y, r] of cs) { ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); }
+  }
   function shadow(x, y, w, a = .22) { ctx.fillStyle = `rgba(30,60,20,${a})`; ctx.beginPath(); ctx.ellipse(x, y, w, w * .32, 0, 0, 7); ctx.fill(); }
   function glow(x, y, r, a) { const g = ctx.createRadialGradient(x, y, 2, x, y, r); g.addColorStop(0, `rgba(255,205,110,${a})`); g.addColorStop(1, "rgba(255,205,110,0)"); ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2); }
 
@@ -1425,7 +1808,7 @@ const FIREBASE_CONFIG = {
     }
     if (CROPS[v]) return drawCrop(X, Y, s, i, o, v, t);
     if (v === T.PUB) return drawPub(X, Y, s, t);
-    if (isHome(v)) return drawHome(X, Y, s, homeLv(o, v), t);
+    if (isHome(v)) return drawHome(X, Y, s, homeLv(o, v), t, o && o.rc, o && o.wc);
     if (v === T.MAYOR) { drawStall(X, Y, s, "#4f73a8"); drawPerson({ fx: x, fy: y - .12, dir: 1, swing: 0, moving: false, c: "#7a4fd9", hat: "#5a3a8a" }, t, s, 0, 0); return; }
     if (v === T.MARKET) { drawStall(X, Y, s, "#e0544a"); for (const [a, c] of [[.24, "#e0a45a"], [.46, "#f2cf5c"], [.68, "#e0544a"]]) shp(s, () => ctx.arc(X + s * a, Y + s * .56, s * .07, 0, 7), c); return; }
     if (v === T.WALL_WOOD || v === T.WALL_STONE) return drawWall(x, y, X, Y, s, v);
@@ -1528,7 +1911,7 @@ const FIREBASE_CONFIG = {
       shp(s, () => rr(X + s * .56, Y + s * .24, s * .34, s * .32, s * .05), "#d9a46c"); shp(s, () => { ctx.moveTo(X + s * .52, Y + s * .28); ctx.lineTo(X + s * .73, Y + s * .1); ctx.lineTo(X + s * .94, Y + s * .28); ctx.closePath(); }, "#e0654e");
       for (const [a, b] of [[.22, .66], [.42, .74]]) { shp(s, () => ctx.ellipse(X + s * a, Y + s * b + bob, s * .1, s * .08, 0, 0, 7), "#fbf8f0"); ctx.fillStyle = "#e0544a"; ctx.beginPath(); ctx.arc(X + s * (a + .07), Y + s * (b - .08) + bob, s * .03, 0, 7); ctx.fill(); ctx.fillStyle = "#f2a83a"; ctx.beginPath(); ctx.moveTo(X + s * (a + .1), Y + s * (b - .02) + bob); ctx.lineTo(X + s * (a + .15), Y + s * b + bob); ctx.lineTo(X + s * (a + .1), Y + s * (b + .02) + bob); ctx.fill(); }
     } else if (v === T.SHEEP) {
-      shp(s, () => { for (let k = 0; k < 5; k++) ctx.arc(X + s * (.28 + k * .09), Y + s * (.62 + (k % 2) * .06) + bob, s * .12, 0, 7); }, "#fbf8f0");
+      cloud(s, [0, 1, 2, 3, 4].map((k) => [X + s * (.28 + k * .09), Y + s * (.62 + (k % 2) * .06) + bob, s * .12]), "#fbf8f0");
       shp(s, () => rr(X + s * .7, Y + s * .5 + bob, s * .16, s * .18, s * .06), "#4a403a");
     } else {
       shp(s, () => rr(X + s * .16, Y + s * .5 + bob, s * .56, s * .3, s * .12), "#fbf8f0");
@@ -1537,10 +1920,10 @@ const FIREBASE_CONFIG = {
     }
     if (o && mine(o)) { const n = livePending(o); if (n > 0) bubble(X + s * .5, Y - s * .06 + Math.sin(t * 5) * s * .03, s, String(n)); else if (fedLeft(o) <= 0) bubble(X + s * .5, Y - s * .06, s, "?"); }
   }
-  function drawHome(X, Y, s, lv, t) {
+  function drawHome(X, Y, s, lv, t, rc, wc) {
     const cx = X + s / 2;
     if (lv <= 2) {
-      const stone = lv === 2, col = stone ? "#ece6da" : "#d9a46c", roof = stone ? "#4f73a8" : "#e0654e";
+      const stone = lv === 2, col = wc || (stone ? "#ece6da" : "#d9a46c"), roof = rc || (stone ? "#4f73a8" : "#e0654e");
       shadow(cx + s * .08, Y + s * .94, s * .5);
       shp(s, () => rr(X + s * .1, Y + s * .38, s * .8, s * .55, s * .1), col);
       if (!stone) { ctx.strokeStyle = "#b8824e"; ctx.lineWidth = Math.max(1, s * .025); for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.moveTo(X + s * .14, Y + s * (.52 + k * .12)); ctx.lineTo(X + s * .86, Y + s * (.52 + k * .12)); ctx.stroke(); } }
@@ -1552,20 +1935,20 @@ const FIREBASE_CONFIG = {
     }
     if (lv === 3) {
       shadow(cx + s * .08, Y + s * .95, s * .62);
-      shp(s, () => rr(X + s * .02, Y + s * .4, s * .96, s * .53, s * .08), "#f3ead6");
+      shp(s, () => rr(X + s * .02, Y + s * .4, s * .96, s * .53, s * .08), wc || "#f3ead6");
       ctx.strokeStyle = "#a8713f"; ctx.lineWidth = Math.max(1.5, s * .04); ctx.beginPath(); ctx.moveTo(X + s * .04, Y + s * .62); ctx.lineTo(X + s * .96, Y + s * .62); ctx.moveTo(X + s * .3, Y + s * .42); ctx.lineTo(X + s * .3, Y + s * .92); ctx.moveTo(X + s * .7, Y + s * .42); ctx.lineTo(X + s * .7, Y + s * .92); ctx.stroke();
-      shp(s, () => { ctx.moveTo(X - s * .08, Y + s * .46); ctx.lineTo(X + s * .2, Y + s * .02); ctx.lineTo(X + s * .8, Y + s * .02); ctx.lineTo(X + s * 1.08, Y + s * .46); ctx.closePath(); }, "#c4503c");
+      shp(s, () => { ctx.moveTo(X - s * .08, Y + s * .46); ctx.lineTo(X + s * .2, Y + s * .02); ctx.lineTo(X + s * .8, Y + s * .02); ctx.lineTo(X + s * 1.08, Y + s * .46); ctx.closePath(); }, rc || "#c4503c");
       shp(s, () => rr(cx - s * .11, Y + s * .64, s * .22, s * .29, [s * .1, s * .1, 0, 0]), "#5a3a22");
       for (const wx of [X + s * .1, X + s * .76]) shp(s, () => rr(wx, Y + s * .48, s * .14, s * .1, s * .03), "#ffe08a");
       return;
     }
     shadow(cx + s * .1, Y + s * 1.0, s * .66);
-    shp(s, () => rr(X + s * .05, Y + s * .2, s * .9, s * .76, s * .08), "#d6dbe1");
+    shp(s, () => rr(X + s * .05, Y + s * .2, s * .9, s * .76, s * .08), wc || "#d6dbe1");
     ctx.fillStyle = "#e9ecf0"; for (let k = 0; k < 4; k++) { rr(X + s * (.08 + k * .22), Y + s * .1, s * .14, s * .14, s * .03); ctx.fill(); }
     const towers = lv === 5 ? [X - s * .14, X + s * .82] : [X + s * .7];
     for (const tx of towers) {
       shp(s, () => rr(tx, Y - s * (lv === 5 ? .45 : .2), s * .32, s * (lv === 5 ? 1.4 : 1.15), s * .08), "#e2e6eb");
-      if (lv === 5) shp(s, () => { ctx.moveTo(tx - s * .05, Y - s * .45); ctx.lineTo(tx + s * .16, Y - s * .9); ctx.lineTo(tx + s * .37, Y - s * .45); ctx.closePath(); }, "#4f73a8");
+      if (lv === 5) shp(s, () => { ctx.moveTo(tx - s * .05, Y - s * .45); ctx.lineTo(tx + s * .16, Y - s * .9); ctx.lineTo(tx + s * .37, Y - s * .45); ctx.closePath(); }, rc || "#4f73a8");
       else { ctx.fillStyle = "#c3cad2"; for (let k = 0; k < 2; k++) { rr(tx + s * (.02 + k * .16), Y - s * .3, s * .12, s * .12, s * .03); ctx.fill(); } }
       shp(s, () => rr(tx + s * .1, Y - s * .12, s * .12, s * .16, s * .05), "#ffe08a");
     }
@@ -1626,7 +2009,68 @@ const FIREBASE_CONFIG = {
     ctx.fillStyle = p.me ? "#b6f08e" : "#ffffff"; ctx.fillText(p.n, X, Y - s * .02);
   }
   function floaters(inRoom, s, ox, oy) { floatersW(inRoom, s, ox, oy); }
+  // farm animals and pets, drawn facing right and mirrored for dir < 0
+  function drawBeast(k, X, Y, s, dir, t, moving, tame) {
+    const cx = X + s / 2, step = moving ? Math.sin(t * 14 + X * .1) * s * .05 : 0, bob = moving ? Math.abs(Math.sin(t * 14)) * s * .025 : 0;
+    const big = k === "horse" ? .34 : k === "cow" ? .3 : k === "sheep" ? .26 : k === "dog" ? .22 : .17;
+    shadow(cx, Y + s * .9, s * big);
+    ctx.save(); ctx.translate(cx, 0); ctx.scale(dir < 0 ? -1 : 1, 1); ctx.translate(-cx, -bob);
+    const leg = (lx, ly, h, c, w = .06, ph = 1) => shp(s, () => rr(cx + s * lx - s * w / 2, Y + s * ly + (ph > 0 ? step : -step) * .6, s * w, s * h, s * w / 2), c);
+    const eye = (ex, ey, r = .025) => { ctx.fillStyle = OL; ctx.beginPath(); ctx.arc(cx + s * ex, Y + s * ey, s * r, 0, 7); ctx.fill(); };
+    if (k === "cat") {
+      const c = "#f0a04a";
+      leg(-.1, .74, .14, c, .05, 1); leg(.1, .74, .14, c, .05, -1);
+      ctx.strokeStyle = OL; ctx.lineWidth = lw(s) * 2.6; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(cx - s * .16, Y + s * .7); ctx.quadraticCurveTo(cx - s * .32, Y + s * .62, cx - s * .28, Y + s * .44 + Math.sin(t * 3) * s * .03); ctx.stroke();
+      ctx.strokeStyle = c; ctx.lineWidth = lw(s) * 1.2; ctx.stroke();
+      shp(s, () => ctx.ellipse(cx, Y + s * .7, s * .18, s * .1, 0, 0, 7), c);
+      shp(s, () => { ctx.moveTo(cx + s * .07, Y + s * .5); ctx.lineTo(cx + s * .1, Y + s * .38); ctx.lineTo(cx + s * .16, Y + s * .47); ctx.lineTo(cx + s * .22, Y + s * .38); ctx.lineTo(cx + s * .26, Y + s * .5); ctx.closePath(); }, c);
+      shp(s, () => ctx.arc(cx + s * .16, Y + s * .56, s * .11, 0, 7), c);
+      ctx.strokeStyle = "#c4762a"; ctx.lineWidth = Math.max(1, s * .025); ctx.beginPath(); for (const sx of [-.06, .02]) { ctx.moveTo(cx + s * sx, Y + s * .62); ctx.lineTo(cx + s * (sx + .02), Y + s * .7); } ctx.stroke();
+      eye(.2, .54); ctx.fillStyle = "#f28a9a"; ctx.beginPath(); ctx.arc(cx + s * .26, Y + s * .59, s * .02, 0, 7); ctx.fill();
+    } else if (k === "dog") {
+      const c = "#c58648", d = "#7a4f2c";
+      leg(-.14, .68, .22, c, .07, 1); leg(-.04, .68, .22, c, .07, -1); leg(.08, .68, .22, c, .07, 1); leg(.16, .68, .22, c, .07, -1);
+      shp(s, () => { ctx.moveTo(cx - s * .2, Y + s * .56); ctx.quadraticCurveTo(cx - s * .34, Y + s * .4 + Math.sin(t * 12) * s * .04, cx - s * .3, Y + s * .34); ctx.quadraticCurveTo(cx - s * .26, Y + s * .46, cx - s * .16, Y + s * .52); ctx.closePath(); }, c);
+      shp(s, () => rr(cx - s * .22, Y + s * .5, s * .44, s * .22, s * .11), c);
+      shp(s, () => rr(cx + s * .1, Y + s * .3, s * .24, s * .22, s * .1), c);
+      shp(s, () => rr(cx + s * .26, Y + s * .4, s * .12, s * .1, s * .05), "#e2b07a");
+      ctx.fillStyle = OL; ctx.beginPath(); ctx.arc(cx + s * .37, Y + s * .42, s * .03, 0, 7); ctx.fill();
+      shp(s, () => rr(cx + s * .08, Y + s * .3, s * .09, s * .2, s * .045), d);
+      eye(.24, .38);
+      if (tame) { ctx.fillStyle = "#e0544a"; rr(cx + s * .06, Y + s * .5, s * .14, s * .05, s * .02); ctx.fill(); }
+    } else if (k === "sheep") {
+      leg(-.14, .66, .2, "#4a403a", .06, 1); leg(-.04, .66, .2, "#4a403a", .06, -1); leg(.06, .66, .2, "#4a403a", .06, 1); leg(.14, .66, .2, "#4a403a", .06, -1);
+      cloud(s, [0, 1, 2, 3, 4].map((q) => [cx + s * (-.18 + q * .09), Y + s * (.56 + (q % 2) * .06), s * .12]), "#fbf8f0");
+      shp(s, () => rr(cx + s * .16, Y + s * .42, s * .16, s * .2, s * .07), "#4a403a");
+      shp(s, () => ctx.ellipse(cx + s * .16, Y + s * .46, s * .06, s * .03, -.5, 0, 7), "#4a403a");
+      ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(cx + s * .26, Y + s * .48, s * .02, 0, 7); ctx.fill();
+    } else if (k === "cow") {
+      leg(-.2, .64, .26, "#fbf8f0", .08, 1); leg(-.08, .64, .26, "#fbf8f0", .08, -1); leg(.08, .64, .26, "#fbf8f0", .08, 1); leg(.2, .64, .26, "#fbf8f0", .08, -1);
+      ctx.strokeStyle = OL; ctx.lineWidth = lw(s); ctx.beginPath(); ctx.moveTo(cx - s * .28, Y + s * .5); ctx.quadraticCurveTo(cx - s * .38, Y + s * .6, cx - s * .34, Y + s * .74); ctx.stroke();
+      shp(s, () => rr(cx - s * .3, Y + s * .4, s * .54, s * .3, s * .12), "#fbf8f0");
+      ctx.save(); rr(cx - s * .3, Y + s * .4, s * .54, s * .3, s * .12); ctx.clip(); ctx.fillStyle = "#3b3330";
+      for (const [a, b, r] of [[-.16, .48, .09], [.06, .62, .08], [.14, .44, .05]]) { ctx.beginPath(); ctx.arc(cx + s * a, Y + s * b, s * r, 0, 7); ctx.fill(); } ctx.restore();
+      shp(s, () => rr(cx + s * .18, Y + s * .3, s * .2, s * .24, s * .08), "#fbf8f0");
+      shp(s, () => rr(cx + s * .22, Y + s * .44, s * .18, s * .12, s * .06), "#f2b8b0");
+      shp(s, () => { ctx.moveTo(cx + s * .2, Y + s * .32); ctx.lineTo(cx + s * .16, Y + s * .22); ctx.lineTo(cx + s * .25, Y + s * .3); }, "#efe3c4");
+      eye(.3, .37);
+    } else if (k === "horse") {
+      const c = "#9a5a2e", m = "#3a2618";
+      leg(-.22, .58, .32, c, .08, 1); leg(-.11, .58, .32, c, .08, -1); leg(.12, .58, .32, c, .08, 1); leg(.23, .58, .32, c, .08, -1);
+      shp(s, () => { ctx.moveTo(cx - s * .3, Y + s * .42); ctx.quadraticCurveTo(cx - s * .46, Y + s * .5 + step, cx - s * .4, Y + s * .74); ctx.quadraticCurveTo(cx - s * .34, Y + s * .56, cx - s * .26, Y + s * .5); ctx.closePath(); }, m);
+      shp(s, () => rr(cx - s * .32, Y + s * .38, s * .62, s * .28, s * .13), c);
+      shp(s, () => { ctx.moveTo(cx + s * .14, Y + s * .46); ctx.lineTo(cx + s * .24, Y + s * .14); ctx.lineTo(cx + s * .36, Y + s * .16); ctx.lineTo(cx + s * .32, Y + s * .46); ctx.closePath(); }, c);
+      shp(s, () => rr(cx + s * .2, Y + s * .08, s * .26, s * .14, s * .07), c);
+      shp(s, () => { ctx.moveTo(cx + s * .22, Y + s * .1); ctx.lineTo(cx + s * .26, Y); ctx.lineTo(cx + s * .3, Y + s * .1); ctx.closePath(); }, c);
+      ctx.fillStyle = m; ctx.beginPath(); ctx.moveTo(cx + s * .22, Y + s * .1); ctx.quadraticCurveTo(cx + s * .1, Y + s * .3, cx + s * .12, Y + s * .44); ctx.lineTo(cx + s * .2, Y + s * .4); ctx.lineTo(cx + s * .26, Y + s * .14); ctx.fill();
+      eye(.34, .13); ctx.fillStyle = "#5a3418"; ctx.beginPath(); ctx.arc(cx + s * .43, Y + s * .17, s * .02, 0, 7); ctx.fill();
+      if (tame) { shp(s, () => rr(cx - s * .12, Y + s * .34, s * .26, s * .12, s * .05), "#c4503c"); }
+    }
+    ctx.restore();
+    if (tame && k !== "horse") { ctx.fillStyle = "#ff7a9a"; ctx.font = `${Math.round(s * .2)}px sans-serif`; ctx.textAlign = "center"; ctx.globalAlpha = .85; ctx.fillText("♥", cx, Y + s * (k === "cat" ? .3 : .22)); ctx.globalAlpha = 1; }
+  }
   function drawAnimal(a, t) {
+    if (PETS[a.kind]) { drawBeast(a.kind, a.fx * tile, a.fy * tile, tile, a.dir, t, true, false); if (Math.hypot(a.fx - P.fx, a.fy - P.fy) < 4 && mode === "play") bubble(a.fx * tile + tile / 2, a.fy * tile + tile * .02, tile, "♥"); return; }
     const s = tile, X = a.fx * s, Y = a.fy * s, cx = X + s / 2, f = a.dir;
     if (a.kind === "rabbit") {
       const hop = Math.abs(Math.sin(t * 6 + a.fx)) * s * .06, by = Y + s * .56 - hop;
@@ -1811,14 +2255,20 @@ const FIREBASE_CONFIG = {
     const x0 = Math.max(0, Math.floor(camX / tile)), y0 = Math.max(0, Math.floor(camY / tile));
     const x1 = Math.min(W - 1, Math.ceil((camX + w) / tile)), y1 = Math.min(H - 1, Math.ceil((camY + h) / tile));
     for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) drawGround(x, y, t);
-    const people = Object.values(others).filter((o) => !o.inside).map((o) => ({ fx: o.fx, fy: o.fy, dir: o.dir, swing: o.swing, moving: o.moving, c: o.c, n: o.n, me: false }));
-    if (mode === "play") people.push({ fx: P.fx, fy: P.fy, dir: P.dir, swing: P.swing, moving: P.path.length > 0, c: me.c, n: me.name, me: true, hurt: P.hurt > 0 });
+    const vis = Object.values(others).filter((o) => !o.inside);
+    const people = vis.map((o) => ({ fx: o.fx, fy: o.fy, dir: o.dir, swing: o.swing, moving: o.moving, c: o.c, n: o.n, me: false, ride: o.pet === "horse", em: o.em, emt: o.emt }));
+    const pets = vis.filter((o) => o.pet && o.pet !== "horse" && o.px !== undefined).map((o) => ({ k: o.pet, fx: o.px, fy: o.py, dir: o.pdir, moving: o.pmov }));
+    if (mode === "play") {
+      people.push({ fx: P.fx, fy: P.fy, dir: P.dir, swing: P.swing, moving: P.path.length > 0, c: me.c, n: me.name, me: true, hurt: P.hurt > 0, ride: !!riding(), em: myEmote.e, emt: myEmote.t });
+      const ap = activePet(); if (ap && !PETS[ap.k].ride && pet.placed) pets.push({ k: ap.k, fx: pet.fx, fy: pet.fy, dir: pet.dir, moving: pet.moving, mine: true });
+    }
     const beasts = animalsNear((x0 + x1) / 2, (y0 + y1) / 2, Math.max(x1 - x0, y1 - y0) / 2 + 2);
     for (let y = y0; y <= y1; y++) {
       for (let x = x0; x <= x1; x++) drawObj(x, y, t);
       for (const a of beasts) if (Math.round(a.fy) === y) drawAnimal(a, t);
       for (const wv of wolves) if (Math.round(wv.fy) === y) drawWolf(wv, t);
-      for (const p of people) if (Math.round(p.fy) === y) { drawPerson(p, t, tile, 0, 0); if (p.hurt) { ctx.fillStyle = "rgba(255,60,40,.35)"; ctx.fillRect(p.fx * tile + tile * .3, p.fy * tile + tile * .1, tile * .4, tile * .8); } }
+      for (const q of pets) if (Math.round(q.fy) === y) drawBeast(q.k, q.fx * tile, q.fy * tile, tile, q.dir, t, q.moving, true);
+      for (const p of people) if (Math.round(p.fy) === y) { if (p.ride) { drawBeast("horse", p.fx * tile, p.fy * tile, tile, p.dir, t, p.moving, true); p.fy -= .34; } drawPerson(p, t, tile, 0, 0); if (p.ride) p.fy += .34; if (p.hurt) { ctx.fillStyle = "rgba(255,60,40,.35)"; ctx.fillRect(p.fx * tile + tile * .3, p.fy * tile + tile * .1, tile * .4, tile * .8); } }
     }
     if (S.marker && mode === "play") {
       const m = S.marker, s = tile, pulse = 2 + Math.sin(t * 6) * 1.5;
@@ -1826,7 +2276,7 @@ const FIREBASE_CONFIG = {
     }
     drawArrows();
     ctx.textAlign = "center";
-    for (const p of people) nameTag(p, p.fx * tile + tile / 2, p.fy * tile + tile * .02, tile);
+    for (const p of people) nameTag(p, p.fx * tile + tile / 2, (p.fy - (p.ride ? .34 : 0)) * tile + tile * .02, tile);
     floatersW(false, tile, 0, 0);
     ctx.restore();
     drawNight(w, h, x0, y0, x1, y1, t);
@@ -1949,7 +2399,7 @@ const FIREBASE_CONFIG = {
       $("pTillV").textContent = `${pb.till || 0} grošů`;
     }
     if (dun) {
-      $("dFloor").textContent = `Jeskyně · patro ${dun.floor}`; $("dGold").textContent = `nalezeno zlata: ${dun.runGold}`;
+      $("dFloor").textContent = dun.swamp ? "Bažina čarodějnice" : `Jeskyně · patro ${dun.floor}`; $("dGold").textContent = `nalezeno zlata: ${dun.runGold}`;
       const f = bestFood(); $("dEatT").textContent = f ? `${ITEMS[f].s} +${FOOD[f]} HP (${have(f)})` : "nemáš jídlo";
     }
     for (const [id, k] of [["fBed", "bed"], ["fTable", "table"], ["fFire", "fire"]]) $(id).setAttribute("aria-pressed", selected === k);
@@ -1980,15 +2430,25 @@ const FIREBASE_CONFIG = {
       add2(el("div", { class: "note" }, `Úroveň ${l} · zkušenosti ${me.xp}/${xpAt(l + 1)} · zdraví ${me.hp}/${maxHp()} · nejhlubší jeskyně: patro ${me.deep || 0}`));
       add2(el("div", { class: "sec" }, "Suroviny"));
       const g = el("div", { class: "grid" });
-      for (const k of Object.keys(ITEMS)) g.append(el("div", { class: "cell" }, el("span", { class: "dot", style: `background:${ITEMS[k].c}` }), ITEMS[k].n, el("b", {}, have(k))));
+      for (const k of Object.keys(ITEMS)) if (!ITEMS[k].trophy || have(k) > 0) g.append(el("div", { class: "cell" }, el("span", { class: "dot", style: `background:${ITEMS[k].c}` }), ITEMS[k].n, el("b", {}, have(k))));
       add2(g);
       add2(el("div", { class: "sec" }, "Jídlo"));
-      for (const k of ["meat", "milk", "egg"]) add2(row(ITEMS[k].n, `+${FOOD[k]} zdraví · máš ${have(k)}`, btn("Sníst", () => eat(k), { disabled: have(k) < 1 })));
+      for (const k of ["meat", "milk", "egg", "fish", "bigfish"]) if (k !== "fish" && k !== "bigfish" || have(k) > 0) add2(row(ITEMS[k].n, `+${FOOD[k]} zdraví · máš ${have(k)}`, btn("Sníst", () => eat(k), { disabled: have(k) < 1 })));
       add2(el("div", { class: "sec" }, "Výbava"));
       const slots = [["weapon", "Zbraň", "sekera (3)"], ["shield", "Štít", "nic"], ["armor", "Brnění", "nic"], ["bow", "Luk", "nic"]];
       for (const [s, n, none] of slots) { const gg = gearOf(s); add2(row(n, gg ? `${gg.name}${gg.dmg ? ` · útok ${gg.dmg}` : ""}${gg.def ? ` · obrana ${Math.round(gg.def * 100)} %` : ""}` : none)); }
       if (!gearOf("bow")) add2(row("Vyrobit luk", "Na lov zajíců a jelenů · dřevo 6", btn("Vyrobit", () => craft("bow1"), { disabled: !canPay(GEAR.bow1.cost) })));
       add2(el("div", { class: "note" }, `Nástroje: ${me.toolLvl ? TOOLS[me.toolLvl].name : "základní"}. Útok ${weaponDmg()}, obrana ${Math.round(defense() * 100)} %.`));
+      add2(el("div", { class: "sec" }, `Zvířata ${me.pets.length}/${PET_MAX}`));
+      if (!me.pets.length) add2(el("div", { class: "note" }, "Zatím žádná. Ťukni na kočku, psa, ovci, krávu nebo koně v přírodě a nakrm je: kočka chce mléko, pes maso, ovce, kráva a kůň obilí."));
+      for (const p of me.pets) {
+        const D = PETS[p.k], on = me.petOn === p.id, n = petPending(p), bs = [];
+        if (D.gives && n) bs.push(btn(`Sebrat ${n}`, () => petCollect(p)));
+        bs.push(btn(on ? "Nechat doma" : (D.ride ? "Osedlat" : "Vzít s sebou"), () => petToggle(p)));
+        bs.push(btn(sheetData.release === p.id ? "Opravdu?" : "Pustit", () => petRelease(p)));
+        add2(row(`${D.n} ${p.n}${on ? " · s tebou" : ""}`, D.perk + (D.gives ? ` · teď ${n}/5 ${ITEMS[D.gives].s}` : ""), ...bs));
+      }
+      achSection(add2);
     } else if (sheetKind === "home") {
       const lv = homeLv(o, t), up = HOME_UP[lv + 1];
       $("shTitle").textContent = HOME_NAMES[lv];
@@ -2162,6 +2622,707 @@ const FIREBASE_CONFIG = {
   let last = performance.now();
   function loop(t) { const dt = Math.min(.05, (t - last) / 1000); last = t; update(dt); draw(t); requestAnimationFrame(loop); }
   requestAnimationFrame(loop);
+  // =================== EXTRAS: emotes, weather, fishing, shrine quest, decorations, house colours ===================
+  for (const k of ["fish", "bigfish", "goldfish"]) ITEMS[k].trophy = true;
+  const xcss = document.createElement("style");
+  xcss.textContent = `
+.emoFab { position: absolute; right: 10px; bottom: 10px; z-index: 8; width: 48px; height: 48px; border-radius: 50%; font-size: 24px; cursor: pointer;
+  background: #fffaf0; border: 3px solid #2f3b2a; box-shadow: 0 4px 0 rgba(0,0,0,.3); }
+.emoFab:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,.3); }
+.emoPick { position: absolute; bottom: 66px; right: 8px; z-index: 8; display: grid; grid-template-columns: repeat(4, 44px); gap: 6px; padding: 8px;
+  background: rgba(21,32,26,.96); border: 2px solid var(--line); border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,.4); }
+.emoPick button { font-size: 24px; height: 44px; border-radius: 10px; border: 2px solid var(--line); background: var(--frame-2); cursor: pointer; }
+.emoPick button:active { transform: scale(.9); }
+.swatches { display: flex; flex-wrap: wrap; gap: 6px; }
+.swatch { width: 34px; height: 34px; border-radius: 50%; border: 3px solid #2f3b2a; cursor: pointer; box-shadow: 0 0 0 2px var(--line); }
+.swatch[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--moss); }
+.godTask { padding: 12px; border-radius: 12px; background: linear-gradient(135deg, #3a3018, #22180a); border: 2px solid #f4cf6a; color: #fff8e0; }
+.godTask .q { font-family: var(--display); font-size: 18px; margin: 4px 0 8px; }
+.godTask .pb { height: 10px; border-radius: 5px; background: rgba(0,0,0,.35); overflow: hidden; }
+.godTask .pb i { display: block; height: 100%; background: linear-gradient(90deg, #f4cf6a, #fff3b0); }`;
+  document.head.append(xcss);
+
+  // ---------- emotes and speech bubbles ----------
+  const EMOTES = ["👋", "😂", "❤️", "😮", "😡", "👍", "🍺", "🎉"];
+  const myEmote = { e: null, t: 0 };
+  {
+    const b = el("button", { class: "emoFab", id: "emoBtn", title: "Emoce", "aria-label": "Emoce" }, "💬");
+    $("cv").parentElement.append(b);
+    let pick = null;
+    b.addEventListener("click", () => {
+      if (pick) { pick.remove(); pick = null; return; }
+      pick = el("div", { class: "emoPick" }, ...EMOTES.map((e) => el("button", { "aria-label": e, on: () => { sayEmote(e); pick.remove(); pick = null; } }, e)));
+      $("cv").parentElement.append(pick);
+    });
+  }
+  function sayEmote(e) { myEmote.e = e; myEmote.t = now(); sendPos({ em: e, emt: TS() }); }
+  const _nameTag = nameTag;
+  nameTag = function (p, X, Y, s) {
+    _nameTag(p, X, Y, s);
+    if (!p.em || !p.emt) return;
+    const age = (now() - p.emt) / 1000; if (age < 0 || age > 4.5) return;
+    const sc = age < .3 ? .4 + .6 * Math.sin(age / .3 * Math.PI / 2) * 1.12 : age > 4.1 ? Math.max(0, (4.5 - age) / .4) : 1;
+    const bx = X, by = Y - s * .62 + Math.sin(age * 4) * s * .03, r = s * .36;
+    ctx.save(); ctx.translate(bx, by); ctx.scale(sc, sc);
+    ctx.fillStyle = "rgba(0,0,0,.2)"; ctx.beginPath(); ctx.roundRect(-r + 2, -r + 3, r * 2, r * 1.7, r * .5); ctx.fill();
+    ctx.fillStyle = "#fffaf0"; ctx.strokeStyle = OL; ctx.lineWidth = Math.max(1.5, s * .04);
+    ctx.beginPath(); ctx.roundRect(-r, -r, r * 2, r * 1.7, r * .5); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-r * .2, r * .7 - 1); ctx.lineTo(0, r * 1.05); ctx.lineTo(r * .25, r * .7 - 1); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#fffaf0"; ctx.fillRect(-r * .18, r * .62, r * .4, r * .12);
+    ctx.font = `${Math.round(r * 1.15)}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(p.em, 0, -r * .12); ctx.textBaseline = "alphabetic";
+    ctx.restore();
+  };
+
+  // ---------- weather: changes every 30 minutes, the same for everyone ----------
+  const WX = [
+    { k: "sun", n: "Slunečno", ic: "☀️", w: 34, d: "Krásný den." },
+    { k: "clouds", n: "Zataženo", ic: "☁️", w: 20, d: "Nic zvláštního." },
+    { k: "rain", n: "Déšť", ic: "🌧️", w: 20, d: "Pole rostou rychleji a ryby lépe berou." },
+    { k: "storm", n: "Bouřka", ic: "⛈️", w: 8, d: "Pole rostou rychleji a v bouřce bere i zlatá rybka." },
+    { k: "fog", n: "Mlha", ic: "🌫️", w: 10, d: "Není moc vidět." },
+    { k: "snow", n: "Sněžení", ic: "❄️", w: 8, d: "Pole rostou pomaleji." },
+  ];
+  const WX_MS = 30 * 60000;
+  let wxForce = null, wxLast = null;
+  function weather() {
+    if (wxForce) return WX.find((w) => w.k === wxForce);
+    const idx = Math.floor(now() / WX_MS), total = WX.reduce((a, w) => a + w.w, 0);
+    let r = hash(idx * 7 + 3, 11) * total;
+    for (const w of WX) { if ((r -= w.w) < 0) return w; }
+    return WX[0];
+  }
+  const rainy = () => { const k = weather().k; return k === "rain" || k === "storm"; };
+  const _cropGrowth = cropGrowth;
+  cropGrowth = function (i, o, v) {
+    const g = _cropGrowth(i, o, v), k = weather().k;
+    return g >= 1 ? g : Math.min(1, g * (k === "rain" || k === "storm" ? 1.3 : k === "snow" ? .8 : 1));
+  };
+  const _clockTick = clockTick;
+  clockTick = function () {
+    _clockTick();
+    const w = weather(), c = $("clock");
+    c.textContent = `${w.ic} ${c.textContent}`; c.title = `${w.n}. ${w.d} ${c.title}`;
+    if (wxLast && wxLast !== w.k && mode === "play") banner(`Počasí se mění: ${w.ic} ${w.n}. ${w.d}`, 4000);
+    wxLast = w.k;
+  };
+  function drawWeather(w, h, t) {
+    const k = weather().k;
+    if (k === "sun") { const g = ctx.createRadialGradient(0, 0, 10, 0, 0, Math.max(w, h) * .8); g.addColorStop(0, "rgba(255,230,150,.22)"); g.addColorStop(1, "rgba(255,230,150,0)"); ctx.fillStyle = g; ctx.fillRect(0, 0, w, h); return; }
+    const dark = { clouds: .12, rain: .2, storm: .32, fog: .05, snow: .1 }[k] || 0;
+    ctx.fillStyle = k === "snow" ? `rgba(200,215,235,${dark})` : `rgba(30,40,60,${dark})`; ctx.fillRect(0, 0, w, h);
+    if (k !== "fog") for (let q = 0; q < 4; q++) {
+      const cx = ((q * 260 + t * (12 + q * 4)) % (w + 600)) - 300, cy = h * (.15 + q * .23);
+      ctx.fillStyle = "rgba(0,0,0,.07)"; ctx.beginPath(); ctx.ellipse(cx, cy, 240, 90, .2, 0, 7); ctx.fill();
+    }
+    if (k === "rain" || k === "storm") {
+      const n = k === "storm" ? 220 : 130; ctx.strokeStyle = "rgba(200,220,255,.55)"; ctx.lineWidth = 1.3; ctx.beginPath();
+      for (let q = 0; q < n; q++) {
+        const sp = 600 + hash(q, 1) * 300, x = (hash(q, 2) * (w + 100) + t * 160) % (w + 100) - 50, y = (hash(q, 3) * h + t * sp) % (h + 40) - 20;
+        ctx.moveTo(x, y); ctx.lineTo(x - 5, y + 14);
+      }
+      ctx.stroke();
+      if (k === "storm") {
+        const cyc = t % 7, fl = cyc < .12 ? 1 - cyc / .12 : cyc > .25 && cyc < .32 ? .6 : 0;
+        if (fl > 0) { ctx.fillStyle = `rgba(235,240,255,${fl * .55})`; ctx.fillRect(0, 0, w, h); }
+      }
+    }
+    if (k === "snow") {
+      ctx.fillStyle = "rgba(255,255,255,.9)";
+      for (let q = 0; q < 110; q++) {
+        const sp = 30 + hash(q, 4) * 40, x = (hash(q, 5) * w + Math.sin(t * .8 + q) * 20 + w) % w, y = (hash(q, 6) * h + t * sp) % (h + 10) - 5, r = 1.2 + hash(q, 7) * 2.2;
+        ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+      }
+    }
+    if (k === "fog") {
+      ctx.fillStyle = "rgba(235,240,240,.18)"; ctx.fillRect(0, 0, w, h);
+      for (let q = 0; q < 8; q++) { const fx = ((q * 190 + t * (10 + q * 3)) % (w + 500)) - 250, fy = h * (q / 8) + 30; ctx.fillStyle = "rgba(240,245,245,.16)"; ctx.beginPath(); ctx.ellipse(fx, fy, 260, 70, 0, 0, 7); ctx.fill(); }
+    }
+  }
+  const _draw = draw;
+  draw = function (nowMs) {
+    _draw(nowMs);
+    if (room || dun || mode === "gate") return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    drawWeather(cv.width / dpr, cv.height / dpr, nowMs / 1000);
+  };
+
+  // ---------- fishing ----------
+  const _drawArrows = drawArrows;
+  drawArrows = function () {
+    _drawArrows();
+    const j = P.job; if (!j || j.kind !== "fish" || j.state === "walk" || room || dun) return;
+    const s = tile, t = performance.now() / 1000, bite = j.state === "bite";
+    const rx = P.fx * s + s / 2 + P.dir * s * .42, ry = P.fy * s + s * .12;
+    const bx = (j.x + .5) * s, by = (j.y + .5) * s + (bite ? Math.abs(Math.sin(t * 22)) * s * .12 : Math.sin(t * 2.5) * s * .03);
+    ctx.strokeStyle = "#8a5a34"; ctx.lineWidth = Math.max(2, s * .05); ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(P.fx * s + s / 2 + P.dir * s * .15, P.fy * s + s * .55); ctx.lineTo(rx, ry); ctx.stroke();
+    ctx.strokeStyle = "rgba(255,255,255,.8)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(rx, ry); ctx.quadraticCurveTo((rx + bx) / 2, Math.max(ry, by) + s * .3, bx, by - s * .06); ctx.stroke();
+    for (let q = 0; q < (bite ? 3 : 1); q++) { const ph = (t * (bite ? 2 : .7) + q / 3) % 1; ctx.strokeStyle = `rgba(255,255,255,${.6 * (1 - ph)})`; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(bx, (j.y + .5) * s + s * .04, s * (.12 + ph * .35), s * (.05 + ph * .14), 0, 0, 7); ctx.stroke(); }
+    ctx.fillStyle = "#fffaf0"; ctx.beginPath(); ctx.arc(bx, by, s * .08, 0, Math.PI); ctx.fill();
+    ctx.fillStyle = "#e0544a"; ctx.beginPath(); ctx.arc(bx, by, s * .08, Math.PI, 0); ctx.fill();
+    ctx.strokeStyle = OL; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(bx, by, s * .08, 0, 7); ctx.stroke();
+    if (bite) bubble(bx, by - s * .45, s, "!");
+  };
+  function startFishWait(j) { j.state = "wait"; j.t = (2.5 + Math.random() * 4) * (rainy() ? .6 : 1); }
+  function reel(j) {
+    const r = Math.random(), gold = weather().k === "storm" ? .12 : .04;
+    let got;
+    if (r < gold) { got = "goldfish"; add("goldfish", 1); add("coins", 40); add("gold", 2); pop(j.x, j.y, "+zlatá rybka! +40 grošů", "#ffb52a"); banner("Chytil jsi zlatou rybku! Je vzácná.", 3500); }
+    else if (r < gold + .06) { got = "boot"; addXP(1); pop(j.x, j.y, "stará bota 🥾", "#c9d2da"); }
+    else if (r < gold + .28) { got = "bigfish"; add("bigfish", 1); pop(j.x, j.y, "+velká ryba", "#4a9ad8"); }
+    else { got = "fish"; add("fish", 1); pop(j.x, j.y, "+ryba", "#7ac8ff"); }
+    if (got !== "boot") { stat("fish"); if (got === "goldfish") stat("goldfish"); addXP(got === "fish" ? 3 : 6); }
+    P.swing = .25; saveMe(); ui(); startFishWait(j);
+  }
+  const _runJob2 = runJob;
+  runJob = function (j, dt) {
+    if (j.kind !== "fish") return _runJob2(j, dt);
+    if (at(j.x, j.y) !== T.WATER) { P.job = null; return; }
+    P.dir = j.x >= P.x ? 1 : -1; S.marker = null;
+    if (j.state === "walk") { startFishWait(j); banner("Hodil jsi udici. Až zabere, rychle ťukni kamkoli.", 3000); return; }
+    j.t -= dt;
+    if (j.state === "wait" && j.t <= 0) { j.state = "bite"; j.t = 1.15; pop(j.x, j.y - .4, "Bere!", "#ffe27a"); try { navigator.vibrate && navigator.vibrate(80); } catch (e) {} }
+    else if (j.state === "bite" && j.t <= 0) { pop(j.x, j.y, "utekla…", "#9fb3a3"); startFishWait(j); }
+  };
+
+  // ---------- shrine with a daily task from the gods ----------
+  const [SX, SY] = freeNear(PLAZA[0] - 3, PLAZA[1] + 2);
+  const GODQ = [
+    { k: "tree", t: (n) => `Pokácej ${n} stromů`, g: 20, lv: 1 }, { k: "rock", t: (n) => `Rozbij ${n} kamenů`, g: 20, lv: 1 },
+    { k: "reap", t: (n) => `Sklid ${n} polí`, g: 5, lv: 1 }, { k: "fish", t: (n) => `Chyť ${n} ryb`, g: 5, lv: 1 },
+    { k: "build", t: (n) => `Postav ${n} staveb`, g: 5, lv: 1 }, { k: "hunt", t: (n) => `Ulov ${n} zvířata`, g: 3, lv: 2 },
+    { k: "wolf", t: (n) => `Zabij ${n} vlky`, g: 3, lv: 2 }, { k: "cave", t: (n) => `Navštiv jeskyni ${n}×`, g: 2, lv: 2 },
+    { k: "ore", t: (n) => `Vytěž ${n} železné rudy`, g: 5, lv: 3 }, { k: "brew", t: (n) => `Uvař ${n} piva`, g: 3, lv: 3 },
+  ];
+  const dayNo = () => Math.floor((Date.now() + 3600000) / 86400000);
+  function godQuest() {
+    const d = dayNo();
+    if (!me.godq || me.godq.day !== d) {
+      const pool = GODQ.filter((q) => q.lv <= Math.max(1, Math.min(3, level())));
+      const q = pool[Math.floor(hash(d, 77 + (me.id || "").length) * pool.length)];
+      const streak = me.godq && me.godq.claimed && me.godq.day === d - 1 ? (me.godStreak || 0) : 0;
+      me.godStreak = streak; me.godq = { day: d, k: q.k, goal: q.g, base: st(q.k), claimed: false }; saveMe();
+    }
+    const q = GODQ.find((x) => x.k === me.godq.k);
+    return { q, prog: Math.min(me.godq.goal, st(me.godq.k) - me.godq.base), ...me.godq };
+  }
+  function claimGod() {
+    const g = godQuest(); if (g.claimed || g.prog < g.goal) return;
+    me.godq.claimed = true; me.godStreak = (me.godStreak || 0) + 1;
+    const bonus = Math.min(5, me.godStreak) * 10;
+    const coins = 100 + bonus * 3; add("coins", coins); add("gold", 3); addXP(150); me.pts += 200; me.buffUntil = Math.max(Date.now(), me.buffUntil || 0) + 300000;
+    stat("god"); saveScore(); ui(); refreshSheet();
+    pop(SX, SY - 1, `+${coins} grošů`, "#f4cf6a");
+    banner(`Bohové jsou spokojeni! +${coins} grošů, +3 zlata a požehnání na 5 minut.`, 4500);
+  }
+  const _order2 = order;
+  order = function (tx, ty) {
+    const j = P.job;
+    if (j && j.kind === "fish" && j.state !== "walk" && !dun && !room) {
+      if (j.state === "bite") return reel(j);
+      if (at(tx, ty) === T.WATER || (tx === P.x && ty === P.y)) return banner("Ještě nebere, počkej…", 1200);
+      P.job = null;
+    }
+    if (!dun && !room && !selected) {
+      if (tx === SX && ty === SY) return goAdj(SX, SY, { kind: "open", what: "god", x: SX, y: SY }, "K oltáři se nedostaneš");
+      if (at(tx, ty) === T.WATER) {
+        if (!me.rod) return banner("Na ryby potřebuješ prut. Vyrobíš ho v batohu z 5 dřeva.", 3000);
+        return goAdj(tx, ty, { kind: "fish", x: tx, y: ty, state: "walk" }, "Sem nedosáhneš. Ťukni na vodu u břehu.");
+      }
+    }
+    return _order2(tx, ty);
+  };
+  const _drawObj2 = drawObj;
+  drawObj = function (x, y, t) {
+    _drawObj2(x, y, t);
+    if (x !== SX || y !== SY) return;
+    const s = tile, X = x * s, Y = y * s, cx = X + s / 2;
+    const g = ctx.createLinearGradient(0, Y - s * 2.2, 0, Y + s * .4); g.addColorStop(0, "rgba(255,230,140,0)"); g.addColorStop(1, `rgba(255,230,140,${.3 + Math.sin(t * 2) * .08})`);
+    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(cx - s * .18, Y + s * .3); ctx.lineTo(cx - s * .4, Y - s * 2.2); ctx.lineTo(cx + s * .4, Y - s * 2.2); ctx.lineTo(cx + s * .18, Y + s * .3); ctx.fill();
+    shadow(cx, Y + s * .92, s * .42);
+    shp(s, () => rr(X + s * .12, Y + s * .7, s * .76, s * .22, s * .05), "#c9d0d8");
+    shp(s, () => rr(X + s * .22, Y + s * .28, s * .56, s * .46, s * .06), "#e2e6eb");
+    ctx.strokeStyle = "#aab3bd"; ctx.lineWidth = Math.max(1, s * .025); ctx.beginPath(); ctx.moveTo(X + s * .26, Y + s * .5); ctx.lineTo(X + s * .74, Y + s * .5); ctx.stroke();
+    const fl = Math.sin(t * 2) * s * .04;
+    glow(cx, Y + s * .1 + fl, s * .6, .55);
+    shp(s, () => ctx.arc(cx, Y + s * .12 + fl, s * .15, 0, 7), "#ffe27a");
+    ctx.strokeStyle = "#f4cf6a"; ctx.lineWidth = Math.max(1.5, s * .04);
+    for (let k = 0; k < 8; k++) { const an = k / 8 * Math.PI * 2 + t * .6; ctx.beginPath(); ctx.moveTo(cx + Math.cos(an) * s * .2, Y + s * .12 + fl + Math.sin(an) * s * .2); ctx.lineTo(cx + Math.cos(an) * s * .3, Y + s * .12 + fl + Math.sin(an) * s * .3); ctx.stroke(); }
+    for (let k = 0; k < 4; k++) { const ph = (t * .4 + k / 4) % 1; ctx.fillStyle = `rgba(255,240,180,${1 - ph})`; ctx.beginPath(); ctx.arc(cx + Math.sin(k * 2 + t) * s * .35, Y + s * .6 - ph * s * 1.6, s * .03, 0, 7); ctx.fill(); }
+    if (mode === "play") { const q = godQuest(); if (!q.claimed && q.prog >= q.goal) bubble(cx, Y - s * .45 + Math.sin(t * 4) * s * .04, s, "!"); }
+  };
+
+  // ---------- decorations inside the house ----------
+  const DECOR = {
+    plant: { id: 7, cost: { wood: 2, stone: 1 }, pts: 8, name: "Květina", lbl: "Květina" },
+    rug: { id: 8, cost: { wool: 3 }, pts: 12, name: "Koberec", lbl: "Koberec" },
+    painting: { id: 9, cost: { wood: 3, gold: 1 }, pts: 15, name: "Obraz", lbl: "Obraz" },
+    lamp: { id: 10, cost: { iron: 1, wood: 2 }, pts: 12, name: "Lucerna", lbl: "Lucerna" },
+    shelf: { id: 11, cost: { wood: 8 }, pts: 15, name: "Knihovna", lbl: "Knihovna" },
+    aquarium: { id: 12, cost: { goldfish: 1, stone: 4 }, pts: 40, name: "Akvárium se zlatou rybkou", lbl: "Akvárium" },
+  };
+  Object.assign(FURN, DECOR);
+  for (const [k, d] of Object.entries(DECOR)) {
+    const b = el("button", { class: "tool", id: "fd_" + k, "aria-pressed": "false", on: () => pick(k) }, el("b", {}, d.lbl), el("span", {}, costText(d.cost)));
+    $("fExit").before(b);
+  }
+  const _ui2 = ui;
+  ui = function () {
+    _ui2();
+    for (const k of Object.keys(DECOR)) { const b = $("fd_" + k); if (b) b.setAttribute("aria-pressed", selected === k); }
+    const a = $("fd_aquarium"); if (a) a.hidden = have("goldfish") < 1;
+    $("emoBtn").hidden = $("bagBtn").hidden || !!dun;
+  };
+  function drawDecor(id, X, Y, s, t) {
+    const cx = X + s / 2;
+    if (id === 7) { shadow(cx, Y + s * .88, s * .26); shp(s, () => { ctx.moveTo(cx - s * .2, Y + s * .55); ctx.lineTo(cx + s * .2, Y + s * .55); ctx.lineTo(cx + s * .15, Y + s * .88); ctx.lineTo(cx - s * .15, Y + s * .88); ctx.closePath(); }, "#c4603c");
+      for (const [a, b, c] of [[-.14, .3, "#4fa04a"], [.12, .26, "#56a84c"], [0, .16, "#6cc160"]]) shp(s, () => ctx.ellipse(cx + s * a, Y + s * b + s * .12, s * .13, s * .2, a * 3, 0, 7), c);
+      for (const [a, b, c] of [[-.12, .22, "#ff9fb3"], [.1, .16, "#ffe36e"], [0, .06, "#ff9fb3"]]) { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(cx + s * a, Y + s * b, s * .06, 0, 7); ctx.fill(); } return; }
+    if (id === 8) { shp(s, () => rr(X + s * .04, Y + s * .14, s * .92, s * .72, s * .1), "#b8443c"); shp(s, () => rr(X + s * .14, Y + s * .24, s * .72, s * .52, s * .06), "#e0a45a");
+      ctx.fillStyle = "#b8443c"; ctx.beginPath(); ctx.moveTo(cx, Y + s * .32); ctx.lineTo(cx + s * .2, Y + s * .5); ctx.lineTo(cx, Y + s * .68); ctx.lineTo(cx - s * .2, Y + s * .5); ctx.fill(); return; }
+    if (id === 9) { shp(s, () => rr(X + s * .1, Y + s * .1, s * .8, s * .62, s * .04), "#c79d34"); ctx.fillStyle = "#8fd0f0"; ctx.fillRect(X + s * .18, Y + s * .18, s * .64, s * .46);
+      ctx.fillStyle = "#6cc160"; ctx.beginPath(); ctx.moveTo(X + s * .18, Y + s * .64); ctx.quadraticCurveTo(cx - s * .1, Y + s * .36, cx + s * .1, Y + s * .5); ctx.quadraticCurveTo(X + s * .74, Y + s * .38, X + s * .82, Y + s * .5); ctx.lineTo(X + s * .82, Y + s * .64); ctx.fill();
+      ctx.fillStyle = "#ffe27a"; ctx.beginPath(); ctx.arc(X + s * .7, Y + s * .3, s * .07, 0, 7); ctx.fill(); return; }
+    if (id === 10) { glow(cx, Y + s * .4, s * .9, .45 + Math.sin(t * 5) * .05); shadow(cx, Y + s * .9, s * .2); shp(s, () => rr(cx - s * .04, Y + s * .5, s * .08, s * .4, s * .02), "#5f6770");
+      shp(s, () => rr(cx - s * .16, Y + s * .14, s * .32, s * .38, s * .08), "#ffe9a8"); ctx.strokeStyle = "#5f6770"; ctx.lineWidth = Math.max(1, s * .03); ctx.beginPath(); ctx.moveTo(cx, Y + s * .14); ctx.lineTo(cx, Y + s * .52); ctx.stroke();
+      shp(s, () => { ctx.moveTo(cx - s * .2, Y + s * .16); ctx.lineTo(cx, Y + s * .02); ctx.lineTo(cx + s * .2, Y + s * .16); ctx.closePath(); }, "#5f6770"); return; }
+    if (id === 11) { shadow(cx, Y + s * .94, s * .44); shp(s, () => rr(X + s * .08, Y - s * .2, s * .84, s * 1.1, s * .05), "#8a5a34");
+      const cols = ["#e0544a", "#4f73a8", "#f2cf5c", "#56a84c", "#c47ad9", "#e0a45a"];
+      for (let r = 0; r < 3; r++) { ctx.fillStyle = "#6b4428"; ctx.fillRect(X + s * .14, Y - s * .12 + r * s * .34, s * .72, s * .28); for (let k = 0; k < 6; k++) { ctx.fillStyle = cols[(k + r * 2) % 6]; ctx.fillRect(X + s * (.16 + k * .115), Y - s * .1 + r * s * .34 + (k % 3) * s * .02, s * .09, s * .26 - (k % 3) * s * .02); } }
+      return; }
+    if (id === 12) { shadow(cx, Y + s * .92, s * .42); shp(s, () => rr(X + s * .1, Y + s * .66, s * .8, s * .24, s * .04), "#8a5a34");
+      shp(s, () => rr(X + s * .1, Y + s * .14, s * .8, s * .54, s * .08), "rgba(140,210,240,.75)"); ctx.fillStyle = "#3f8a5a"; for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.ellipse(X + s * (.2 + k * .1), Y + s * .56, s * .03, s * .12, Math.sin(t * 2 + k) * .3, 0, 7); ctx.fill(); }
+      const fx = cx + Math.sin(t * 1.3) * s * .22, f = Math.cos(t * 1.3) > 0 ? 1 : -1;
+      ctx.fillStyle = "#ffb52a"; ctx.beginPath(); ctx.ellipse(fx, Y + s * .4, s * .08, s * .05, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.moveTo(fx - f * s * .06, Y + s * .4); ctx.lineTo(fx - f * s * .13, Y + s * .35); ctx.lineTo(fx - f * s * .13, Y + s * .45); ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,.7)"; const ph = (t * .6) % 1; ctx.beginPath(); ctx.arc(fx + f * s * .1, Y + s * (.36 - ph * .2), s * .02, 0, 7); ctx.fill(); return; }
+  }
+  const _drawFurniture2 = drawFurniture;
+  drawFurniture = function (id, X, Y, s, t) { if (id >= 7 && id <= 12) return drawDecor(id, X, Y, s, t); return _drawFurniture2(id, X, Y, s, t); };
+
+  // ---------- sheets: house colours, fishing rod, shrine ----------
+  const ROOFS = ["#e0654e", "#4f73a8", "#6b4428", "#56a84c", "#c47ad9", "#f2b93a", "#2f3b4a", "#e88aa8"];
+  const WALLS = ["#d9a46c", "#ece6da", "#f3ead6", "#d6dbe1", "#c9b08a", "#b8d8e8", "#f2c4c4"];
+  function paintHome(i, field, color) {
+    const o = tiles[i]; if (!o || !mine(o)) return;
+    claim(i, (e, cur) => isHome(e) && cur && mine(cur), Object.assign({}, o, { [field]: color }), (ok) => { if (!ok) return banner("Nepovedlo se, zkus to znovu"); refreshSheet(); });
+  }
+  const _refresh2 = refreshSheet;
+  refreshSheet = function () {
+    if (sheetKind === "god") {
+      $("shTitle").textContent = "Oltář bohů"; const body = $("shBody"); body.innerHTML = "";
+      const g = godQuest(), done = g.prog >= g.goal;
+      body.append(el("div", { class: "note" }, "Bohyně Mokoš dává každý den jeden úkol. Když ho splníš, dostaneš zlato, zkušenosti a požehnání. Plň úkoly každý den a odměna poroste."),
+        el("div", { class: "godTask" }, el("div", { style: "font-size:12px;letter-spacing:.1em;color:#f4cf6a" }, "✨ DNEŠNÍ ÚKOL"), el("div", { class: "q" }, g.q.t(g.goal)),
+          el("div", { class: "pb" }, el("i", { style: `width:${g.prog / g.goal * 100}%` })), el("div", { style: "font-size:12px;margin-top:6px;color:#e8d9a8" }, `${g.prog}/${g.goal} · odměna ${100 + Math.min(5, (me.godStreak || 0) + 1) * 30} grošů + 3 zlata · požehnání 5 min`)),
+        row(g.claimed ? "Splněno, přijď zítra" : done ? "Úkol je splněný!" : "Ještě to není hotové", `Řada splněných dní: ${me.godStreak || 0}`, btn(g.claimed ? "Hotovo" : "Přijmout odměnu", claimGod, { disabled: g.claimed || !done })));
+      return;
+    }
+    _refresh2();
+    const body = $("shBody"), add2 = (...n) => body.append(...n);
+    if (sheetKind === "home") {
+      const i = sheetData.i, o = tiles[i]; if (!o || !mine(o)) return;
+      add2(el("div", { class: "sec" }, "Barva střechy"));
+      add2(el("div", { class: "swatches" }, ...ROOFS.map((c) => el("button", { class: "swatch", style: `background:${c}`, "aria-label": "barva střechy", "aria-pressed": String(o.rc === c), on: () => paintHome(i, "rc", c) }))));
+      add2(el("div", { class: "sec" }, "Barva zdí"));
+      add2(el("div", { class: "swatches" }, ...WALLS.map((c) => el("button", { class: "swatch", style: `background:${c}`, "aria-label": "barva zdí", "aria-pressed": String(o.wc === c), on: () => paintHome(i, "wc", c) }))));
+    } else if (sheetKind === "bag") {
+      add2(el("div", { class: "sec" }, "Rybaření"));
+      if (!me.rod) add2(row("Rybářský prut", "Ťukni pak na vodu u břehu · dřevo 5", btn("Vyrobit", () => { if (have("wood") < 5) return banner("Potřebuješ 5 dřeva"); add("wood", -5); me.rod = true; saveMe(); ui(); refreshSheet(); banner("Máš prut! Ťukni na vodu u břehu."); }, { disabled: have("wood") < 5 })));
+      else add2(el("div", { class: "note" }, `Máš prut. Ťukni na vodu u břehu, počkej až zabere a pak rychle ťukni. Teď: ${weather().ic} ${weather().n} – ${weather().d}`));
+    }
+  };
+
+  ACH.push(
+    { id: "fish", ic: "🎣", n: "Rybář", d: "Chyť 10 ryb", goal: 10, v: () => st("fish"), gold: 20 },
+    { id: "goldfish", ic: "🐠", n: "Zlatá rybka", d: "Chyť zlatou rybku", goal: 1, v: () => st("goldfish"), gold: 30, secret: true },
+    { id: "god", ic: "✨", n: "Vyvolený", d: "Splň 5 úkolů od bohů", goal: 5, v: () => st("god"), gold: 60 },
+  );
+  Object.assign(PATCH_COL, { fish: ["#1e4a6b", "#7ac8ff"], goldfish: ["#1e4a6b", "#ffb52a"], god: ["#4a3a18", "#fff3b0"] });
+  // =================== BOSS PROTOTYPE: swamp witch (test version only) ===================
+  ENEMY.witch = { name: "Bažinná čarodějnice", hp: 900, hpF: 0, dmg: 12, dmgF: 0, step: 99 };
+  ENEMY.crow = { name: "Havran", hp: 8, hpF: 0, dmg: 4, dmgF: 0, step: .28 };
+  function makeSwamp() {
+    const w = 25, h = 25, cx = 12, cy = 12, g = new Uint8Array(w * h), r = rng(4242), deco = new Uint8Array(w * h);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const n = Math.sin(x * 1.3 + y * .7) * .06 + Math.cos(y * 1.1 - x * .5) * .06;
+      if (Math.hypot((x - cx) / 10.2, (y - cy + 1) / 9.6) + n < 1) g[y * w + x] = 1;
+    }
+    for (let y = cy + 6; y < h - 1; y++) { g[y * w + cx] = 1; g[y * w + cx - 1] = 1; deco[y * w + cx] = deco[y * w + cx - 1] = 1; }
+    const home = [cx, 7], keep = (x, y) => Math.hypot(x - home[0], y - home[1]) < 3.2 || (Math.abs(x - cx + .5) < 2.5 && y > cy + 2);
+    for (const [px, py, pr] of [[5.5, 11, 2.4], [18.5, 9.5, 2.2], [17, 16.5, 2], [7, 17.5, 1.8]])
+      for (let y = py - 3; y <= py + 3; y++) for (let x = px - 3; x <= px + 3; x++)
+        if (g[y * w + x] === 1 && !keep(x, y) && Math.hypot(x - px, y - py) < pr) g[y * w + x] = 2;
+    for (let k = 0, n = 0; k < 80 && n < 9; k++) {
+      const x = 2 + Math.floor(r() * (w - 4)), y = 2 + Math.floor(r() * (h - 4));
+      if (g[y * w + x] !== 1 || keep(x, y) || deco[y * w + x]) continue;
+      g[y * w + x] = 3; n++;
+    }
+    for (let y = 4; y <= 10; y++) for (let x = cx - 3; x <= cx + 3; x++) if (Math.hypot(x - home[0], y - home[1]) < 3.2) g[y * w + x] = 1;
+    g[home[1] * w + home[0] + 2] = 4;
+    // two extra rows of swamp water on top so the witch's tall hat always fits on screen
+    const TOP = 3, H2 = h + TOP, g2 = new Uint8Array(w * H2), deco2 = new Uint8Array(w * H2);
+    g2.set(g, w * TOP); deco2.set(deco, w * TOP); home[1] += TOP;
+    return finishSwamp(w, H2, g2, deco2, home, [cx, h - 3 + TOP]);
+  }
+  function finishSwamp(w, h, g, deco, home, ladder) {
+    const hp = ENEMY.witch.hp;
+    const d = { swamp: true, cave: -1, floor: 5, w, h, g, deco, rooms: [], ladder, stairs: [-9, -9], chests: [], seen: new Uint8Array(w * h).fill(1), runGold: 0,
+      home, cauldron: [home[0] + 2, home[1]], shots: [], puddles: [], puffs: [], won: false, intro: 2.5,
+      enemies: [{ type: "witch", x: home[0], y: home[1], fx: home[0], fy: home[1], hp, max: hp, cd: 2, step: 99, dir: 1, throwCd: 3, summonCd: 6, tpCd: 7, cast: 0 }] };
+    return d;
+  }
+  function enterSwamp() {
+    stat("swamp");
+    if (room) exitHouse();
+    if (!dun) caveReturn = [P.x, P.y];
+    dun = makeSwamp();
+    P.x = dun.ladder[0]; P.y = dun.home[1] + 6; P.fx = P.x; P.fy = P.y; P.path = []; P.job = null; S.marker = null; selected = null; wolves = [];
+    camX = P.fx * tile; camY = P.fy * tile; closeSheet(); ui();
+    banner("Bažina čarodějnice. Pozor na její lektvary a havrany!", 4500);
+  }
+  const witchOf = (d) => d.enemies.find((e) => e.type === "witch");
+  const swampFloor = (d, x, y) => x >= 0 && y >= 0 && x < d.w && y < d.h && d.g[y * d.w + x] === 1;
+  const _updateDungeon = updateDungeon;
+  updateDungeon = function (dt) {
+    const d = dun;
+    if (!d.swamp) return _updateDungeon(dt);
+    const W0 = witchOf(d);
+    if (d.intro > 0) d.intro -= dt;
+    // witch never walks: she throws, summons and teleports
+    if (W0.hp > 0) {
+      W0.step = 99; const fr = W0.hp / W0.max, phase = fr > .66 ? 1 : fr > .33 ? 2 : 3;
+      if (phase !== d.phase) { if (d.phase) banner(phase === 2 ? "Čarodějnice volá havrany!" : "Čarodějnice zuří a mizí v mlze!", 2500); d.phase = phase; }
+      W0.dir = P.fx >= W0.fx ? 1 : -1; W0.cast = Math.max(0, W0.cast - dt);
+      W0.throwCd -= dt;
+      if (W0.throwCd <= 0 && d.intro <= 0) {
+        W0.throwCd = phase === 3 ? 1.6 : phase === 2 ? 2.4 : 3; W0.cast = .5;
+        const tx = P.x + (phase === 3 ? Math.round((Math.random() - .5) * 2) : 0), ty = P.y;
+        d.shots.push({ x0: W0.fx + .3 * W0.dir, y0: W0.fy - 1.6, tx, ty, t: 0, dur: .9 });
+      }
+      if (phase >= 2) {
+        W0.summonCd -= dt;
+        if (W0.summonCd <= 0 && d.enemies.filter((e) => e.type === "crow" && e.hp > 0).length < 3) {
+          W0.summonCd = 9; W0.cast = .7;
+          for (const [ox, oy] of [[-1, 1], [1, 1]]) { const x = W0.x + ox, y = W0.y + oy; if (swampFloor(d, x, y)) d.enemies.push({ type: "crow", x, y, fx: W0.fx, fy: W0.fy - 1.4, hp: 8, max: 8, cd: 1, step: .3, dir: 1 }); }
+        }
+      }
+      if (phase === 3) {
+        W0.tpCd -= dt;
+        if (W0.tpCd <= 0) {
+          W0.tpCd = 6;
+          for (let k = 0; k < 40; k++) {
+            const x = 3 + Math.floor(Math.random() * (d.w - 6)), y = 3 + Math.floor(Math.random() * (d.h - 8));
+            if (!swampFloor(d, x, y) || Math.hypot(x - P.x, y - P.y) < 3 || enemyAt(x, y)) continue;
+            d.puffs.push({ x: W0.fx, y: W0.fy, t: 0 }); W0.x = x; W0.y = y; W0.fx = x; W0.fy = y; d.puffs.push({ x, y, t: 0 }); break;
+          }
+        }
+      }
+    }
+    // potions in the air and poison puddles
+    for (const s of d.shots) { s.t += dt; if (s.t >= s.dur && !s.done) { s.done = true; d.puddles.push({ x: s.tx, y: s.ty, life: 6, cd: 0 }); d.puffs.push({ x: s.tx, y: s.ty, t: 0, splash: true }); } }
+    d.shots = d.shots.filter((s) => !s.done);
+    for (const p of d.puddles) {
+      p.life -= dt; p.cd -= dt;
+      if (Math.abs(P.x - p.x) + Math.abs(P.y - p.y) <= 1 && p.cd <= 0) { p.cd = .7; hurt(4); if (!dun) return; }
+    }
+    d.puddles = d.puddles.filter((p) => p.life > 0);
+    for (const f of d.puffs) f.t += dt; d.puffs = d.puffs.filter((f) => f.t < .8);
+    _updateDungeon(dt);
+  };
+  const _orderDungeon = orderDungeon;
+  orderDungeon = function (tx, ty) {
+    const d = dun, wi = d && d.swamp && witchOf(d);
+    if (wi && wi.hp > 0 && Math.abs(tx - wi.x) <= 1 && ty <= wi.y && ty >= wi.y - 2) { P.job = { kind: "fightE", ref: wi }; P.path = []; return; }
+    return _orderDungeon(tx, ty);
+  };
+  const _strike = strike;
+  strike = function (target, isWolf) {
+    const done = _strike(target, isWolf);
+    if (!isWolf) target.hitT = performance.now() / 1000;
+    if (done && dun && dun.swamp && target.type === "witch" && !dun.won) {
+      const d = dun; d.won = true; d.shots = []; d.puddles = [];
+      for (const e of d.enemies) e.hp = 0;
+      stat("witch"); add("coins", 600); add("gold", 50); d.runGold += 50; add("witchStatue", 1); addXP(600); me.pts += 1000; saveScore(); ui();
+      pop(target.x, target.y - 1, "+600 grošů +50 zlata", "#ffd84a");
+      banner("Bažinná čarodějnice je poražena! +600 grošů, +50 zlata a soška čarodějnice. Postav si ji doma: vejdi do domu a dole vyber Soška.", 7000);
+    }
+    return done;
+  };
+
+  // ---------- drawing ----------
+  function gl(x, y, r, rgb, a) { const g = ctx.createRadialGradient(x, y, 1, x, y, r); g.addColorStop(0, `rgba(${rgb},${a})`); g.addColorStop(1, `rgba(${rgb},0)`); ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2); }
+  const wl = () => Math.max(1.5, tile * .05);
+  function ws(fn, fill, stroke = OL) { ctx.beginPath(); fn(); ctx.fillStyle = fill; ctx.fill(); ctx.lineWidth = wl(); ctx.strokeStyle = stroke; ctx.lineJoin = "round"; ctx.lineCap = "round"; ctx.stroke(); }
+  function drawCrowAt(x, y, s, flip, t) {
+    const fl = Math.sin(t * 18) * .5;
+    ctx.save(); ctx.translate(x, y); ctx.scale(flip, 1);
+    ws(() => { ctx.moveTo(-s * .02, 0); ctx.quadraticCurveTo(-s * .2, -s * (.18 + fl * .2), -s * .32, -s * .05 * fl); ctx.quadraticCurveTo(-s * .16, s * .02, -s * .02, s * .04); ctx.closePath(); }, "#2a2a33");
+    ws(() => ctx.ellipse(0, 0, s * .14, s * .1, 0, 0, 7), "#22222a"); ws(() => ctx.arc(s * .12, -s * .08, s * .07, 0, 7), "#22222a");
+    ws(() => { ctx.moveTo(s * .18, -s * .1); ctx.lineTo(s * .28, -s * .06); ctx.lineTo(s * .18, -s * .04); ctx.closePath(); }, "#f2b93a");
+    ctx.fillStyle = "#ffd84a"; ctx.beginPath(); ctx.arc(s * .135, -s * .095, s * .02, 0, 7); ctx.fill();
+    ctx.restore();
+  }
+  function drawCauldron(cx, by, s, t) {
+    gl(cx, by - s * .3, s * .7, "200,120,255", .45 + Math.sin(t * 3) * .08);
+    gl(cx, by + s * .02, s * .35, "255,140,40", .7 + Math.sin(t * 11) * .1);
+    ctx.fillStyle = "rgba(0,0,0,.3)"; ctx.beginPath(); ctx.ellipse(cx, by, s * .45, s * .12, 0, 0, 7); ctx.fill();
+    for (const a of [-.25, .25]) ws(() => rr(cx + s * a - s * .04, by - s * .14, s * .08, s * .14, s * .02), "#2a2e34");
+    ws(() => ctx.ellipse(cx, by - s * .3, s * .4, s * .3, 0, 0, 7), "#3a3f46");
+    ws(() => ctx.ellipse(cx, by - s * .52, s * .38, s * .09, 0, 0, 7), "#b96ae0");
+    ctx.fillStyle = "#e6b8ff";
+    for (let k = 0; k < 4; k++) { const ph = (t * .8 + k * .27) % 1; ctx.globalAlpha = 1 - ph; ctx.beginPath(); ctx.arc(cx + s * (-.2 + k * .13), by - s * (.55 + ph * .6), s * (.04 + ph * .04), 0, 7); ctx.fill(); }
+    ctx.globalAlpha = 1;
+  }
+  function drawDeadTree(X, Y, s, t, k) {
+    ctx.fillStyle = "rgba(0,0,0,.28)"; ctx.beginPath(); ctx.ellipse(X + s * .5, Y + s * .9, s * .4, s * .12, 0, 0, 7); ctx.fill();
+    const sw = Math.sin(t * .8 + k) * s * .02;
+    ws(() => { ctx.moveTo(X + s * .36, Y + s * .92); ctx.quadraticCurveTo(X + s * .44, Y + s * .2, X + s * .4 + sw, Y - s * .5); ctx.lineTo(X + s * .5 + sw, Y - s * .5); ctx.quadraticCurveTo(X + s * .58, Y + s * .2, X + s * .66, Y + s * .92); ctx.closePath(); }, "#6b5a48");
+    ctx.strokeStyle = OL; ctx.lineWidth = wl() * 2.2; ctx.lineCap = "round";
+    const br = [[.45, -.1, .1, -.45], [.5, .1, .9, -.2], [.44, -.3, .7, -.7]];
+    for (const [a, b, c2, d2] of br) { ctx.beginPath(); ctx.moveTo(X + s * a + sw, Y + s * b); ctx.quadraticCurveTo(X + s * ((a + c2) / 2), Y + s * (b - .2), X + s * c2 + sw, Y + s * d2); ctx.stroke(); }
+    ctx.strokeStyle = "#6b5a48"; ctx.lineWidth = wl() * .9;
+    for (const [a, b, c2, d2] of br) { ctx.beginPath(); ctx.moveTo(X + s * a + sw, Y + s * b); ctx.quadraticCurveTo(X + s * ((a + c2) / 2), Y + s * (b - .2), X + s * c2 + sw, Y + s * d2); ctx.stroke(); }
+    ctx.fillStyle = "rgba(120,150,90,.8)"; for (const [a, b] of [[.3, -.3], [.7, -.05]]) { ctx.beginPath(); ctx.ellipse(X + s * a + sw, Y + s * b, s * .05, s * .14, 0, 0, 7); ctx.fill(); }
+  }
+  // E3: big moss hat, dark face with violet eyes, ragged cloak, crow on the hat
+  function drawWitch(e, t) {
+    const s = tile * 2.7, footX = e.fx * tile + tile / 2, footY = e.fy * tile + tile * .95;
+    const X = footX - s / 2 + s * .08, Y = footY - s * .95, cx = X + s / 2 - s * .08, f = e.dir;
+    const hurtT = e.hitT ? Math.max(0, .2 - (performance.now() / 1000 - e.hitT)) : 0;
+    gl(cx, Y + s * .55, s * .7, "160,90,220", .18);
+    ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.beginPath(); ctx.ellipse(footX, footY, s * .3, s * .08, 0, 0, 7); ctx.fill();
+    ctx.save(); ctx.translate(cx, 0); ctx.scale(f, 1); ctx.translate(-cx, Math.sin(t * 1.6) * s * .01);
+    const fl = Math.sin(t * 3) * s * .015;
+    ws(() => { ctx.moveTo(cx - s * .1, Y + s * .42); ctx.quadraticCurveTo(cx - s * .32, Y + s * .7, cx - s * .26 - fl, Y + s * .95); ctx.quadraticCurveTo(cx, Y + s * .99, cx + s * .18 + fl, Y + s * .95); ctx.quadraticCurveTo(cx + s * .18, Y + s * .6, cx + s * .12, Y + s * .44); ctx.closePath(); }, "#3e4a30");
+    ctx.strokeStyle = "#2c3522"; ctx.lineWidth = wl() * .8;
+    for (const a of [-.18, -.06, .06]) { ctx.beginPath(); ctx.moveTo(cx + s * a, Y + s * .94); ctx.lineTo(cx + s * (a + .03), Y + s * .86); ctx.lineTo(cx + s * (a + .06), Y + s * .94); ctx.stroke(); }
+    ctx.fillStyle = "#5aa04a"; for (const [a, b, r] of [[-.16, .62, .05], [.06, .76, .045], [-.08, .86, .04]]) { ctx.beginPath(); ctx.ellipse(cx + s * a, Y + s * b, s * r, s * r * .5, .6, 0, 7); ctx.fill(); }
+    // arm: raised while casting
+    const up = e.cast > 0 ? 1 : 0;
+    ctx.save(); ctx.translate(cx + s * .1, Y + s * .5); ctx.rotate(up ? -2.2 : -.5);
+    ws(() => rr(-s * .035, -s * .02, s * .07, s * .22, s * .035), "#3e4a30"); ws(() => ctx.arc(0, s * .23, s * .04, 0, 7), "#8f9a7a");
+    if (up) { gl(0, s * .28, s * .12, "210,140,255", .8); ws(() => rr(-s * .03, s * .24, s * .06, s * .08, s * .02), "#b96ae0"); }
+    ctx.restore();
+    ctx.fillStyle = "#15120c"; ctx.beginPath(); ctx.ellipse(cx, Y + s * .38, s * .15, s * .15, 0, 0, 7); ctx.fill(); ctx.strokeStyle = OL; ctx.lineWidth = wl(); ctx.stroke();
+    const blink = (t % 4) < .12 ? .2 : 1;
+    ctx.fillStyle = "#d58cff"; for (const d2 of [-.05, .05]) { ctx.beginPath(); ctx.ellipse(cx + s * d2, Y + s * .38, s * .03, s * .018 * blink, 0, 0, 7); ctx.fill(); }
+    gl(cx, Y + s * .38, s * .12, "210,140,255", .35);
+    ctx.fillStyle = "#c9c4bb"; ctx.beginPath(); ctx.moveTo(cx - s * .14, Y + s * .3); ctx.quadraticCurveTo(cx - s * .28, Y + s * .5 + fl, cx - s * .2, Y + s * .64); ctx.lineTo(cx - s * .08, Y + s * .42); ctx.fill(); ctx.strokeStyle = OL; ctx.stroke();
+    const top = Y - s * .26;
+    ws(() => ctx.ellipse(cx, top + s * .52, s * .36, s * .08, 0, 0, 7), "#3a3a2c");
+    ws(() => { ctx.moveTo(cx - s * .2, top + s * .5); ctx.quadraticCurveTo(cx - s * .08, top + s * .2, cx + s * .3, top + Math.sin(t * 2) * s * .01); ctx.quadraticCurveTo(cx + s * .06, top + s * .25, cx + s * .2, top + s * .5); ctx.closePath(); }, "#3a3a2c");
+    ws(() => { ctx.moveTo(cx - s * .19, top + s * .44); ctx.quadraticCurveTo(cx, top + s * .4, cx + s * .19, top + s * .44); ctx.lineTo(cx + s * .2, top + s * .5); ctx.quadraticCurveTo(cx, top + s * .46, cx - s * .2, top + s * .5); ctx.closePath(); }, "#6fae3e");
+    ctx.fillStyle = "#6fae3e"; for (const [a, b, r] of [[-.24, .22, .045], [.22, .24, .04], [.06, .14, .035]]) { ctx.beginPath(); ctx.ellipse(cx + s * a, Y + s * b, s * r, s * r * .5, .6, 0, 7); ctx.fill(); }
+    ws(() => rr(cx + s * .1 - s * .01, Y - s * .02, s * .025, s * .05, s * .01), "#f3ead6"); ws(() => ctx.ellipse(cx + s * .112, Y - s * .02, s * .045, s * .028, 0, Math.PI, 0), "#e0544a");
+    if (!dun.phase || dun.phase === 1) drawCrowAt(cx + s * .22, Y - s * .2, s * .9, 1, 0);
+    ctx.restore();
+    if (hurtT > 0) { ctx.fillStyle = `rgba(255,255,255,${hurtT * 2.5})`; ctx.beginPath(); ctx.ellipse(footX, footY - s * .45, s * .3, s * .5, 0, 0, 7); ctx.fill(); }
+  }
+  const _drawDungeon = drawDungeon;
+  drawDungeon = function (w, h, t) {
+    const d = dun;
+    if (!d.swamp) return _drawDungeon(w, h, t);
+    ctx.fillStyle = "#1b2a22"; ctx.fillRect(0, 0, w, h);
+    camera(w, h, d.w, d.h);
+    ctx.save(); ctx.translate(-Math.round(camX), -Math.round(camY));
+    const s = tile, x0 = Math.max(0, Math.floor(camX / s) - 1), y0 = Math.max(0, Math.floor(camY / s) - 1);
+    const x1 = Math.min(d.w - 1, Math.ceil((camX + w) / s) + 1), y1 = Math.min(d.h - 1, Math.ceil((camY + h) / s) + 2);
+    const G = (x, y) => x < 0 || y < 0 || x >= d.w || y >= d.h ? 0 : d.g[y * d.w + x];
+    // ground
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+      const v = G(x, y), X = x * s, Y = y * s, r = hash(x + 50, y + 50);
+      if (v === 0) {
+        ctx.fillStyle = "#2c4a3c"; ctx.fillRect(X, Y, s, s);
+        ctx.fillStyle = "rgba(255,255,255,.05)"; const o = Math.sin(t * .7 + x + y) * s * .1; ctx.beginPath(); ctx.ellipse(X + s * .5 + o, Y + s * .5, s * .3, s * .08, 0, 0, 7); ctx.fill();
+        if (r > .78) { ws(() => ctx.ellipse(X + s * .5, Y + s * .5, s * .22, s * .14, 0, .5, 6.6), "#5c8f4a"); }
+        continue;
+      }
+      if (v === 2) {
+        ctx.fillStyle = "#56683a"; ctx.fillRect(X, Y, s, s);
+        const L = G(x - 1, y) !== 2, R = G(x + 1, y) !== 2, U = G(x, y - 1) !== 2, D = G(x, y + 1) !== 2, ins = s * .14, rad = s * .4;
+        ctx.fillStyle = "#3d6650"; rr(X + (L ? ins : 0), Y + (U ? ins : 0), s - (L ? ins : 0) - (R ? ins : 0), s - (U ? ins : 0) - (D ? ins : 0), [L && U ? rad : 0, R && U ? rad : 0, R && D ? rad : 0, L && D ? rad : 0]); ctx.fill();
+        const ph = (t * .5 + r * 3) % 1; ctx.strokeStyle = `rgba(200,230,180,${.5 - ph * .5})`; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(X + s * (.3 + r * .4), Y + s * (.4 + r * .2), s * ph * .2, 0, 7); ctx.stroke();
+        if (r > .6) { ctx.fillStyle = "#6a9a4c"; ctx.beginPath(); ctx.ellipse(X + s * .3, Y + s * .65, s * .12, s * .07, 0, .5, 6.6); ctx.fill(); }
+        continue;
+      }
+      ctx.fillStyle = "#56683a"; ctx.fillRect(X, Y, s, s);
+      if (r > .55) { ctx.fillStyle = "#4b5c32"; ctx.beginPath(); ctx.ellipse(X + s * (.3 + r * .4), Y + s * .5, s * .3, s * .14, 0, 0, 7); ctx.fill(); }
+      if (r < .15) { ctx.fillStyle = "#6b5c3c"; ctx.beginPath(); ctx.ellipse(X + s * .5, Y + s * .6, s * .28, s * .12, 0, 0, 7); ctx.fill(); }
+      if (d.deco[y * d.w + x]) { ctx.fillStyle = "#8a6a44"; ctx.fillRect(X, Y + s * .1, s, s * .8); ctx.strokeStyle = "#5e4630"; ctx.lineWidth = Math.max(1, s * .03); for (let k = 1; k < 4; k++) { ctx.beginPath(); ctx.moveTo(X, Y + s * (.1 + k * .2)); ctx.lineTo(X + s, Y + s * (.1 + k * .2)); ctx.stroke(); } }
+      // reeds at the water's edge
+      if (G(x, y + 1) === 0 || G(x - 1, y) === 0 || G(x + 1, y) === 0) {
+        ctx.strokeStyle = "#7a9a4a"; ctx.lineWidth = Math.max(1, s * .035);
+        for (const a of [.2, .5, .78]) { const sw = Math.sin(t * 1.5 + x + a * 5) * s * .04; ctx.beginPath(); ctx.moveTo(X + s * a, Y + s * .95); ctx.quadraticCurveTo(X + s * a, Y + s * .6, X + s * a + sw, Y + s * .45); ctx.stroke(); }
+        ctx.fillStyle = "#6b4a2a"; ctx.beginPath(); ctx.ellipse(X + s * .5 + Math.sin(t * 1.5 + x + 2.5) * s * .04, Y + s * .45, s * .035, s * .09, 0, 0, 7); ctx.fill();
+      }
+    }
+    // poison puddles
+    for (const p of d.puddles) {
+      const a = Math.min(1, p.life / 1.5), X = p.x * s + s / 2, Y = p.y * s + s / 2;
+      gl(X, Y, s * 1.6, "190,100,255", .35 * a);
+      ctx.globalAlpha = a; ctx.fillStyle = "rgba(150,70,210,.55)"; ctx.beginPath(); ctx.ellipse(X, Y + s * .1, s * 1.3, s * .75, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = "#e6b8ff"; for (let k = 0; k < 3; k++) { const ph = (t * 1.2 + k * .33) % 1; ctx.beginPath(); ctx.arc(X + s * (k - 1) * .5, Y - ph * s * .4, s * .05 * (1 - ph), 0, 7); ctx.fill(); }
+      ctx.globalAlpha = 1;
+    }
+    // exit sign by the ladder
+    { const [lx, ly] = d.ladder, X = lx * s, Y = ly * s; ws(() => rr(X + s * .45, Y + s * .1, s * .1, s * .8, s * .03), "#8a5a34"); ws(() => rr(X + s * .1, Y + s * .08, s * .8, s * .3, s * .06), "#c08a52"); ctx.fillStyle = OL; ctx.font = `700 ${Math.round(s * .2)}px "Pixelify Sans", monospace`; ctx.textAlign = "center"; ctx.fillText("VEN", X + s * .5, Y + s * .3); }
+    if (S.marker) { const m = S.marker; ctx.strokeStyle = "rgba(255,240,180,.85)"; ctx.lineWidth = Math.max(2, s * .05); rr(m.x * s + s * .08, m.y * s + s * .08, s * .84, s * .84, s * .16); ctx.stroke(); }
+    // objects by row
+    const witch = witchOf(d);
+    for (let y = y0; y <= y1; y++) {
+      for (let x = x0; x <= x1; x++) {
+        const v = G(x, y);
+        if (v === 3) drawDeadTree(x * s, y * s, s, t, x * 7 + y);
+        if (v === 4) drawCauldron(x * s + s / 2, y * s + s * .95, s * 1.4, t);
+      }
+      for (const e of d.enemies) if (e.hp > 0 && e.type === "crow" && Math.round(e.fy) === y) {
+        const X = e.fx * s + s / 2, Y = e.fy * s + s * .35 + Math.sin(t * 6 + e.x) * s * .08;
+        ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.beginPath(); ctx.ellipse(X, e.fy * s + s * .9, s * .2, s * .06, 0, 0, 7); ctx.fill();
+        drawCrowAt(X, Y, s * 1.7, e.dir, t + e.x);
+      }
+      if (witch.hp > 0 && Math.round(witch.fy) === y) drawWitch(witch, t);
+      if (Math.round(P.fy) === y) {
+        drawPerson({ fx: P.fx, fy: P.fy, dir: P.dir, swing: P.swing, moving: P.path.length > 0, c: me.c }, t, s, 0, 0);
+        if (P.hurt > 0) { ctx.fillStyle = "rgba(255,60,40,.3)"; ctx.beginPath(); ctx.arc(P.fx * s + s / 2, P.fy * s + s / 2, s * .45, 0, 7); ctx.fill(); }
+      }
+    }
+    // potions flying in an arc
+    for (const sh of d.shots) {
+      const k = Math.min(1, sh.t / sh.dur), x = (sh.x0 + (sh.tx - sh.x0) * k) * s + s / 2, y = (sh.y0 + (sh.ty - sh.y0) * k) * s + s / 2 - Math.sin(k * Math.PI) * s * 2;
+      ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.beginPath(); ctx.ellipse(sh.tx * s + s / 2, sh.ty * s + s * .6, s * .5 * k, s * .15 * k, 0, 0, 7); ctx.fill();
+      ctx.strokeStyle = "rgba(220,150,255,.8)"; ctx.lineWidth = s * .08 * k; ctx.beginPath(); ctx.arc(sh.tx * s + s / 2, sh.ty * s + s * .55, s * .9 * (1 - k * .4), 0, 7); ctx.globalAlpha = .4 * k; ctx.stroke(); ctx.globalAlpha = 1;
+      gl(x, y, s * .4, "210,140,255", .7);
+      ctx.save(); ctx.translate(x, y); ctx.rotate(sh.t * 12);
+      ws(() => ctx.arc(0, s * .06, s * .13, 0, 7), "#b96ae0"); ws(() => rr(-s * .05, -s * .16, s * .1, s * .12, s * .02), "#d6dbe1"); ctx.restore();
+    }
+    for (const f of d.puffs) {
+      const X = f.x * s + s / 2, Y = f.y * s + s * (f.splash ? .5 : -.4), k = f.t / .8;
+      ctx.globalAlpha = 1 - k; ctx.fillStyle = f.splash ? "#c98af0" : "#7a5a9a";
+      for (let q = 0; q < 7; q++) { const an = q * .9; ctx.beginPath(); ctx.arc(X + Math.cos(an) * s * k * (f.splash ? 1 : 1.2), Y + Math.sin(an) * s * k * .6, s * (.18 - k * .12) * (f.splash ? 1 : 2), 0, 7); ctx.fill(); }
+      ctx.globalAlpha = 1;
+    }
+    // fireflies
+    for (let q = 0; q < 14; q++) {
+      const fx = (hash(q, 3) * d.w + Math.sin(t * .4 + q) * 1.5) * s, fy = (hash(3, q) * d.h + Math.cos(t * .35 + q * 2) * 1.2) * s, a = .5 + Math.sin(t * 3 + q) * .4;
+      gl(fx, fy, s * .25, "240,255,150", a * .6); ctx.fillStyle = `rgba(246,255,154,${a})`; ctx.beginPath(); ctx.arc(fx, fy, Math.max(1.5, s * .04), 0, 7); ctx.fill();
+    }
+    floatersW(false, s, 0, 0);
+    ctx.restore();
+    // drifting fog and a dark vignette
+    for (let q = 0; q < 6; q++) {
+      const fx = ((q * 173 + t * (8 + q * 3)) % (w + 400)) - 200, fy = h * (.15 + q * .14);
+      ctx.fillStyle = "rgba(170,200,170,.07)"; ctx.beginPath(); ctx.ellipse(fx, fy, 220, 50, 0, 0, 7); ctx.fill();
+    }
+    const vg = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * .3, w / 2, h / 2, Math.max(w, h) * .75);
+    vg.addColorStop(0, "rgba(10,20,15,0)"); vg.addColorStop(1, "rgba(10,20,15,.65)"); ctx.fillStyle = vg; ctx.fillRect(0, 0, w, h);
+    // boss health bar
+    if (witch.hp > 0 || d.won) {
+      const bw = Math.min(w - 32, 360), bx = (w - bw) / 2, by = h - 50;
+      rr(bx - 4, by - 4, bw + 8, 40, 12); ctx.fillStyle = "rgba(20,16,26,.82)"; ctx.fill();
+      ctx.fillStyle = "#e6b8ff"; ctx.font = `700 13px "Pixelify Sans", monospace`; ctx.textAlign = "center"; ctx.fillText(d.won ? "Bažinná čarodějnice · poražena" : "Bažinná čarodějnice", w / 2, by + 12);
+      rr(bx + 6, by + 18, bw - 12, 12, 6); ctx.fillStyle = "#2a2233"; ctx.fill();
+      const fr = Math.max(0, witch.hp / witch.max); if (fr > 0) { rr(bx + 7, by + 19, (bw - 14) * fr, 10, 5); ctx.fillStyle = "#b96ae0"; ctx.fill(); }
+      ctx.fillStyle = "rgba(255,255,255,.35)"; for (const m of [.33, .66]) ctx.fillRect(bx + 6 + (bw - 12) * m, by + 18, 2, 12);
+    }
+  };
+
+  // ---------- the swamp entrance in the world and its map icon ----------
+  const [GX, GY] = freeNear(54, 166);
+  const nearGate = (x, y) => Math.hypot(x - GX, y - GY);
+  const _order = order;
+  order = function (tx, ty) {
+    if (!dun && !room && !selected && Math.abs(tx - GX) <= 1 && ty >= GY - 1 && ty <= GY) return goAdj(GX, GY, { kind: "swamp" }, "K bažině se nedostaneš");
+    return _order(tx, ty);
+  };
+  const _runJob = runJob;
+  runJob = function (j, dt) { if (j.kind === "swamp") { P.job = null; S.marker = null; enterSwamp(); caveReturn = [GX, GY + 1]; return; } return _runJob(j, dt); };
+  const _drawGround = drawGround;
+  drawGround = function (x, y, t) {
+    _drawGround(x, y, t);
+    if (x !== GX || y !== GY) return;
+    const s = tile, cx = (GX + .5) * s, cy = (GY + .4) * s;
+    const g = ctx.createRadialGradient(cx, cy, s * .5, cx, cy, s * 3.2);
+    g.addColorStop(0, "rgba(62,84,48,.95)"); g.addColorStop(.6, "rgba(78,100,56,.7)"); g.addColorStop(1, "rgba(90,120,60,0)");
+    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(cx, cy, s * 3.4, s * 2.6, 0, 0, 7); ctx.fill();
+    for (const [a, b2, r] of [[-1.8, .9, .45], [1.9, .6, .38], [-.9, -1.2, .3], [1.2, 1.6, .32]]) {
+      ctx.fillStyle = "#3d6650"; ctx.beginPath(); ctx.ellipse(cx + a * s, cy + b2 * s, s * r * 1.4, s * r * .8, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,.08)"; ctx.beginPath(); ctx.ellipse(cx + a * s - s * .1, cy + b2 * s - s * .08, s * r * .6, s * r * .2, 0, 0, 7); ctx.fill();
+    }
+    ctx.strokeStyle = "#7a9a4a"; ctx.lineWidth = Math.max(1, s * .035);
+    for (const [a, b2] of [[-2.3, .6], [-1.4, 1.2], [2.4, .4], [1.5, .9], [-.4, 1.9], [.7, -1.5]]) for (const o of [-.1, 0, .1]) {
+      const sw = Math.sin(t * 1.5 + a + o * 9) * s * .04; ctx.beginPath(); ctx.moveTo(cx + (a + o) * s, cy + b2 * s); ctx.quadraticCurveTo(cx + (a + o) * s, cy + (b2 - .3) * s, cx + (a + o) * s + sw, cy + (b2 - .45) * s); ctx.stroke();
+    }
+  };
+  const _drawObj = drawObj;
+  drawObj = function (x, y, t) {
+    _drawObj(x, y, t);
+    const s = tile, X = x * s, Y = y * s;
+    if ((x === GX - 1 || x === GX + 1) && y === GY - 1) drawDeadTree(X + (x < GX ? -s * .2 : s * .2), Y + s * .3, s * 1.2, t, x);
+    if (x !== GX || y !== GY) return;
+    gl(X + s / 2, Y + s * .5, s * 1.4, "190,100,255", .35 + Math.sin(t * 2) * .08);
+    ctx.fillStyle = "#2c4a3c"; ctx.beginPath(); ctx.ellipse(X + s * .5, Y + s * .62, s * .85, s * .4, 0, 0, 7); ctx.fill(); ctx.strokeStyle = OL; ctx.lineWidth = wl(); ctx.stroke();
+    ctx.fillStyle = "rgba(190,110,240,.55)"; ctx.beginPath(); ctx.ellipse(X + s * .5, Y + s * .62, s * .6, s * .24, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = "#e6b8ff"; for (let k = 0; k < 3; k++) { const ph = (t * .7 + k * .33) % 1; ctx.globalAlpha = 1 - ph; ctx.beginPath(); ctx.arc(X + s * (.35 + k * .15), Y + s * (.6 - ph * .7), s * .05, 0, 7); ctx.fill(); }
+    ctx.globalAlpha = 1;
+    // sign with the witch hat
+    ws(() => rr(X + s * .86, Y + s * .1, s * .08, s * .8, s * .03), "#6b5a48");
+    ws(() => rr(X + s * .6, Y - s * .02, s * .6, s * .32, s * .06), "#8a6a44");
+    ctx.fillStyle = "#2a2433"; ctx.beginPath(); ctx.moveTo(X + s * .72, Y + s * .24); ctx.lineTo(X + s * .92, Y + s * .02); ctx.lineTo(X + s * 1.0, Y + s * .24); ctx.closePath(); ctx.fill();
+    ctx.fillRect(X + s * .66, Y + s * .23, s * .4, s * .04);
+    if (mode === "play" && Math.hypot(P.fx - x, P.fy - y) < 5) bubble(X + s * .5, Y - s * .25 + Math.sin(t * 4) * s * .04, s, "!");
+  };
+  const _drawMini = drawMini;
+  drawMini = function () {
+    _drawMini();
+    const mm = $("mm"), m = mm.getContext("2d"), k = mm.width / W, x = GX * k + k / 2, y = GY * k + k / 2;
+    m.fillStyle = "rgba(185,106,224,.35)"; m.beginPath(); m.arc(x, y, 17, 0, 7); m.fill();
+    m.fillStyle = "#1e1628"; m.strokeStyle = "#e6b8ff"; m.lineWidth = 2; m.beginPath(); m.arc(x, y, 11, 0, 7); m.fill(); m.stroke();
+    m.fillStyle = "#b96ae0"; m.beginPath(); m.moveTo(x - 6, y + 4); m.quadraticCurveTo(x - 1, y - 2, x + 4, y - 9); m.quadraticCurveTo(x + 2, y - 1, x + 5, y + 4); m.closePath(); m.fill();
+    m.fillRect(x - 8, y + 3, 16, 3);
+    m.font = "700 12px 'Pixelify Sans', monospace"; m.textAlign = "left";
+    const label = "Bažina čarodějnice", tw = m.measureText(label).width;
+    m.fillStyle = "rgba(20,16,26,.85)"; m.beginPath(); m.roundRect(x + 15, y - 9, tw + 10, 18, 6); m.fill();
+    m.fillStyle = "#e6b8ff"; m.fillText(label, x + 20, y + 4);
+  };
+
+  // ---------- trophy: a statue of the witch to put in your home ----------
+  ITEMS.witchStatue = { n: "Soška čarodějnice", s: "soška", c: "#b96ae0", trophy: true };
+  FURN.statue = { id: 6, cost: { witchStatue: 1 }, pts: 300, name: "Soška čarodějnice" };
+  {
+    const b = el("button", { class: "tool", id: "fStatue", "aria-pressed": "false", on: () => pick("statue") }, el("b", {}, "Soška"), el("span", {}, "čarodějnice"));
+    $("fExit").before(b);
+  }
+  const _ui = ui;
+  ui = function () {
+    _ui();
+    const b = $("fStatue"); if (!b) return;
+    b.hidden = have("witchStatue") < 1; b.setAttribute("aria-pressed", selected === "statue");
+    b.querySelector("span").textContent = `máš ${have("witchStatue")}`;
+  };
+  function drawStatue(X, Y, s, t) {
+    const cx = X + s / 2;
+    gl(cx, Y + s * .3, s * .7, "190,110,240", .22 + Math.sin(t * 2) * .06);
+    ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.beginPath(); ctx.ellipse(cx, Y + s * .92, s * .4, s * .1, 0, 0, 7); ctx.fill();
+    const lw0 = Math.max(1, s * .035), S2 = (fn, fill) => { ctx.beginPath(); fn(); ctx.fillStyle = fill; ctx.fill(); ctx.lineWidth = lw0; ctx.strokeStyle = OL; ctx.lineJoin = "round"; ctx.stroke(); };
+    S2(() => rr(X + s * .14, Y + s * .7, s * .72, s * .22, s * .05), "#d6dbe1");
+    S2(() => rr(X + s * .2, Y + s * .62, s * .6, s * .1, s * .04), "#e9ecf0");
+    S2(() => rr(cx - s * .14, Y + s * .76, s * .28, s * .08, s * .02), "#f2cf5c");
+    // little witch
+    S2(() => { ctx.moveTo(cx - s * .06, Y + s * .3); ctx.quadraticCurveTo(cx - s * .2, Y + s * .5, cx - s * .17, Y + s * .63); ctx.lineTo(cx + s * .13, Y + s * .63); ctx.quadraticCurveTo(cx + s * .12, Y + s * .42, cx + s * .07, Y + s * .3); ctx.closePath(); }, "#3e4a30");
+    ctx.fillStyle = "#5aa04a"; ctx.beginPath(); ctx.ellipse(cx - s * .07, Y + s * .5, s * .03, s * .015, .6, 0, 7); ctx.fill();
+    ctx.fillStyle = "#15120c"; ctx.beginPath(); ctx.arc(cx, Y + s * .27, s * .09, 0, 7); ctx.fill(); ctx.strokeStyle = OL; ctx.lineWidth = lw0; ctx.stroke();
+    ctx.fillStyle = "#d58cff"; for (const d of [-.03, .03]) { ctx.beginPath(); ctx.ellipse(cx + s * d, Y + s * .27, s * .018, s * .011, 0, 0, 7); ctx.fill(); }
+    S2(() => ctx.ellipse(cx, Y + s * .2, s * .2, s * .045, 0, 0, 7), "#3a3a2c");
+    S2(() => { ctx.moveTo(cx - s * .1, Y + s * .19); ctx.quadraticCurveTo(cx - s * .04, Y + s * .04, cx + s * .16, Y - s * .06); ctx.quadraticCurveTo(cx + s * .03, Y + s * .07, cx + s * .1, Y + s * .19); ctx.closePath(); }, "#3a3a2c");
+    ctx.fillStyle = "#6fae3e"; ctx.fillRect(cx - s * .1, Y + s * .155, s * .2, s * .03);
+    ctx.fillStyle = "#22222a"; ctx.beginPath(); ctx.ellipse(cx + s * .13, Y - s * .05, s * .04, s * .03, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(cx + s * .16, Y - s * .08, s * .022, 0, 7); ctx.fill();
+    ctx.fillStyle = "#f2b93a"; ctx.beginPath(); ctx.moveTo(cx + s * .18, Y - s * .085); ctx.lineTo(cx + s * .21, Y - s * .075); ctx.lineTo(cx + s * .18, Y - s * .065); ctx.fill();
+    // sparkle
+    const ph = (t * .6) % 1; ctx.globalAlpha = 1 - ph; ctx.fillStyle = "#e6b8ff"; ctx.beginPath(); ctx.arc(cx - s * .22, Y + s * (.4 - ph * .3), s * .025, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+  }
+  const _drawFurniture = drawFurniture;
+  drawFurniture = function (id, X, Y, s, t) { if (id === 6) return drawStatue(X - s * .3, Y - s * .55, s * 1.6, t); return _drawFurniture(id, X, Y, s, t); };
   // =================== TEST MODE (only in test.html) ===================
   const TST = { inf: true, god: true, speed: 1 };
   try { Object.assign(TST, JSON.parse(store.get("tst-opts") || "{}")); } catch (e) {}
@@ -2225,6 +3386,14 @@ const FIREBASE_CONFIG = {
     const fl = el("div", { class: "form" });
     for (const f of [1, 3, 5, 9]) fl.append(btn(`Patro ${f}`, () => { if (room) exitHouse(); if (!dun) caveReturn = [CAVES[0][0], CAVES[0][1] + 1]; dun = null; enterCave(CAVES[0][0], CAVES[0][1], f); closeSheet(); }));
     add2(row("Rovnou do jeskyně", "Na patře 3, 6, 9 čeká troll", fl));
+    add2(el("div", { class: "sec" }, "Počasí"));
+    add2(row(`Teď: ${weather().ic} ${weather().n}`, "Normálně se mění samo každých 30 minut", el("div", { class: "form" }, ...WX.map((w) => btn(w.ic, () => { wxForce = w.k; clockTick(); refreshSheet(); }, { ghost: weather().k !== w.k })), btn("Auto", () => { wxForce = null; clockTick(); refreshSheet(); }, { ghost: !!wxForce }))));
+    add2(row("Boží úkol", "Splní dnešní úkol, abys viděl odměnu", btn("Splnit", () => { const g = godQuest(); me.st[g.k] = (me.st[g.k] || 0) + g.goal; closeSheet(); banner("Úkol splněn. Dojdi k oltáři vedle návsi."); })));
+    add2(row("Oltář a rybník", "Teleport k oltáři bohů", btn("K oltáři", () => tstTeleport(SX, SY + 1))));
+    add2(el("div", { class: "sec" }, "Úspěchy"));
+    add2(row("Ukázat animaci", "Vyskočí ukázka úspěchu dole uprostřed", btn("Ukázat", () => { closeSheet(); achQueue.push(ACH[Math.floor(Math.random() * ACH.length)]); showNextAch(); })));
+    add2(el("div", { class: "sec" }, "Boss (prototyp)"));
+    add2(row("Bažinná čarodějnice", "Boss aréna v bažině. Hází jedové lektvary, volá havrany a v poslední třetině se teleportuje.", btn("Do bažiny", enterSwamp)));
     add2(el("div", { class: "sec" }, "Začít znovu"));
     add2(row("Smazat testovací svět", "Smaže stavby i postavu v testovací verzi", btn("Smazat", () => {
       try { Object.keys(localStorage).filter((k) => k.startsWith("tst-")).forEach((k) => localStorage.removeItem(k)); } catch (e) {}
