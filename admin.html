@@ -172,7 +172,7 @@ const FIREBASE_CONFIG = {
       market: { ".read": true, "$id": { ".write": true, ".validate": "newData.child('sid').isString() && newData.child('item').isString() && newData.child('qty').isNumber() && newData.child('qty').val() >= 1 && newData.child('qty').val() <= 9999 && newData.child('price').isNumber() && newData.child('price').val() >= 0 && newData.child('price').val() <= 1000000" } },
       payouts: { "$pid": { ".read": true, ".write": true, ".validate": "newData.isNumber() && newData.val() >= 0" } },
       allowed: { ".read": A, ".write": A, "$u": { ".read": true, ".validate": "newData.isBoolean()" } },
-      claims: { ".read": A, ".write": A, "$u": { ".read": true, ".write": "!data.exists() && newData.isString() && root.child('allowed').child($u).exists()" } },
+      claims: { ".read": A, ".write": A, "$u": { ".read": true, ".write": "(!data.exists() || data.val() === newData.val()) && newData.isString() && $u.matches(/^[a-z0-9_,-]{1,40}$/)" } },
     } }, null, 2);
   }
 

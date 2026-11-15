@@ -107,7 +107,7 @@ label.eyebrow { color: var(--muted); margin-bottom: -6px; }
 .card input { width: 100%; padding: 12px; font-size: 18px; font-family: var(--display); background: var(--frame); color: var(--ink); border: 2px solid var(--line); border-radius: 6px; }
 .igfield { position: relative; }
 .igfield span { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-family: var(--display); font-size: 18px; color: var(--muted); pointer-events: none; }
-.igfield input { padding-left: 30px; text-transform: lowercase; }
+.igfield input { padding-left: 12px; }
 .hint { font-size: 13px; color: var(--muted); line-height: 1.45; }
 .btn {
   padding: 11px 16px; font-family: var(--display); font-size: 17px; font-weight: 700;
@@ -191,12 +191,12 @@ label.eyebrow { color: var(--muted); margin-bottom: -6px; }
 
     <section class="overlay" id="gate">
       <div class="card">
-        <div class="eyebrow">Společná hra pro sledující</div>
+        <div class="eyebrow">Společná online hra</div>
         <h1>Manazinie</h1>
         <p>Kácej stromy, těž kámen a železo, stav domy, hradby a hospody, choď na lov a do jeskyní pro zlato. Všichni hrají v jednom velkém světě.</p>
-        <label class="eyebrow" for="nick">Tvoje jméno na Instagramu</label>
-        <div class="igfield"><span>@</span><input id="nick" maxlength="30" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="jmeno.na.instagramu"></div>
-        <div class="hint">Hrát můžou sledující účtu. Nové sledující přidáváme do hry průběžně, takže pokud tě hra ještě nepustí, zkus to za den nebo dva.</div>
+        <label class="eyebrow" for="nick">Tvoje jméno ve hře</label>
+        <div class="igfield"><input id="nick" maxlength="20" autocomplete="nickname" spellcheck="false" placeholder="Vymysli si přezdívku"></div>
+        <div class="hint">Vyber si přezdívku (3–20 znaků). Sprostá a urážlivá jména nejdou. Pro novinky sleduj @manazinie na Instagramu.</div>
         <div class="err" id="err" role="status"></div>
         <button class="btn" id="go">Vstoupit</button>
         <button class="btn ghost" id="watch">Jen se dívat</button>
@@ -2521,21 +2521,41 @@ const FIREBASE_CONFIG = {
   const igKey = (name) => name.replace(/\./g, ",");
   const err = (t) => { $("err").textContent = t; };
   let entering = false;
+  // ---------- choosing a name: free nickname, with a filter for rude words ----------
+  const cleanName = (v) => String(v || "").replace(/\s+/g, " ").trim().slice(0, 20);
+  const plain = (v) => v.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  const nameKey = (v) => plain(v).replace(/[^a-z0-9]/g, "_");
+  const BAD = ["kurv", "kurev", "kurw", "prdel", "curak", "cural", "zmrd", "kokot", "kokut", "pica", "picu", "picus", "picov", "piča", "mrdk", "mrdat", "mrdal", "mrdni",
+    "jebat", "jeben", "jebal", "jebn", "jebk", "zajeb", "hovno", "hovad", "sracka", "sracky", "posran", "zasran", "seru", "hajzl", "buzerant", "buzna", "teplous", "negr", "nigg", "cigos",
+    "debil", "kreten", "idiot", "blbec", "retard", "mongol", "hitler", "nacist", "nazi", "fuck", "shit", "bitch", "cunt", "dick", "pussy", "cock", "penis", "vagin", "porn",
+    "sex", "kunda", "kundo", "kundy", "prcat", "prcal", "sperm", "cecky", "kozy", "ciciny", "whore", "slut", "rape", "znasil", "chcip", "zabij", "admin", "moderator", "manazinie"];
+  function rude(name) {
+    const p = plain(name), leet = p.replace(/[0]/g, "o").replace(/[1!|]/g, "i").replace(/3/g, "e").replace(/4|@/g, "a").replace(/5|\$/g, "s").replace(/7/g, "t").replace(/8/g, "b");
+    const letters = leet.replace(/[^a-z]/g, ""), squeezed = letters.replace(/(.)\1+/g, "$1");
+    return BAD.some((w) => { const b = plain(w); return letters.includes(b) || squeezed.includes(b.replace(/(.)\1+/g, "$1")); });
+  }
   async function enter() {
     if (entering) return;
-    const name = igClean($("nick").value);
-    if (!/^[a-z0-9._]{1,30}$/.test(name)) return err("Napiš své jméno z Instagramu, třeba jmeno.prijmeni");
+    const name = cleanName($("nick").value);
+    if (name.length < 3) return err("Jméno musí mít aspoň 3 znaky.");
+    if (!/^[\p{L}\p{N} ._-]+$/u.test(name)) return err("Použij jen písmena, čísla, mezeru, tečku, pomlčku nebo podtržítko.");
+    if (rude(name)) return err("Tohle jméno nejde použít. Vyber si prosím jiné, slušné jméno.");
     if (online) {
-      entering = true; $("go").disabled = true; err("Ověřuju…");
+      entering = true; $("go").disabled = true; err("Kontroluju jméno…");
       try {
-        const key = igKey(name);
-        const allowed = (await db.ref("allowed/" + key).get()).exists();
-        if (!allowed) throw new Error("Účet @" + name + " zatím mezi sledujícími nemáme. Sleduj nás na Instagramu a zkus to znovu za den nebo dva.");
-        const res = await db.ref("claims/" + key).transaction((cur) => (cur === null ? me.id : undefined), undefined, false);
-        if (res.snapshot.val() !== me.id) throw new Error("Účet @" + name + " už hraje na jiném zařízení. Pokud je tvůj, napiš nám zprávu na Instagramu.");
+        const key = nameKey(name), oldKey = name.toLowerCase().replace(/\./g, ",");
+        for (const k of [key, oldKey]) {
+          if (!/^[a-z0-9_,-]+$/.test(k)) continue;
+          const owner = (await db.ref("claims/" + k).get()).val();
+          if (owner && owner !== me.id) throw new Error("Jméno „" + name + "“ už někdo používá. Vyber si jiné.");
+        }
+        try {
+          const res = await db.ref("claims/" + key).transaction((cur) => (cur === null || cur === me.id ? me.id : undefined), undefined, false);
+          if (res.snapshot.val() !== me.id) throw new Error("Jméno „" + name + "“ už někdo používá. Vyber si jiné.");
+        } catch (e) { if (!/permission|PERMISSION/.test(String(e && e.message))) throw e; }
       } catch (e) {
         entering = false; $("go").disabled = false;
-        return err(e && e.message && !/permission|PERMISSION/.test(e.message) ? e.message : "Nepodařilo se ověřit účet. Zkus to za chvíli znovu.");
+        return err(e && e.message && !/permission|PERMISSION/.test(e.message) ? e.message : "Nepodařilo se ověřit jméno. Zkus to za chvíli znovu.");
       }
       entering = false; $("go").disabled = false;
     }
@@ -2647,7 +2667,7 @@ const FIREBASE_CONFIG = {
   const myEmote = { e: null, t: 0 };
   {
     const b = el("button", { class: "emoFab", id: "emoBtn", title: "Emoce", "aria-label": "Emoce" }, "💬");
-    $("cv").parentElement.append(b);
+    b.hidden = true; $("cv").parentElement.append(b);
     let pick = null;
     b.addEventListener("click", () => {
       if (pick) { pick.remove(); pick = null; return; }
