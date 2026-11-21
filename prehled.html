@@ -560,7 +560,7 @@ const FIREBASE_CONFIG = {
       done(!err && ok, err);
     }, false);
   }
-  function saveScore() { saveMe(); if (online && me.name) db.ref("scores/" + me.id).set({ n: me.name, p: me.pts }); }
+  function saveScore() { saveMe(); if (online && me.name) db.ref("scores/" + me.id).set({ n: me.name, p: me.pts, t: firebase.database.ServerValue.TIMESTAMP }); }
   // =================== GAMEPLAY ===================
   const pop = (x, y, text, color) => S.fx.push({ x: x + .5, y: y + .2, text, color, life: 1.2, room: !!room, dun: !!dun });
   function addXP(n) {
@@ -3434,7 +3434,7 @@ table.dt tr.sel td { background: rgba(143,209,106,.12); }
       kpi("kHomes", "domů a hradů"), kpi("kPubs", "hospod · piv na skladě"), kpi("kMarket", "nabídek na trhu"), kpi("kHarvest", "vytěženo od otevření")),
     el("div", { class: "grid2" },
       el("div", { class: "panel" }, el("h2", {}, "Živá kamera", el("small", { id: "camWho" }, "")), el("div", { id: "camBox" }),
-        el("div", { class: "camBar" }, el("button", { id: "camPrev" }, "◀ předchozí"), el("button", { id: "camNext" }, "další hráč ▶"), el("button", { id: "camPlaza" }, "náves"), el("button", { id: "camSwamp" }, "bažina"), el("span", {}, "Ťukni na mapu a kamera se tam podívá."))),
+        el("div", { class: "camBar" }, el("button", { id: "camPrev" }, "◀ předchozí"), el("button", { id: "camNext" }, "další hráč ▶"), el("button", { id: "camPlaza" }, "náves"), el("button", { id: "camSwamp" }, "bažina"), el("span", {}, "Ťukni na mapu a kamera se tam podívá. Ťukni v kameře na stavbu a můžeš ji zbořit.")), el("div", { id: "dSel" })),
       el("div", { class: "panel" }, el("h2", {}, "Mapa světa", el("small", {}, "200 × 200 políček")), el("canvas", { id: "dMap", width: 600, height: 600 }),
         el("div", { class: "legendD" }, ...[["#8fd16a", "hráč"], ["#e8574a", "domy"], ["#f0a030", "hospoda"], ["#d0d6dc", "hradby"], ["#b58b3a", "pole"], ["#b96ae0", "bažina"], ["#ffe27a", "oltář"], ["#1b1b1b", "jeskyně"]].map(([c, n]) => el("span", {}, el("i", { style: `background:${c}` }), n))))),
     el("div", { class: "grid2" },
@@ -3444,8 +3444,11 @@ table.dt tr.sel td { background: rgba(143,209,106,.12); }
       el("div", { class: "panel" }, el("h2", {}, "Žebříček", el("small", {}, "top 20")), el("div", { id: "dTop" })),
       el("div", { class: "panel" }, el("h2", {}, "Stavby ve světě"), el("div", { class: "bars", id: "dBuild" }))),
     el("div", { class: "grid2" },
-      el("div", { class: "panel" }, el("h2", {}, "Největší stavitelé"), el("div", { id: "dBuilders" })),
+      el("div", { class: "panel" }, el("h2", {}, "Stavitelé", el("small", {}, "kdo kolik postavil a kdy naposledy hrál")), el("div", { id: "dBuilders" })),
       el("div", { class: "panel" }, el("h2", {}, "Hospody"), el("div", { id: "dPubs" }))),
+    el("div", { class: "panel" }, el("h2", {}, "Všechny stavby", el("small", { id: "allSmall" }, "")),
+      el("div", { class: "camBar", style: "margin:0 0 8px" }, el("input", { id: "dSearch", type: "search", placeholder: "Hledat hráče nebo stavbu…", style: "flex:1;min-width:180px;font:inherit;padding:7px 10px;border-radius:8px;border:2px solid var(--line);background:var(--frame);color:var(--ink)" })),
+      el("div", { id: "dAll", style: "max-height:420px;overflow:auto" })),
     el("div", { class: "panel" }, el("h2", {}, "Trh", el("small", {}, "posledních 80 nabídek")), el("div", { id: "dMarket" })),
   );
   $("camBox").append(document.querySelector("main.stage"));
@@ -3516,9 +3519,7 @@ table.dt tr.sel td { background: rgba(143,209,106,.12); }
     const rows = Object.entries(counts).sort((a, b) => b[1] - a[1]), max = rows.length ? rows[0][1] : 1, bb = $("dBuild"); bb.innerHTML = "";
     if (!rows.length) bb.append(el("div", { class: "empty" }, "Zatím nic nepostaveno."));
     for (const [n, c] of rows) bb.append(el("div", { class: "dbar" }, el("span", {}, n), el("div", {}, el("i", { style: `width:${c / max * 100}%` })), el("span", {}, String(c))));
-    const br = Object.entries(builders).sort((a, b) => b[1] - a[1]).slice(0, 10), bx = $("dBuilders"); bx.innerHTML = "";
-    if (!br.length) bx.append(el("div", { class: "empty" }, "Zatím nikdo."));
-    else bx.append(el("table", { class: "dt" }, el("thead", {}, el("tr", {}, el("th", {}, "#"), el("th", {}, "Hráč"), el("th", {}, "Staveb"))), el("tbody", {}, ...br.map(([n, c], k) => el("tr", {}, el("td", {}, String(k + 1)), el("td", {}, n), el("td", { class: "n" }, String(c)))))));
+    renderBuilders(builders);
     $("kOnline").textContent = Object.keys(others).length;
     $("kHarvest").textContent = `${harvest.tree + harvest.rock + harvest.ore}`;
     $("kHarvest").title = `stromy ${harvest.tree} · kameny ${harvest.rock} · ruda ${harvest.ore}`;
@@ -3560,7 +3561,7 @@ table.dt tr.sel td { background: rgba(143,209,106,.12); }
         else if (!p) addFeed(`🔨 ${who}: nová stavba – ${nm.toLowerCase()} (${+i % W}, ${Math.floor(+i / W)})`);
       }
     }
-    for (const i of Object.keys(prevTiles)) if (!tiles[i]) { const o = prevTiles[i], nm = o && buildName(o, o.t); if (nm) addFeed(`🧹 ${(o && o.o) || "Někdo"}: zbořeno – ${nm.toLowerCase()}`); }
+    for (const i of Object.keys(prevTiles)) if (!tiles[i] && adminGone.has(i)) adminGone.delete(i); else if (!tiles[i]) { const o = prevTiles[i], nm = o && buildName(o, o.t); if (nm) addFeed(`🧹 ${(o && o.o) || "Někdo"}: zbořeno – ${nm.toLowerCase()}`); }
     prevTiles = Object.assign({}, tiles);
   }
   function diffPlayers() {
@@ -3578,11 +3579,81 @@ table.dt tr.sel td { background: rgba(143,209,106,.12); }
     }
     prevPlayers = cur;
   }
-  function tick() { diffTiles(); diffPlayers(); drawMap(); renderStats(); renderOnline(); renderTopD(); renderMarket(); camLabel(); }
+  // ---------- admin: demolishing buildings ----------
+  const lastSeen = {}, adminGone = new Set();
+  let delAsk = null, delBusy = false, selTile = null, allSig = "";
+  const ago = (t) => { if (!t) return "neznámo"; const m = Math.round((now() - t) / 60000); if (m < 2) return "právě teď"; if (m < 60) return `před ${m} min`; const h = Math.round(m / 60); if (h < 36) return `před ${h} h`; return `před ${Math.round(h / 24)} dny`; };
+  const posOf = (i) => [i % W, Math.floor(i / W)];
+  const builtList = () => Object.entries(tiles).map(([i, o]) => ({ i: +i, o, nm: buildName(o, eff(+i)) })).filter((b) => b.nm);
+  async function removeTile(i) {
+    const keys = [...new Set([keyOf[i], keyFor(i)].filter(Boolean))];
+    if (!online) { delete tiles[i]; for (const k of keys) { delete rawLocal[k]; delete pubsLocal[k]; } store.set("osada-raw", JSON.stringify(rawLocal)); protDirty = true; return; }
+    for (const k of keys) {
+      await db.ref("world/tiles/" + k).remove();
+      await db.ref("pubs/" + k).remove().catch(() => {});
+      try { const s = await db.ref("homes/" + k + "/items").get(); const v = s.val(); if (v) { const nul = {}; for (const c of Object.keys(v)) nul[c] = null; await db.ref("homes/" + k + "/items").update(nul); } } catch (e) {}
+    }
+    delete tiles[i];
+  }
+  async function demolishMany(list, label) {
+    if (delBusy) return; delBusy = true; let ok = 0, bad = 0;
+    for (const b of list) { adminGone.add(String(b.i)); try { await removeTile(b.i); ok++; } catch (e) { bad++; adminGone.delete(String(b.i)); } }
+    delBusy = false; delAsk = null; selTile = null; S.marker = null;
+    addFeed(`🧹 Admin: zbořeno ${label}${ok > 1 ? ` (${ok}×)` : ""}${bad ? ` · ${bad} se nepovedlo` : ""}`);
+    tick();
+  }
+  function askBtn(id, text, run, danger = true) {
+    const asking = delAsk === id;
+    return el("button", { style: danger ? `border-color:${asking ? "#ff6b5a" : "var(--line)"};color:${asking ? "#ff8a7a" : "var(--ink)"}` : "", on: () => { if (delBusy) return; if (asking) run(); else { delAsk = id; tick(); setTimeout(() => { if (delAsk === id) { delAsk = null; tick(); } }, 5000); } } }, asking ? "Opravdu? Klikni znovu" : text);
+  }
+  function renderBuilders(builders) {
+    const bx = $("dBuilders"); bx.innerHTML = "";
+    const names = new Set([...Object.keys(builders)]), on = new Set(Object.values(others).map((o) => o.n));
+    if (!names.size) return bx.append(el("div", { class: "empty" }, "Zatím nikdo."));
+    const rows = [...names].map((n) => ({ n, c: builders[n], t: on.has(n) ? now() : lastSeen[n] })).sort((a, b) => b.c - a.c);
+    bx.append(el("table", { class: "dt" }, el("thead", {}, el("tr", {}, el("th", {}, "Hráč"), el("th", {}, "Staveb"), el("th", {}, "Naposledy ve hře"), el("th", {}, ""))),
+      el("tbody", {}, ...rows.map((r) => el("tr", {}, el("td", {}, r.n + (on.has(r.n) ? " 🟢" : "")), el("td", { class: "n" }, String(r.c)), el("td", {}, ago(r.t)),
+        el("td", {}, el("span", { class: "pl" }, el("button", { on: () => { $("dSearch").value = r.n; allSig = ""; renderAll(); $("dAll").scrollIntoView({ behavior: "smooth", block: "center" }); } }, "stavby"),
+          askBtn("all:" + r.n, "zbořit vše", () => demolishMany(builtList().filter((b) => b.o.o === r.n), `všechny stavby hráče ${r.n}`)))))))));
+  }
+  function renderAll() {
+    const q = plain($("dSearch").value.trim()), list = builtList().filter((b) => !q || plain(`${b.nm} ${b.o.o || ""}`).includes(q)).sort((a, b) => String(a.o.o || "").localeCompare(String(b.o.o || "")) || a.nm.localeCompare(b.nm));
+    const sig = q + "|" + delAsk + "|" + list.map((b) => b.i + b.nm).join(",");
+    if (sig === allSig) return; allSig = sig;
+    $("allSmall").textContent = `${list.length} staveb`;
+    const box = $("dAll"); box.innerHTML = "";
+    if (!list.length) return box.append(el("div", { class: "empty" }, q ? "Nic neodpovídá hledání." : "Zatím nic nepostaveno."));
+    box.append(el("table", { class: "dt" }, el("thead", {}, el("tr", {}, el("th", {}, "Stavba"), el("th", {}, "Majitel"), el("th", {}, "Pozice"), el("th", {}, ""))),
+      el("tbody", {}, ...list.slice(0, 300).map((b) => { const [x, y] = posOf(b.i); return el("tr", { class: selTile === b.i ? "sel" : "" }, el("td", {}, b.nm), el("td", {}, b.o.o || "?"), el("td", {}, `${x}, ${y}`),
+        el("td", {}, el("span", { class: "pl" }, el("button", { on: () => selectTile(x, y, true) }, "ukázat"), askBtn("one:" + b.i, "zbořit", () => demolishMany([b], `${b.nm.toLowerCase()} hráče ${b.o.o || "?"} (${x}, ${y})`))))); }))));
+  }
+  function selectTile(x, y, move) {
+    const i = y * W + x; selTile = tiles[i] && buildName(tiles[i], eff(i)) ? i : null; S.marker = { x, y };
+    if (move) look(x, y, `stavba na ${x}, ${y}`);
+    renderSel(x, y); allSig = ""; renderAll();
+  }
+  function renderSel(x, y) {
+    const box = $("dSel"); box.innerHTML = "";
+    if (selTile === null) { if (x !== undefined) box.append(el("div", { class: "empty" }, `Na ${x}, ${y} nic postaveného není.`)); return; }
+    const o = tiles[selTile], nm = buildName(o, eff(selTile)), [sx, sy] = posOf(selTile);
+    box.append(el("div", { class: "camBar", style: "background:rgba(255,255,255,.04);padding:8px;border-radius:10px" },
+      el("span", { style: "color:var(--ink)" }, `Vybráno: ${nm} · majitel ${o.o || "?"} · ${sx}, ${sy}`),
+      askBtn("one:" + selTile, "Zbořit", () => demolishMany([{ i: selTile, o, nm }], `${nm.toLowerCase()} hráče ${o.o || "?"} (${sx}, ${sy})`)),
+      el("button", { on: () => { selTile = null; S.marker = null; renderSel(); allSig = ""; renderAll(); } }, "Zrušit výběr")));
+  }
+  $("dSearch").addEventListener("input", () => { allSig = ""; renderAll(); });
+  cv.addEventListener("pointerdown", (e) => {
+    if (lock.hidden === false || mode !== "watch" || dun || room) return;
+    e.stopImmediatePropagation();
+    const r = cv.getBoundingClientRect(), x = Math.floor((e.clientX - r.left + camX) / tile), y = Math.floor((e.clientY - r.top + camY) / tile);
+    const has = (tx, ty) => tiles[ty * W + tx] && buildName(tiles[ty * W + tx], eff(ty * W + tx));
+    if (x >= 0 && y >= 0 && x < W && y < H) { if (!has(x, y) && y + 1 < H && has(x, y + 1)) selectTile(x, y + 1, false); else selectTile(x, y, false); }
+  }, { capture: true });
+  function tick() { diffTiles(); diffPlayers(); drawMap(); renderStats(); renderOnline(); renderTopD(); renderMarket(); camLabel(); renderAll(); if (selTile !== null && !tiles[selTile]) { selTile = null; renderSel(); } else if (selTile !== null) renderSel(); }
   function startDash() {
     lock.hidden = true; dash.hidden = false; watch(); window.dispatchEvent(new Event("resize"));
     if (online) {
-      db.ref("scores").on("value", (s) => { const r = []; s.forEach((c) => { const v = c.val(); if (v && v.p > 0) r.push({ n: String(v.n || "Hráč").slice(0, 30), p: v.p | 0 }); }); r.sort((a, b) => b.p - a.p); scores = r; renderTopD(); });
+      db.ref("scores").on("value", (s) => { const r = []; s.forEach((c) => { const v = c.val(); if (v && v.p > 0) r.push({ n: String(v.n || "Hráč").slice(0, 30), p: v.p | 0 }); if (v && v.n && typeof v.t === "number") lastSeen[v.n] = Math.max(lastSeen[v.n] || 0, v.t); }); r.sort((a, b) => b.p - a.p); scores = r; renderTopD(); });
       db.ref("pubs").on("value", (s) => { pubsAll = s.val() || {}; renderPubs(); });
       db.ref("claims").once("value").then((s) => { claimsN = s.numChildren(); $("kNames").textContent = claimsN; }).catch(() => { $("kNames").textContent = "–"; });
     } else { scores = window.__demoScores || []; pubsAll = window.__demoPubs || {}; if (window.__demoOthers) { others = window.__demoOthers; window.__setDemo = (o) => { others = o; }; } renderPubs(); }
