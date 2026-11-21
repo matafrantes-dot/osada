@@ -558,7 +558,7 @@ const FIREBASE_CONFIG = {
       done(!err && ok, err);
     }, false);
   }
-  function saveScore() { saveMe(); if (online && me.name) db.ref("scores/" + me.id).set({ n: me.name, p: me.pts }); }
+  function saveScore() { saveMe(); if (online && me.name) db.ref("scores/" + me.id).set({ n: me.name, p: me.pts, t: firebase.database.ServerValue.TIMESTAMP }); }
   // =================== GAMEPLAY ===================
   const pop = (x, y, text, color) => S.fx.push({ x: x + .5, y: y + .2, text, color, life: 1.2, room: !!room, dun: !!dun });
   function addXP(n) {
